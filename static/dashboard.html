@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTI Agentic System - Pipeline Overview</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1400px;margin:0 auto}
+        .page-header{margin-bottom:28px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .pipeline-flow{display:flex;align-items:center;gap:0;margin-bottom:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:28px 24px;overflow-x:auto}
+        .pipeline-step{flex:1;min-width:150px;text-align:center;position:relative;cursor:pointer;text-decoration:none;color:inherit}
+        .pipeline-step:hover .step-circle{transform:scale(1.08)}
+        .step-circle{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3em;font-weight:700;transition:all .3s;border:3px solid var(--border);background:var(--bg-primary);color:var(--text-muted)}
+        .pipeline-step.done .step-circle{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green)}
+        .pipeline-step.active .step-circle{border-color:var(--accent);background:rgba(59,130,246,.15);color:var(--accent-light);box-shadow:0 0 20px rgba(59,130,246,.2);animation:glow 2s infinite}
+        /* Per-step colors when done */
+        .pipeline-step.s1.done .step-circle{border-color:var(--cyan);background:rgba(6,182,212,.15);color:var(--cyan)}
+        .pipeline-step.s2.done .step-circle{border-color:var(--yellow);background:var(--yellow-bg);color:var(--yellow)}
+        .pipeline-step.s3.done .step-circle{border-color:var(--orange);background:var(--orange-bg);color:var(--orange)}
+        .pipeline-step.s4.done .step-circle{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+        .pipeline-step.s5.done .step-circle{border-color:var(--purple);background:var(--purple-bg);color:var(--purple)}
+        /* Per-step colors when active (currently running) */
+        .pipeline-step.s1.active .step-circle{border-color:var(--cyan);background:rgba(6,182,212,.15);color:var(--cyan);box-shadow:0 0 20px rgba(6,182,212,.3);animation:glow-cyan 2s infinite}
+        .pipeline-step.s2.active .step-circle{border-color:var(--yellow);background:var(--yellow-bg);color:var(--yellow);box-shadow:0 0 20px rgba(234,179,8,.3);animation:glow-yellow 2s infinite}
+        .pipeline-step.s3.active .step-circle{border-color:var(--orange);background:var(--orange-bg);color:var(--orange);box-shadow:0 0 20px rgba(249,115,22,.3);animation:glow-orange 2s infinite}
+        .pipeline-step.s4.active .step-circle{border-color:var(--green);background:var(--green-bg);color:var(--green);box-shadow:0 0 20px rgba(34,197,94,.3);animation:glow-green 2s infinite}
+        .pipeline-step.s5.active .step-circle{border-color:var(--purple);background:var(--purple-bg);color:var(--purple);box-shadow:0 0 20px rgba(168,85,247,.3);animation:glow-purple 2s infinite}
+        @keyframes glow{0%,100%{box-shadow:0 0 10px rgba(59,130,246,.2)}50%{box-shadow:0 0 25px rgba(59,130,246,.4)}}
+        @keyframes glow-cyan{0%,100%{box-shadow:0 0 10px rgba(6,182,212,.2)}50%{box-shadow:0 0 25px rgba(6,182,212,.5)}}
+        @keyframes glow-yellow{0%,100%{box-shadow:0 0 10px rgba(234,179,8,.2)}50%{box-shadow:0 0 25px rgba(234,179,8,.5)}}
+        @keyframes glow-orange{0%,100%{box-shadow:0 0 10px rgba(249,115,22,.2)}50%{box-shadow:0 0 25px rgba(249,115,22,.5)}}
+        @keyframes glow-green{0%,100%{box-shadow:0 0 10px rgba(34,197,94,.2)}50%{box-shadow:0 0 25px rgba(34,197,94,.5)}}
+        @keyframes glow-purple{0%,100%{box-shadow:0 0 10px rgba(168,85,247,.2)}50%{box-shadow:0 0 25px rgba(168,85,247,.5)}}
+        /* Per-step arrow colors when done */
+        .pipeline-arrow.a1{color:var(--cyan)}
+        .pipeline-arrow.a2{color:var(--yellow)}
+        .pipeline-arrow.a3{color:var(--orange)}
+        .pipeline-arrow.a4{color:var(--green)}
+        /* Per-step stat card accent */
+        .stat-card.sc1{border-left:3px solid var(--cyan)}
+        .stat-card.sc2{border-left:3px solid var(--yellow)}
+        .stat-card.sc3{border-left:3px solid var(--orange)}
+        .stat-card.sc4{border-left:3px solid var(--green)}
+        .stat-card.sc5{border-left:3px solid var(--purple)}
+        .stat-card:hover{transform:translateY(-2px)}
+        .badge-running{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.72em;font-weight:600;background:rgba(59,130,246,.15);color:var(--accent-light);animation:pulse-badge 2s infinite}
+        @keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.5}}
+        .pipeline-step .step-label{font-size:.85em;font-weight:600;margin-bottom:4px}
+        .pipeline-step .step-count{font-size:1.3em;font-weight:700;color:var(--accent-light)}
+        .pipeline-step .step-sub{font-size:.75em;color:var(--text-muted);margin-top:2px}
+        .pipeline-arrow{flex-shrink:0;width:36px;display:flex;align-items:center;justify-content:center;color:var(--border);font-size:1.5em}
+        .pipeline-arrow.done{color:var(--green)}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .explain-box code{background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)}
+        .step-tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.8em;font-weight:600;margin-right:4px}
+        .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+        .stat-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+        .stat-card .label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .stat-card .value{font-size:1.8em;font-weight:700}
+        .stat-card .sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:16px 20px;max-height:400px;overflow-y:auto}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-track{background:transparent}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .log-item{padding:8px 12px;border-left:2px solid var(--border);margin-bottom:6px;font-size:.84em}
+        .log-item .time{font-size:.8em;color:var(--text-muted)}
+        .log-item .agent{color:var(--accent-light);font-weight:600}
+        .log-item .detail{color:var(--text-secondary);margin-top:2px}
+        .log-item.success{border-left-color:var(--green)}
+        .log-item.warning{border-left-color:var(--yellow)}
+        .log-item.error{border-left-color:var(--red)}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+        @media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr)}.pipeline-flow{flex-wrap:wrap}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>
+            CTI Agentic System
+        </a>
+        <div class="nav-links">
+            <a href="/" class="active"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text" style="color:var(--text-secondary)">Connecting...</span>
+        </div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1>Pipeline Overview</h1>
+            <div class="subtitle">Real-time view of the 5-agent CTI processing pipeline. Each step processes threat intelligence sequentially &mdash; click any step to see details.</div>
+        </div>
+        <div class="pipeline-flow" id="pipeline-flow">
+            <a class="pipeline-step s1" href="/ingestion" id="ps-1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Ingestion</div>
+                <div class="step-count" id="pc-events">-</div>
+                <div class="step-sub">raw events collected</div>
+            </a>
+            <div class="pipeline-arrow" id="pa-1">&#8594;</div>
+            <a class="pipeline-step s2" href="/enrichment" id="ps-2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Enrichment</div>
+                <div class="step-count" id="pc-enriched">-</div>
+                <div class="step-sub">LLM analyzed</div>
+            </a>
+            <div class="pipeline-arrow" id="pa-2">&#8594;</div>
+            <a class="pipeline-step s3" href="/patterns" id="ps-3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Pattern Discovery</div>
+                <div class="step-count" id="pc-patterns">-</div>
+                <div class="step-sub">threat patterns</div>
+            </a>
+            <div class="pipeline-arrow" id="pa-3">&#8594;</div>
+            <a class="pipeline-step s4" href="/mitigations" id="ps-4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Mitigation</div>
+                <div class="step-count" id="pc-mitigations">-</div>
+                <div class="step-sub">responses generated</div>
+            </a>
+            <div class="pipeline-arrow" id="pa-4">&#8594;</div>
+            <a class="pipeline-step s5" href="/mitigations" id="ps-5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Validation</div>
+                <div class="step-count" id="pc-validated">-</div>
+                <div class="step-sub">safety-checked</div>
+            </a>
+        </div>
+        <div class="explain-box" id="explain-box">Loading pipeline status...</div>
+        <div class="stats-row">
+            <a class="stat-card sc1" href="/ingestion"><div class="label">Step 1 &mdash; Ingestion</div><div class="value" id="s-events">-</div><div class="sub">raw events from data sources</div></a>
+            <a class="stat-card sc2" href="/enrichment"><div class="label">Step 2 &mdash; Enrichment</div><div class="value" id="s-enriched">-</div><div class="sub">enriched by LLM</div></a>
+            <a class="stat-card sc3" href="/patterns"><div class="label">Step 3 &mdash; Patterns</div><div class="value" id="s-patterns">-</div><div class="sub">threat clusters</div></a>
+            <a class="stat-card sc4" href="/mitigations"><div class="label">Step 4 &mdash; Mitigations</div><div class="value" id="s-mitigations">-</div><div class="sub">response plans</div></a>
+            <a class="stat-card sc5" href="/mitigations"><div class="label">Step 5 &mdash; Validation</div><div class="value" id="s-validated">-</div><div class="sub">safety-checked</div></a>
+        </div>
+        <div class="panel">
+            <div class="panel-head"><h2>Agent Activity Log</h2><span class="count" id="log-count">0</span></div>
+            <div class="panel-body" id="log-body"><div style="text-align:center;padding:40px;color:var(--text-muted)">Waiting for agent activity...</div></div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function ts(t){try{return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){return t||''}}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        async function updateAll(){
+            var res=await Promise.all([api('health'),api('stats'),api('enriched-events'),api('patterns'),api('mitigations'),api('logs?limit=20')]);
+            var health=res[0],stats=res[1],enriched=res[2],patterns=res[3],mits=res[4],logs=res[5];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+
+            var ev=health.events_count||0,enr=enriched?enriched.length:0,pat=patterns?patterns.length:0,mit=mits?mits.length:0,val=mits?mits.filter(function(m){return m.validated}).length:0;
+            var curStep=health.current_pipeline_step||0;
+            var pipeStatus=health.pipeline_status||'idle';
+            el('pc-events').textContent=ev;el('pc-enriched').textContent=enr;el('pc-patterns').textContent=pat;el('pc-mitigations').textContent=mit;el('pc-validated').textContent=val;
+            el('s-events').textContent=ev;el('s-enriched').textContent=enr;el('s-patterns').textContent=pat;el('s-mitigations').textContent=mit;el('s-validated').textContent=val;
+
+            // Pipeline step states — reset all
+            ['ps-1','ps-2','ps-3','ps-4','ps-5'].forEach(function(id){el(id).classList.remove('done','active')});
+            ['pa-1','pa-2','pa-3','pa-4'].forEach(function(id){el(id).classList.remove('done','a1','a2','a3','a4')});
+
+            // Mark completed steps
+            if(ev>0){el('ps-1').classList.add('done');el('pa-1').classList.add('done','a1')}
+            if(enr>0){el('ps-2').classList.add('done');el('pa-2').classList.add('done','a2')}
+            if(pat>0){el('ps-3').classList.add('done');el('pa-3').classList.add('done','a3')}
+            if(mit>0){el('ps-4').classList.add('done');el('pa-4').classList.add('done','a4')}
+            if(val>0){el('ps-5').classList.add('done')}
+
+            // Active step — use real backend tracking
+            if(pipeStatus==='running'&&curStep>=1&&curStep<=5){
+                var activeEl=el('ps-'+curStep);
+                activeEl.classList.remove('done');
+                activeEl.classList.add('active');
+            }
+
+            // Natural language explanation
+            el('explain-box').innerHTML=buildExplanation(ev,enr,pat,mit,val,patterns,mits);
+
+            // Logs
+            if(logs&&logs.length){
+                el('log-count').textContent=logs.length;
+                var h='';var lr=logs.slice().reverse();
+                for(var i=0;i<lr.length;i++){var l=lr[i];var c=l.status==='success'?'success':(l.status==='warning'?'warning':(l.status==='error'?'error':''));
+                    h+='<div class="log-item '+c+'"><div class="time">'+ts(l.timestamp)+'</div><div><span class="agent">['+esc(l.agent_name)+']</span> '+esc(l.action)+'</div><div class="detail">'+esc(l.details)+'</div></div>'
+                }
+                el('log-body').innerHTML=h;
+            }
+        }
+
+        function buildExplanation(ev,enr,pat,mit,val,patterns,mits){
+            if(ev===0)return'<strong>Waiting for data...</strong> The Ingestion Agent is monitoring the input directory for new threat data files. Drop files into <code>data/input/</code> to begin.';
+            var p=[];
+            p.push('<strong>Pipeline Status:</strong><br><br>');
+            p.push('<span class="step-tag" style="background:var(--green-bg);color:var(--green)">Step 1</span> The <strong>Ingestion Agent</strong> collected <strong>'+ev+' raw threat events</strong> from CSV and JSON data sources.<br><br>');
+            if(enr>0){
+                p.push('<span class="step-tag" style="background:var(--yellow-bg);color:var(--yellow)">Step 2</span> The <strong>Enrichment Agent</strong> used the local LLM to analyze <strong>'+enr+' events</strong>, extracting IOCs, MITRE ATT&CK TTPs, CVE identifiers, affected assets, and attack vectors.<br><br>');
+            }else{
+                p.push('<span class="step-tag" style="background:rgba(59,130,246,.2);color:var(--accent-light)">Step 2</span> The <strong>Enrichment Agent</strong> is currently analyzing events with the LLM (20-60s per event)...<br><br>');
+            }
+            if(pat>0){
+                p.push('<span class="step-tag" style="background:var(--orange-bg);color:var(--orange)">Step 3</span> The <strong>Pattern Discovery Agent</strong> found <strong>'+pat+' threat pattern(s)</strong>');
+                if(patterns&&patterns.length){p.push(': ');for(var i=0;i<patterns.length;i++){p.push('<strong>"'+esc(patterns[i].pattern_name)+'"</strong> ('+patterns[i].event_count+' events)');if(i<patterns.length-1)p.push(', ')}}
+                p.push('.<br><br>');
+            }else if(enr>0){
+                p.push('<span class="step-tag" style="background:rgba(59,130,246,.2);color:var(--accent-light)">Step 3</span> The <strong>Pattern Discovery Agent</strong> is grouping events by common TTPs...<br><br>');
+            }
+            if(mit>0){
+                var fp=0,fe=0;if(mits)mits.forEach(function(m){if(m.pattern_id)fp++;else if(m.event_id)fe++});
+                p.push('<span class="step-tag" style="background:var(--green-bg);color:var(--green)">Step 4</span> The <strong>Mitigation Agent</strong> generated <strong>'+mit+' mitigation(s)</strong>');
+                if(fp>0)p.push(' &mdash; '+fp+' from patterns');if(fe>0)p.push((fp>0?', ':' &mdash; ')+fe+' from high-severity events');
+                p.push('.<br><br>');
+            }else if(pat>0){
+                p.push('<span class="step-tag" style="background:rgba(59,130,246,.2);color:var(--accent-light)">Step 4</span> The <strong>Mitigation Agent</strong> is generating responses with the LLM...<br><br>');
+            }
+            if(val>0){
+                p.push('<span class="step-tag" style="background:var(--purple-bg);color:var(--purple)">Step 5</span> The <strong>Validation Agent</strong> safety-checked <strong>'+val+'/'+mit+'</strong> mitigations (dangerous commands, overly broad rules).');
+            }else if(mit>0){
+                p.push('<span class="step-tag" style="background:rgba(59,130,246,.2);color:var(--accent-light)">Step 5</span> The <strong>Validation Agent</strong> is checking mitigations for safety...');
+            }
+            return p.join('');
+        }
+
+        updateAll();setInterval(updateAll,3000);
+    })();
+    </script>
+</body>
+</html>

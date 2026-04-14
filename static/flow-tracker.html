@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Tracker - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1200px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.15);color:var(--accent-light);font-weight:700;font-size:.7em;border:2px solid var(--accent)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+
+        /* Event selector */
+        .selector-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:24px}
+        .selector-panel h3{font-size:.92em;margin-bottom:12px;color:var(--text-secondary)}
+        .event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;max-height:300px;overflow-y:auto}
+        .event-grid::-webkit-scrollbar{width:6px}
+        .event-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .event-option{padding:10px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;font-size:.85em}
+        .event-option:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+        .event-option.selected{border-color:var(--accent);background:rgba(59,130,246,.1);box-shadow:0 0 0 1px var(--accent)}
+        .event-option .eo-id{font-family:monospace;color:var(--cyan);font-size:.82em}
+        .event-option .eo-type{font-size:.75em;color:var(--text-muted)}
+        .event-option .eo-desc{font-size:.82em;color:var(--text-secondary);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase}
+        .badge-low{background:var(--green-bg);color:var(--green)}
+        .badge-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .badge-high{background:var(--orange-bg);color:var(--orange)}
+        .badge-critical{background:var(--red-bg);color:var(--red)}
+        .badge-emergency{background:var(--purple-bg);color:var(--purple)}
+        .badge-type{background:rgba(59,130,246,.12);color:var(--accent-light)}
+        .badge-ok{background:var(--green-bg);color:var(--green)}
+        .badge-warn{background:var(--yellow-bg);color:var(--yellow)}
+        .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+        .tag{font-size:.72em;padding:3px 8px;border-radius:3px;background:var(--bg-primary);color:var(--text-secondary);border:1px solid var(--border)}
+        .tag-ttp{border-color:var(--orange);color:var(--orange)}
+        .tag-ioc{border-color:var(--cyan);color:var(--cyan)}
+
+        /* Flow timeline */
+        .flow-timeline{position:relative;padding-left:40px;margin-bottom:24px}
+        .flow-timeline::before{content:'';position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--border)}
+        .flow-step{position:relative;margin-bottom:24px}
+        .flow-step:last-child{margin-bottom:0}
+        .flow-step .step-dot{position:absolute;left:-28px;top:4px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--bg-primary);display:flex;align-items:center;justify-content:center;font-size:.65em;font-weight:700;color:var(--text-muted);z-index:1}
+        .flow-step.done .step-dot{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+        .flow-step.active .step-dot{border-color:var(--accent);background:rgba(59,130,246,.15);color:var(--accent-light);box-shadow:0 0 10px rgba(59,130,246,.3)}
+        .flow-step.skipped .step-dot{border-color:var(--text-muted);opacity:.5}
+        .flow-step .step-content{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+        .flow-step.done .step-content{border-left:3px solid var(--green)}
+        .flow-step.active .step-content{border-left:3px solid var(--accent)}
+        .flow-step.skipped .step-content{opacity:.5}
+        .flow-step .step-title{font-weight:700;font-size:.95em;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .flow-step .step-explain{font-size:.88em;color:var(--text-secondary);line-height:1.6;margin-bottom:10px}
+        .flow-step .step-data{background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:.85em}
+        .flow-step .step-data .data-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(51,65,85,.3)}
+        .flow-step .step-data .data-row:last-child{border-bottom:none}
+        .flow-step .step-data .data-key{color:var(--text-muted);font-size:.85em}
+        .flow-step .step-data .data-val{color:var(--text-primary);font-size:.85em;text-align:right;max-width:60%;word-break:break-all}
+
+        .no-selection{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:.95em}
+        .no-selection .arrow{font-size:2em;margin-bottom:10px;color:var(--border)}
+
+        @media(max-width:1100px){.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.nav-links{display:none}.event-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker" class="active"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">T</span> Flow Tracker</h1>
+            <div class="subtitle">Select any event to trace its complete journey through all 5 pipeline stages with natural language explanations.</div>
+        </div>
+        <div class="explain-box">
+            <strong>How to use:</strong> Click any event below to see exactly what happened to it at each stage of the pipeline. The Flow Tracker shows you the full story of how a raw security alert was processed, enriched, grouped into patterns, and turned into actionable mitigations.
+        </div>
+        <div class="selector-panel">
+            <h3>Select an Event to Trace</h3>
+            <div class="event-grid" id="event-grid"><div style="text-align:center;padding:20px;color:var(--text-muted)">Loading events...</div></div>
+        </div>
+        <div id="flow-result">
+            <div class="no-selection"><div class="arrow">&#8593;</div>Select an event above to see its complete pipeline flow</div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        var SEV={1:{label:'LOW',cls:'badge-low'},2:{label:'MEDIUM',cls:'badge-medium'},3:{label:'HIGH',cls:'badge-high'},4:{label:'CRITICAL',cls:'badge-critical'},5:{label:'EMERGENCY',cls:'badge-emergency'}};
+        function sev(v){return SEV[v]||SEV[3]}
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function ts(t){try{return new Date(t).toLocaleString()}catch(e){return t||''}}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        var allEvents=[],allEnriched=[],allPatterns=[],allMitigations=[];
+        var selectedEventId=null;
+
+        async function loadData(){
+            var res=await Promise.all([api('health'),api('events?limit=100'),api('enriched-events?limit=100'),api('patterns'),api('mitigations')]);
+            var health=res[0];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+            allEvents=res[1]||[];allEnriched=res[2]||[];allPatterns=res[3]||[];allMitigations=res[4]||[];
+            renderEventGrid();
+            if(selectedEventId)renderFlow(selectedEventId);
+        }
+
+        function renderEventGrid(){
+            if(!allEvents.length){el('event-grid').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted)">No events yet</div>';return}
+            var html='';
+            for(var i=0;i<allEvents.length;i++){
+                var ev=allEvents[i],sv=sev(ev.severity);
+                var desc=ev.description||(ev.raw_text?ev.raw_text.substring(0,60)+'...':'');
+                var sel=selectedEventId===ev.event_id?' selected':'';
+                html+='<div class="event-option'+sel+'" data-id="'+esc(ev.event_id)+'" onclick="selectEvent(\''+esc(ev.event_id)+'\')">'
+                    +'<div style="display:flex;justify-content:space-between;align-items:center"><span class="eo-id">'+esc(ev.event_id.substring(0,10))+'...</span><span class="badge '+sv.cls+'">'+sv.label+'</span></div>'
+                    +'<div class="eo-type"><span class="badge badge-type" style="font-size:.7em">'+esc(ev.event_type)+'</span> '+esc(ev.indicator||'')+'</div>'
+                    +'<div class="eo-desc">'+esc(desc)+'</div></div>';
+            }
+            el('event-grid').innerHTML=html;
+        }
+
+        window.selectEvent=function(id){
+            selectedEventId=id;
+            renderEventGrid();
+            renderFlow(id);
+        };
+
+        function renderFlow(eventId){
+            // Find this event's data at each stage
+            var rawEvent=null,enrichedEvent=null,matchedPatterns=[],matchedMitigations=[];
+            for(var i=0;i<allEvents.length;i++){if(allEvents[i].event_id===eventId){rawEvent=allEvents[i];break}}
+            for(var i=0;i<allEnriched.length;i++){if(allEnriched[i].event_id===eventId){enrichedEvent=allEnriched[i];break}}
+            for(var i=0;i<allPatterns.length;i++){if(allPatterns[i].event_ids&&allPatterns[i].event_ids.indexOf(eventId)>=0)matchedPatterns.push(allPatterns[i])}
+            for(var i=0;i<allMitigations.length;i++){
+                var m=allMitigations[i];
+                if(m.event_id===eventId)matchedMitigations.push(m);
+                for(var j=0;j<matchedPatterns.length;j++){if(m.pattern_id===matchedPatterns[j].pattern_id)matchedMitigations.push(m)}
+            }
+            // Deduplicate mitigations
+            var seen={};matchedMitigations=matchedMitigations.filter(function(m){if(seen[m.mitigation_id])return false;seen[m.mitigation_id]=true;return true});
+
+            if(!rawEvent){el('flow-result').innerHTML='<div class="no-selection">Event not found</div>';return}
+
+            var sv=sev(rawEvent.severity);
+            var html='';
+
+            // STEP 1: Ingestion
+            html+='<div class="flow-step done">';
+            html+='<div class="step-dot">1</div>';
+            html+='<div class="step-content">';
+            html+='<div class="step-title"><span class="badge" style="background:var(--green-bg);color:var(--green)">Step 1</span> Ingestion Agent</div>';
+            html+='<div class="step-explain"><strong>What happened:</strong> This event was collected from the data source and normalized into a standard format. ';
+            html+='The raw text was parsed, a severity of <strong>'+sv.label+'</strong> was assigned, and it was classified as type <strong>'+esc(rawEvent.event_type)+'</strong>.';
+            if(rawEvent.indicator)html+=' The primary indicator extracted is <strong style="color:var(--cyan)">'+esc(rawEvent.indicator)+'</strong>.';
+            html+='</div>';
+            html+='<div class="step-data">';
+            html+='<div class="data-row"><span class="data-key">Event ID</span><span class="data-val" style="font-family:monospace;color:var(--cyan)">'+esc(rawEvent.event_id)+'</span></div>';
+            html+='<div class="data-row"><span class="data-key">Timestamp</span><span class="data-val">'+ts(rawEvent.timestamp)+'</span></div>';
+            html+='<div class="data-row"><span class="data-key">Source</span><span class="data-val">'+esc(rawEvent.source)+'</span></div>';
+            html+='<div class="data-row"><span class="data-key">Type</span><span class="data-val"><span class="badge badge-type">'+esc(rawEvent.event_type)+'</span></span></div>';
+            html+='<div class="data-row"><span class="data-key">Severity</span><span class="data-val"><span class="badge '+sv.cls+'">'+sv.label+'</span></span></div>';
+            if(rawEvent.indicator)html+='<div class="data-row"><span class="data-key">Indicator</span><span class="data-val" style="color:var(--cyan)">'+esc(rawEvent.indicator)+'</span></div>';
+            var desc=rawEvent.description||(rawEvent.raw_text?rawEvent.raw_text.substring(0,200):'');
+            html+='<div class="data-row"><span class="data-key">Description</span><span class="data-val" style="text-align:left;max-width:70%">'+esc(desc)+'</span></div>';
+            html+='</div></div></div>';
+
+            // STEP 2: Enrichment
+            if(enrichedEvent){
+                html+='<div class="flow-step done">';
+                html+='<div class="step-dot">2</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:var(--yellow-bg);color:var(--yellow)">Step 2</span> Enrichment Agent</div>';
+                html+='<div class="step-explain"><strong>What happened:</strong> The local LLM analyzed this event and extracted structured threat intelligence. ';
+                var iocCount=(enrichedEvent.iocs||[]).length,ttpCount=(enrichedEvent.ttps||[]).length,cveCount=(enrichedEvent.cves||[]).length;
+                html+='The AI found <strong>'+iocCount+' IOC(s)</strong>, <strong>'+ttpCount+' TTP(s)</strong>';
+                if(cveCount>0)html+=', <strong>'+cveCount+' CVE(s)</strong>';
+                html+='. ';
+                if(enrichedEvent.attack_vector)html+='The attack vector is identified as <strong>'+esc(enrichedEvent.attack_vector)+'</strong>. ';
+                if(enrichedEvent.malware_family)html+='Malware family: <strong>'+esc(enrichedEvent.malware_family)+'</strong>. ';
+                var conf=enrichedEvent.enrichment_confidence?Math.round(enrichedEvent.enrichment_confidence*100):0;
+                html+='Confidence: <strong>'+conf+'%</strong>.';
+                html+='</div>';
+
+                // Tags
+                html+='<div class="step-data" style="background:transparent;border:none;padding:0">';
+                if(enrichedEvent.iocs&&enrichedEvent.iocs.length){html+='<div style="margin-bottom:6px;font-size:.72em;color:var(--text-muted);text-transform:uppercase">IOCs</div><div class="tags" style="margin-bottom:10px">';for(var j=0;j<enrichedEvent.iocs.length;j++){var ioc=enrichedEvent.iocs[j];html+='<span class="tag tag-ioc">'+esc((ioc.type||'')+': '+(ioc.value||''))+'</span>'}html+='</div>'}
+                if(enrichedEvent.ttps&&enrichedEvent.ttps.length){html+='<div style="margin-bottom:6px;font-size:.72em;color:var(--text-muted);text-transform:uppercase">TTPs</div><div class="tags" style="margin-bottom:10px">';for(var j=0;j<enrichedEvent.ttps.length;j++){html+='<span class="tag tag-ttp">'+esc(enrichedEvent.ttps[j])+'</span>'}html+='</div>'}
+                if(enrichedEvent.cves&&enrichedEvent.cves.length){html+='<div style="margin-bottom:6px;font-size:.72em;color:var(--text-muted);text-transform:uppercase">CVEs</div><div class="tags" style="margin-bottom:10px">';for(var j=0;j<enrichedEvent.cves.length;j++){html+='<span class="tag" style="border-color:var(--red);color:var(--red)">'+esc(enrichedEvent.cves[j])+'</span>'}html+='</div>'}
+                if(enrichedEvent.affected_assets&&enrichedEvent.affected_assets.length){html+='<div style="margin-bottom:6px;font-size:.72em;color:var(--text-muted);text-transform:uppercase">Affected Assets</div><div class="tags">';for(var j=0;j<enrichedEvent.affected_assets.length;j++){html+='<span class="tag" style="border-color:var(--purple);color:var(--purple)">'+esc(enrichedEvent.affected_assets[j])+'</span>'}html+='</div>'}
+                html+='</div></div></div>';
+            }else{
+                html+='<div class="flow-step active">';
+                html+='<div class="step-dot">2</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:rgba(59,130,246,.2);color:var(--accent-light)">Step 2</span> Enrichment Agent</div>';
+                html+='<div class="step-explain"><strong>Status:</strong> This event has not been enriched yet. The LLM is processing events one at a time (20-60 seconds each). This event is waiting in the queue.</div>';
+                html+='</div></div>';
+            }
+
+            // STEP 3: Pattern Discovery
+            if(matchedPatterns.length>0){
+                html+='<div class="flow-step done">';
+                html+='<div class="step-dot">3</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:var(--orange-bg);color:var(--orange)">Step 3</span> Pattern Discovery Agent</div>';
+                html+='<div class="step-explain"><strong>What happened:</strong> This event was grouped into <strong>'+matchedPatterns.length+' threat pattern(s)</strong>. ';
+                for(var i=0;i<matchedPatterns.length;i++){
+                    var p=matchedPatterns[i];
+                    html+='Pattern <strong>"'+esc(p.pattern_name)+'"</strong> groups '+p.event_count+' events that share ';
+                    if(p.common_ttps&&p.common_ttps.length){html+='the technique(s) '+p.common_ttps.map(function(t){return'<strong>'+esc(t)+'</strong>'}).join(', ')}
+                    html+='. ';
+                }
+                html+='This means the event is part of a larger coordinated threat, not an isolated incident.</div>';
+                // Pattern details
+                for(var i=0;i<matchedPatterns.length;i++){
+                    var p=matchedPatterns[i],svp=sev(p.severity);
+                    html+='<div class="step-data" style="margin-top:8px"><div class="data-row"><span class="data-key">Pattern</span><span class="data-val" style="font-weight:600">'+esc(p.pattern_name)+'</span></div><div class="data-row"><span class="data-key">Events</span><span class="data-val">'+p.event_count+'</span></div><div class="data-row"><span class="data-key">Severity</span><span class="data-val"><span class="badge '+svp.cls+'">'+svp.label+'</span></span></div><div class="data-row"><span class="data-key">Confidence</span><span class="data-val">'+Math.round((p.confidence||0)*100)+'%</span></div></div>';
+                }
+                html+='</div></div>';
+            }else if(enrichedEvent){
+                html+='<div class="flow-step '+(allPatterns.length>0?'done':'active')+'">';
+                html+='<div class="step-dot">3</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:var(--orange-bg);color:var(--orange)">Step 3</span> Pattern Discovery Agent</div>';
+                html+='<div class="step-explain"><strong>Result:</strong> This event was <strong>not grouped into any pattern</strong>. This means its TTPs or attack techniques didn\'t match enough other events to form a cluster. It may still receive a mitigation if its severity is high enough (Step 4 generates event-based mitigations for severity &ge; 3).</div>';
+                html+='</div></div>';
+            }else{
+                html+='<div class="flow-step skipped"><div class="step-dot">3</div><div class="step-content"><div class="step-title"><span class="badge" style="background:var(--bg-primary);color:var(--text-muted)">Step 3</span> Pattern Discovery Agent</div><div class="step-explain">Waiting for enrichment to complete first.</div></div></div>';
+            }
+
+            // STEP 4 & 5: Mitigation & Validation
+            if(matchedMitigations.length>0){
+                html+='<div class="flow-step done">';
+                html+='<div class="step-dot">4</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:var(--green-bg);color:var(--green)">Steps 4-5</span> Mitigation &amp; Validation</div>';
+                html+='<div class="step-explain"><strong>What happened:</strong> ';
+                var fromPat=matchedMitigations.filter(function(m){return m.pattern_id}),fromEv=matchedMitigations.filter(function(m){return m.event_id===eventId});
+                if(fromPat.length>0)html+=fromPat.length+' mitigation(s) were generated based on the threat pattern this event belongs to. ';
+                if(fromEv.length>0)html+=fromEv.length+' mitigation(s) were generated specifically for this high-severity event. ';
+                var valCount=matchedMitigations.filter(function(m){return m.validated}).length;
+                html+=valCount+'/'+matchedMitigations.length+' passed the Validation Agent\'s safety checks.</div>';
+
+                for(var i=0;i<matchedMitigations.length;i++){
+                    var m=matchedMitigations[i],svm=sev(m.priority);
+                    html+='<div class="step-data" style="margin-top:10px">';
+                    html+='<div class="data-row"><span class="data-key">Title</span><span class="data-val" style="font-weight:600;text-align:left">'+esc(m.title)+'</span></div>';
+                    html+='<div class="data-row"><span class="data-key">Priority</span><span class="data-val"><span class="badge '+svm.cls+'">'+svm.label+'</span></span></div>';
+                    html+='<div class="data-row"><span class="data-key">Source</span><span class="data-val">'+(m.pattern_id?'Pattern-based':'Event-based')+'</span></div>';
+                    html+='<div class="data-row"><span class="data-key">Validated</span><span class="data-val">'+(m.validated?'<span class="badge badge-ok">Yes</span>':'<span class="badge badge-warn">Pending</span>')+'</span></div>';
+                    html+='<div class="data-row"><span class="data-key">Status</span><span class="data-val">'+esc((m.status||'').replace(/_/g,' '))+'</span></div>';
+                    if(m.steps&&m.steps.length){html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:.72em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Action Steps</div>';for(var j=0;j<m.steps.length;j++){html+='<div style="font-size:.84em;color:var(--text-secondary);padding:3px 0 3px 14px;position:relative"><span style="position:absolute;left:0;color:var(--accent)">'+(j+1)+'.</span>'+esc(m.steps[j])+'</div>'}html+='</div>'}
+                    if(m.sample_rule){html+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:.72em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">Sample Rule</div><div style="font-family:monospace;font-size:.82em;color:var(--green);background:var(--bg-card);padding:6px 10px;border-radius:4px">'+esc(m.sample_rule)+'</div></div>'}
+                    html+='</div>';
+                }
+                html+='</div></div>';
+            }else if(enrichedEvent){
+                var isHighSev=rawEvent.severity>=3;
+                html+='<div class="flow-step '+(allMitigations.length>0?'done':'active')+'">';
+                html+='<div class="step-dot">4</div>';
+                html+='<div class="step-content">';
+                html+='<div class="step-title"><span class="badge" style="background:var(--green-bg);color:var(--green)">Steps 4-5</span> Mitigation &amp; Validation</div>';
+                if(isHighSev&&matchedPatterns.length===0&&allMitigations.length>0){
+                    html+='<div class="step-explain"><strong>Result:</strong> No mitigation was generated for this specific event. Even though its severity is '+sv.label+', the LLM may not have produced a result, or this event was not in the processing batch.</div>';
+                }else if(!isHighSev&&matchedPatterns.length===0){
+                    html+='<div class="step-explain"><strong>Result:</strong> No mitigation was generated because this event has <strong>'+sv.label+' severity</strong> (below the threshold of HIGH) and was not part of any detected pattern. Mitigations are only auto-generated for high-severity events (severity &ge; 3) or for discovered patterns.</div>';
+                }else{
+                    html+='<div class="step-explain"><strong>Status:</strong> Mitigation generation is in progress or pending...</div>';
+                }
+                html+='</div></div>';
+            }else{
+                html+='<div class="flow-step skipped"><div class="step-dot">4</div><div class="step-content"><div class="step-title"><span class="badge" style="background:var(--bg-primary);color:var(--text-muted)">Steps 4-5</span> Mitigation &amp; Validation</div><div class="step-explain">Waiting for earlier pipeline steps to complete.</div></div></div>';
+            }
+
+            el('flow-result').innerHTML=html;
+        }
+
+        // Check URL for pre-selected event
+        var params=new URLSearchParams(window.location.search);
+        var preselect=params.get('event');
+        if(preselect)selectedEventId=preselect;
+
+        loadData();
+        setInterval(loadData,3000);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 1: Ingestion Agent - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1400px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--green-bg);color:var(--green);font-weight:700;font-size:.7em;border:2px solid var(--green)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .explain-box code{background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)}
+        .nav-flow{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .nav-flow a{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--accent-light);text-decoration:none;font-size:.88em;transition:border-color .2s}
+        .nav-flow a:hover{border-color:var(--accent)}
+        .stats-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+        .stat-card .label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .stat-card .value{font-size:1.8em;font-weight:700}
+        .stat-card .sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:0;overflow-y:auto;max-height:600px}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+        .ev-table{width:100%;border-collapse:collapse}
+        .ev-table th{text-align:left;font-size:.75em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card)}
+        .ev-table td{padding:10px 14px;font-size:.88em;border-bottom:1px solid rgba(51,65,85,.5);color:var(--text-secondary);vertical-align:top}
+        .ev-table tr:hover td{background:rgba(59,130,246,.04)}
+        .ev-table .desc{max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+        .badge-low{background:var(--green-bg);color:var(--green)}
+        .badge-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .badge-high{background:var(--orange-bg);color:var(--orange)}
+        .badge-critical{background:var(--red-bg);color:var(--red)}
+        .badge-emergency{background:var(--purple-bg);color:var(--purple)}
+        .badge-type{background:rgba(59,130,246,.12);color:var(--accent-light)}
+        .src-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(51,65,85,.5)}
+        .src-row:last-child{border-bottom:none}
+        .src-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0}
+        .src-info{flex:1}
+        .src-info .name{font-weight:600;font-size:.9em}
+        .src-info .detail{font-size:.8em;color:var(--text-muted)}
+        .sev-chart{display:flex;gap:8px;align-items:flex-end;height:50px;margin-top:6px}
+        .sev-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+        .sev-col .bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .5s}
+        .sev-col .lbl{font-size:.65em;color:var(--text-muted)}
+        .ev-id{font-family:'Courier New',monospace;font-size:.8em;color:var(--cyan);cursor:pointer}
+        .ev-id:hover{text-decoration:underline}
+        @media(max-width:1100px){.stats-mini{grid-template-columns:1fr 1fr}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.stats-mini{grid-template-columns:1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion" class="active"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">1</span> Ingestion Agent</h1>
+            <div class="subtitle">The first step in the pipeline. The Ingestion Agent collects raw security events from data sources (CSV, JSON files) and normalizes them into a standard format.</div>
+        </div>
+        <div class="explain-box">
+            <strong>What happens here:</strong> The Ingestion Agent monitors the <code>data/input/</code> directory for threat data files. When it finds CSV or JSON files, it reads each record, extracts key fields (IP addresses, descriptions, severity levels, timestamps), normalizes them into a consistent <strong>ThreatEvent</strong> format, and passes them to the next step — the <strong>Enrichment Agent</strong>.
+            <br><br>
+            <strong>In plain terms:</strong> Think of this as the "mailroom" of a Security Operations Center — it receives all incoming threat reports from various sources and organizes them into a standard format that the rest of the team can work with.
+        </div>
+        <div class="nav-flow">
+            <a href="/">&#8592; Overview</a>
+            <a href="/enrichment">Next: Step 2 — Enrichment &#8594;</a>
+        </div>
+        <div class="stats-mini">
+            <div class="stat-card"><div class="label">Total Events</div><div class="value" id="s-total">-</div><div class="sub">collected from all sources</div></div>
+            <div class="stat-card"><div class="label">Data Sources</div><div class="value" id="s-sources">-</div><div class="sub">active feeds</div></div>
+            <div class="stat-card"><div class="label">Severity Distribution</div><div class="sev-chart" id="sev-chart"></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+            <div class="panel">
+                <div class="panel-head"><h2>Raw Threat Events</h2><span class="count" id="ev-count">0</span></div>
+                <div class="panel-body" style="max-height:600px"><table class="ev-table"><thead><tr><th>ID</th><th>Time</th><th>Type</th><th>Indicator</th><th>Description</th><th>Severity</th></tr></thead><tbody id="ev-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Loading events...</td></tr></tbody></table></div>
+            </div>
+            <div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Sources</h2></div>
+                    <div class="panel-body" id="src-body" style="max-height:300px;padding:8px 0"><div style="text-align:center;padding:20px;color:var(--text-muted)">No sources</div></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-head"><h2>Event Types</h2></div>
+                    <div class="panel-body" id="type-body" style="padding:12px 16px"><div style="text-align:center;padding:20px;color:var(--text-muted)">No data</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        var SEV={1:{label:'LOW',cls:'badge-low',color:'var(--green)'},2:{label:'MEDIUM',cls:'badge-medium',color:'var(--yellow)'},3:{label:'HIGH',cls:'badge-high',color:'var(--orange)'},4:{label:'CRITICAL',cls:'badge-critical',color:'var(--red)'},5:{label:'EMERGENCY',cls:'badge-emergency',color:'var(--purple)'}};
+        function sev(v){return SEV[v]||SEV[3]}
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function ts(t){try{return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){return t||''}}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        var sevNames=[{key:'LOW',k:1,color:'var(--green)'},{key:'MEDIUM',k:2,color:'var(--yellow)'},{key:'HIGH',k:3,color:'var(--orange)'},{key:'CRITICAL',k:4,color:'var(--red)'},{key:'EMERGENCY',k:5,color:'var(--purple)'}];
+
+        async function updateAll(){
+            var res=await Promise.all([api('health'),api('events?limit=100'),api('sources'),api('stats')]);
+            var health=res[0],events=res[1],sources=res[2],stats=res[3];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+
+            el('s-total').textContent=health.events_count||0;
+            el('s-sources').textContent=sources?sources.length:0;
+
+            // Severity chart
+            if(stats&&stats.events_by_severity){
+                var sd=stats.events_by_severity,total=stats.total_events||1,ch='';
+                for(var i=0;i<sevNames.length;i++){var s=sevNames[i],cnt=sd[s.key]||sd[s.k]||0,h=total>0?Math.max(2,cnt/total*40):2;
+                    ch+='<div class="sev-col"><div style="font-size:.78em;color:var(--text-secondary)">'+cnt+'</div><div class="bar" style="height:'+h+'px;background:'+s.color+'"></div><div class="lbl">'+s.key.substring(0,4)+'</div></div>'
+                }
+                el('sev-chart').innerHTML=ch;
+            }
+
+            // Sources
+            if(sources&&sources.length){
+                var sh='';for(var i=0;i<sources.length;i++){var src=sources[i];
+                    sh+='<div class="src-row"><div class="src-dot"></div><div class="src-info"><div class="name">'+esc(src.name)+'</div><div class="detail">'+esc(src.source_type)+' &middot; '+src.events_count+' events</div></div></div>'
+                }
+                el('src-body').innerHTML=sh;
+            }
+
+            // Type breakdown
+            if(stats&&stats.events_by_type){
+                var td=stats.events_by_type,tk=Object.keys(td),th='';
+                for(var i=0;i<tk.length;i++){th+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:.88em;border-bottom:1px solid rgba(51,65,85,.3)"><span class="badge badge-type">'+esc(tk[i])+'</span><span style="color:var(--text-secondary)">'+td[tk[i]]+'</span></div>'}
+                el('type-body').innerHTML=th||'<div style="text-align:center;padding:20px;color:var(--text-muted)">No data</div>';
+            }
+
+            // Events table
+            if(events&&events.length){
+                el('ev-count').textContent=events.length;
+                var rows='';for(var i=0;i<events.length;i++){var ev=events[i],sv=sev(ev.severity);
+                    var desc=ev.description||(ev.raw_text?ev.raw_text.substring(0,100)+'...':'N/A');
+                    rows+='<tr><td><span class="ev-id" onclick="window.location.href=\'/flow-tracker?event='+esc(ev.event_id)+'\'">'+esc(ev.event_id.substring(0,8))+'</span></td><td>'+ts(ev.timestamp)+'</td><td><span class="badge badge-type">'+esc(ev.event_type)+'</span></td><td style="font-family:monospace;font-size:.82em;color:var(--cyan)">'+esc(ev.indicator||'-')+'</td><td class="desc">'+esc(desc)+'</td><td><span class="badge '+sv.cls+'">'+sv.label+'</span></td></tr>'
+                }
+                el('ev-tbody').innerHTML=rows;
+            }
+        }
+        updateAll();setInterval(updateAll,3000);
+    })();
+    </script>
+</body>
+</html>

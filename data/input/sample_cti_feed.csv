@@ -1,0 +1,16 @@
+indicator,type,description,first_seen,last_seen
+185.220.101.42,IP,"Tor exit node associated with brute force SSH attacks against enterprise servers. Multiple failed login attempts detected across financial sector targets.",2026-03-20T08:00:00Z,2026-03-23T14:00:00Z
+194.163.45.178,IP,"Command and control server for Emotet botnet variant. Communicating with infected endpoints via HTTPS on port 443.",2026-03-19T12:30:00Z,2026-03-23T11:00:00Z
+http://malicious-update.xyz/payload.exe,URL,"Malware distribution URL serving trojanized software update. Exploits CVE-2024-21412 Windows SmartScreen bypass.",2026-03-21T16:00:00Z,2026-03-23T09:30:00Z
+evil-phish-login.com,Domain,"Phishing domain mimicking Microsoft Office 365 login page. Credential harvesting campaign targeting healthcare organizations.",2026-03-22T06:00:00Z,2026-03-23T18:00:00Z
+d41d8cd98f00b204e9800998ecf8427e,Hash,"MD5 hash of LockBit 3.0 ransomware payload. Encrypts files using AES-256 and demands Bitcoin ransom via Tor hidden service.",2026-03-18T22:00:00Z,2026-03-23T05:00:00Z
+45.33.32.156,IP,"Scanning IP performing reconnaissance against web applications. Detected SQLi and XSS probing against multiple e-commerce sites.",2026-03-22T14:00:00Z,2026-03-23T16:00:00Z
+http://cdn-analytics.evil.net/tracker.js,URL,"Magecart-style JavaScript credit card skimmer injected into compromised e-commerce checkout pages.",2026-03-20T10:00:00Z,2026-03-23T12:00:00Z
+fake-vpn-download.net,Domain,"Trojanized VPN software distribution site. Delivers RAT (Remote Access Trojan) disguised as legitimate VPN client.",2026-03-21T08:00:00Z,2026-03-22T20:00:00Z
+a3f5b2c8d9e1f0a4b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5,Hash,"SHA-256 hash of Cobalt Strike beacon. Used in APT29 campaign targeting government agencies with spear-phishing emails.",2026-03-17T04:00:00Z,2026-03-23T15:00:00Z
+103.87.12.44,IP,"Cryptojacking mining pool proxy. Compromised Linux servers redirecting CPU resources for Monero mining.",2026-03-19T18:00:00Z,2026-03-23T10:00:00Z
+supply-chain-lib.npmjs.org.evil.com,Domain,"Typosquatting domain for npm package supply chain attack. Distributes backdoored dependencies to JavaScript developers.",2026-03-22T09:00:00Z,2026-03-23T13:00:00Z
+http://data-exfil.darkweb.onion/upload,URL,"Data exfiltration endpoint used by APT group. Stolen credentials and sensitive documents uploaded via encrypted channel.",2026-03-20T02:00:00Z,2026-03-23T07:00:00Z
+91.215.85.209,IP,"Known bulletproof hosting IP serving multiple phishing kits. Linked to credential harvesting campaigns against banking sector.",2026-03-21T11:00:00Z,2026-03-23T17:00:00Z
+e7b9a1c3d5f7e9b1a3c5d7f9e1b3a5c7,Hash,"MD5 hash of Agent Tesla keylogger variant. Captures keystrokes and screenshots and exfiltrates via SMTP to attacker-controlled email.",2026-03-19T14:00:00Z,2026-03-22T23:00:00Z
+zero-day-exploit-kit.ru,Domain,"Exploit kit distribution domain. Serves browser exploits targeting unpatched Firefox and Chrome vulnerabilities.",2026-03-23T01:00:00Z,2026-03-23T18:00:00Z

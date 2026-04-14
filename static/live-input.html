@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Input - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1200px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(6,182,212,.15);color:var(--cyan);font-weight:700;font-size:.8em;border:2px solid var(--cyan)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .explain-box code{background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)}
+
+        /* Tabs */
+        .input-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0}
+        .input-tab{background:none;border:none;color:var(--text-muted);padding:12px 20px;font-size:.88em;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+        .input-tab:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .input-tab.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .tab-panel{display:none;padding:20px}
+        .tab-panel.active{display:block}
+
+        /* Form styles */
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;font-size:.82em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;font-weight:500}
+        .form-group input,.form-group textarea,.form-group select{width:100%;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text-primary);font-size:.9em;font-family:inherit;transition:border-color .2s;resize:vertical}
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--accent)}
+        .form-group textarea{min-height:120px;font-family:'Courier New',monospace;font-size:.85em;line-height:1.5}
+        .form-group .hint{font-size:.78em;color:var(--text-muted);margin-top:4px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+        .btn{padding:10px 24px;border:none;border-radius:6px;font-size:.88em;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-primary:hover{background:#2563eb}
+        .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .btn-success{background:var(--green);color:#fff}
+        .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-secondary)}
+        .btn-outline:hover{border-color:var(--accent);color:var(--text-primary)}
+
+        /* Result */
+        .result-box{margin-top:16px;padding:14px 18px;border-radius:8px;font-size:.88em;display:none;line-height:1.6}
+        .result-box.success{display:block;background:var(--green-bg);border:1px solid rgba(34,197,94,.3);color:var(--green)}
+        .result-box.error{display:block;background:var(--red-bg);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+
+        /* Pending indicator */
+        .pending-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+        .pending-bar .pending-label{font-size:.88em;color:var(--text-secondary)}
+        .pending-bar .pending-count{font-size:1.1em;font-weight:700;color:var(--cyan)}
+
+        /* Templates */
+        .template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+        .template-card{padding:12px 16px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;font-size:.84em}
+        .template-card:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+        .template-card .tc-title{font-weight:600;color:var(--text-primary);margin-bottom:4px}
+        .template-card .tc-desc{color:var(--text-muted);font-size:.9em}
+
+        /* File upload */
+        .file-drop{border:2px dashed var(--border);border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text-muted)}
+        .file-drop:hover,.file-drop.dragover{border-color:var(--accent);background:rgba(59,130,246,.05);color:var(--accent-light)}
+        .file-drop .icon{font-size:2em;margin-bottom:10px}
+        .file-drop input[type="file"]{display:none}
+
+        /* Recent submissions */
+        .recent-item{padding:10px 14px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;font-size:.85em}
+        .recent-item .ri-id{font-family:monospace;color:var(--cyan);font-size:.82em}
+        .recent-item .ri-time{color:var(--text-muted);font-size:.8em}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase}
+        .badge-ok{background:var(--green-bg);color:var(--green)}
+        .badge-pending{background:var(--yellow-bg);color:var(--yellow)}
+
+        @media(max-width:1100px){.form-row{grid-template-columns:1fr}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.nav-links{display:none}.template-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input" class="active"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">+</span> Live Input</h1>
+            <div class="subtitle">Submit real-time threat data in JSON, CSV, or free text. Events are immediately queued for the full 5-agent pipeline processing.</div>
+        </div>
+        <div class="explain-box">
+            <strong>How it works:</strong> Submit threat data using any of the 3 input formats below. The event is instantly added to the system and will be processed through all 5 pipeline stages (Enrichment &rarr; Pattern Discovery &rarr; Mitigation &rarr; Validation) in the next processing cycle.
+            <br><br>
+            You can also <strong>upload CSV/JSON files</strong> which are saved to the <code>data/input/</code> directory and ingested on the next cycle. Use the <a href="/flow-tracker" style="color:var(--cyan)">Flow Tracker</a> to trace any submitted event through the pipeline.
+        </div>
+
+        <div class="pending-bar">
+            <div class="pending-label">Events awaiting pipeline processing</div>
+            <div class="pending-count" id="pending-count">0</div>
+        </div>
+
+        <div class="panel">
+            <div class="input-tabs">
+                <button class="input-tab active" onclick="switchTab('text')">Free Text</button>
+                <button class="input-tab" onclick="switchTab('json')">JSON Event</button>
+                <button class="input-tab" onclick="switchTab('csv')">CSV Data</button>
+                <button class="input-tab" onclick="switchTab('file')">Upload File</button>
+            </div>
+
+            <!-- FREE TEXT TAB -->
+            <div class="tab-panel active" id="tab-text">
+                <div class="explain-box" style="border-left-color:var(--green);margin-bottom:16px">
+                    <strong>Paste any security alert, log entry, or threat description.</strong> The system will auto-detect indicators (IPs, domains, URLs) and severity. The LLM will extract full threat intelligence.
+                </div>
+                <div class="template-grid">
+                    <div class="template-card" onclick="useTemplate('text','brute')">
+                        <div class="tc-title">SSH Brute Force</div>
+                        <div class="tc-desc">Brute-force login attempt example</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('text','phish')">
+                        <div class="tc-title">Phishing Campaign</div>
+                        <div class="tc-desc">Credential harvesting email</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('text','malware')">
+                        <div class="tc-title">Malware Detection</div>
+                        <div class="tc-desc">Ransomware alert on endpoint</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('text','custom')">
+                        <div class="tc-title">Custom Alert</div>
+                        <div class="tc-desc">Write your own threat event</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Threat Description</label>
+                    <textarea id="text-input" placeholder="Paste a security alert, log entry, or threat description here...&#10;&#10;Example: Multiple failed SSH login attempts from IP 10.20.30.40 targeting admin account on server web-prod-03. 85 attempts in 5 minutes. Source IP geolocated to Russia."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitText()" id="btn-text">Submit Threat Event</button>
+                <div class="result-box" id="result-text"></div>
+            </div>
+
+            <!-- JSON TAB -->
+            <div class="tab-panel" id="tab-json">
+                <div class="explain-box" style="border-left-color:var(--yellow);margin-bottom:16px">
+                    <strong>Submit a structured JSON threat event.</strong> Supported fields: <code>raw_text</code>, <code>description</code>, <code>indicator</code>, <code>type</code> (IP/URL/Domain/Hash/Email/CVE), <code>severity</code> (1-5), <code>source</code>.
+                </div>
+                <div class="template-grid">
+                    <div class="template-card" onclick="useTemplate('json','ids')">
+                        <div class="tc-title">IDS Alert</div>
+                        <div class="tc-desc">Intrusion detection event</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('json','c2')">
+                        <div class="tc-title">C2 Communication</div>
+                        <div class="tc-desc">Command & control detection</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('json','vuln')">
+                        <div class="tc-title">Vulnerability Alert</div>
+                        <div class="tc-desc">CVE exploitation attempt</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>JSON Event Data</label>
+                    <textarea id="json-input" style="min-height:200px" placeholder='{"raw_text": "...", "indicator": "1.2.3.4", "type": "IP", "severity": 4, "source": "IDS"}'></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitJson()" id="btn-json">Submit JSON Event</button>
+                <div class="result-box" id="result-json"></div>
+            </div>
+
+            <!-- CSV TAB -->
+            <div class="tab-panel" id="tab-csv">
+                <div class="explain-box" style="border-left-color:var(--orange);margin-bottom:16px">
+                    <strong>Paste CSV data with headers.</strong> Required: header row with columns like <code>indicator</code>, <code>type</code>, <code>description</code>. Multiple events can be submitted at once.
+                </div>
+                <div class="template-grid">
+                    <div class="template-card" onclick="useTemplate('csv','iocs')">
+                        <div class="tc-title">IOC Feed</div>
+                        <div class="tc-desc">Multiple indicators with types</div>
+                    </div>
+                    <div class="template-card" onclick="useTemplate('csv','alerts')">
+                        <div class="tc-title">Alert Batch</div>
+                        <div class="tc-desc">Multiple security alerts</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>CSV Data (with headers)</label>
+                    <textarea id="csv-input" style="min-height:180px" placeholder="indicator,type,description&#10;1.2.3.4,IP,Brute force SSH attempts&#10;evil.com,Domain,Phishing domain"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitCsv()" id="btn-csv">Submit CSV Data</button>
+                <div class="result-box" id="result-csv"></div>
+            </div>
+
+            <!-- FILE UPLOAD TAB -->
+            <div class="tab-panel" id="tab-file">
+                <div class="explain-box" style="border-left-color:var(--purple);margin-bottom:16px">
+                    <strong>Upload a CSV or JSON file.</strong> The file is saved to the input directory and will be automatically ingested by the Ingestion Agent in the next pipeline cycle.
+                </div>
+                <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()">
+                    <div class="icon">&#128193;</div>
+                    <div><strong>Click to choose</strong> or drag & drop a file here</div>
+                    <div style="font-size:.82em;margin-top:6px">Supports .csv and .json files</div>
+                    <input type="file" id="file-input" accept=".csv,.json" onchange="handleFile(this)">
+                </div>
+                <div class="result-box" id="result-file"></div>
+            </div>
+        </div>
+
+        <!-- Recent submissions -->
+        <div class="panel" style="margin-top:20px">
+            <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <h2 style="font-size:.95em;font-weight:600">Recent Submissions</h2>
+                <span style="font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px" id="sub-count">0</span>
+            </div>
+            <div style="padding:16px 20px;max-height:300px;overflow-y:auto" id="recent-body">
+                <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.9em">No submissions yet. Use the forms above to add threat data.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var API = window.location.origin;
+        var submissions = [];
+
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function el(id){return document.getElementById(id)}
+        function ts(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+
+        // Tab switching
+        window.switchTab = function(tab){
+            document.querySelectorAll('.input-tab').forEach(function(t){t.classList.remove('active')});
+            document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});
+            el('tab-'+tab).classList.add('active');
+            // Find and activate button
+            var tabs = document.querySelectorAll('.input-tab');
+            var map = {text:0,json:1,csv:2,file:3};
+            if(map[tab]!==undefined)tabs[map[tab]].classList.add('active');
+        };
+
+        // Templates
+        var templates = {
+            text: {
+                brute: 'Multiple failed SSH login attempts from IP 203.0.113.55 targeting root account on production server db-prod-02. 92 attempts in 3 minutes using Hydra brute-force tool. Source IP geolocated to China, previously flagged in AbuseIPDB.',
+                phish: 'Spear-phishing campaign detected targeting 50 employees in HR department. Subject: "Urgent: Benefits Update Required". Contains link to credential-harvesting site hr-benefits-update.evil.com mimicking internal HR portal. SPF check failed. 2 users entered credentials before detection.',
+                malware: 'EDR alert: Ransomware activity detected on workstation WS-DEV-019. Process "svchost_update.exe" (hash: abc123def456) attempting to encrypt files in C:\\Users and network shares. Process is disabling Windows Defender via PowerShell. Matches behavior of BlackCat/ALPHV ransomware family.',
+                custom: ''
+            },
+            json: {
+                ids: JSON.stringify({
+                    "raw_text": "IDS alert: Port scan detected from IP 198.51.100.77 scanning ports 22, 80, 443, 3389, 8080 on subnet 10.0.1.0/24. 500 SYN packets sent in 30 seconds. Known scanner IP from Shodan.",
+                    "indicator": "198.51.100.77",
+                    "type": "IP",
+                    "severity": 3,
+                    "source": "IDS",
+                    "description": "Port scanning reconnaissance from known scanner IP"
+                }, null, 2),
+                c2: JSON.stringify({
+                    "raw_text": "Suspicious outbound HTTPS traffic from server APP-BACKEND-01 to IP 45.77.88.99. Beaconing pattern detected: connection every 60 seconds with 2KB payload. Traffic encrypted but SNI field shows unusual domain c2-relay.darknet.to. 800MB data exfiltrated in last 12 hours.",
+                    "indicator": "45.77.88.99",
+                    "type": "IP",
+                    "severity": 5,
+                    "source": "Network Monitor",
+                    "description": "C2 beaconing and data exfiltration from internal server"
+                }, null, 2),
+                vuln: JSON.stringify({
+                    "raw_text": "Exploitation attempt detected for CVE-2024-3400 (Palo Alto PAN-OS command injection). Attacker IP 192.0.2.100 sent crafted HTTP request to GlobalProtect gateway. Payload contains OS command injection attempting to download reverse shell script from attacker server.",
+                    "indicator": "192.0.2.100",
+                    "type": "IP",
+                    "severity": 5,
+                    "source": "Firewall",
+                    "description": "CVE-2024-3400 exploitation attempt on Palo Alto firewall"
+                }, null, 2)
+            },
+            csv: {
+                iocs: 'indicator,type,description\n203.0.113.55,IP,SSH brute force attacker targeting database servers\n45.77.88.99,IP,C2 server for data exfiltration campaign\nmalware-update.evil.com,Domain,Malware distribution domain serving trojanized updates\nhttp://exploit-kit.bad.net/payload.js,URL,Drive-by download exploit kit targeting browsers\ne3b0c44298fc1c149afbf4c8996fb924,Hash,MD5 hash of information stealer malware variant',
+                alerts: 'indicator,type,description\n10.0.5.22,IP,Internal host sending DNS queries to known DGA domains - possible bot infection\nfake-vpn-portal.com,Domain,Credential phishing site mimicking corporate VPN login page\n172.16.0.100,IP,Unauthorized lateral movement detected from compromised workstation to domain controller\nhttp://cdn-inject.evil.net/skim.js,URL,Magecart credit card skimmer script injected on checkout page'
+            }
+        };
+
+        window.useTemplate = function(tab, key){
+            var t = templates[tab] && templates[tab][key];
+            if(t !== undefined){
+                el(tab+'-input').value = t;
+                if(!t) el(tab+'-input').focus();
+            }
+        };
+
+        function showResult(id, success, msg){
+            var box = el(id);
+            box.className = 'result-box ' + (success ? 'success' : 'error');
+            box.innerHTML = msg;
+            box.style.display = 'block';
+            setTimeout(function(){box.style.display='none'},8000);
+        }
+
+        function addSubmission(type, id, detail){
+            submissions.unshift({type:type, id:id, detail:detail, time:ts()});
+            if(submissions.length > 20) submissions = submissions.slice(0,20);
+            renderRecent();
+        }
+
+        function renderRecent(){
+            if(!submissions.length)return;
+            el('sub-count').textContent = submissions.length;
+            var html = '';
+            for(var i=0;i<submissions.length;i++){
+                var s = submissions[i];
+                html += '<div class="recent-item"><div><span class="badge badge-ok">'+esc(s.type)+'</span> <span class="ri-id">'+esc(s.id)+'</span> <span style="color:var(--text-secondary);font-size:.85em">'+esc(s.detail)+'</span></div><span class="ri-time">'+esc(s.time)+'</span></div>';
+            }
+            el('recent-body').innerHTML = html;
+        }
+
+        // Submit free text
+        window.submitText = async function(){
+            var text = el('text-input').value.trim();
+            if(!text){showResult('result-text',false,'Please enter a threat description.');return}
+            el('btn-text').disabled = true;
+            try{
+                var r = await fetch(API+'/api/ingest/text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})});
+                var d = await r.json();
+                if(r.ok){
+                    showResult('result-text',true,'<strong>Event submitted!</strong> ID: '+esc(d.event_id)+' | Severity: '+esc(d.severity)+(d.indicator?' | Indicator: '+esc(d.indicator):'')+' | '+esc(d.message));
+                    addSubmission('TEXT', d.event_id, d.indicator || 'free text');
+                    el('text-input').value='';
+                }else{
+                    showResult('result-text',false,'Error: '+esc(d.detail));
+                }
+            }catch(e){showResult('result-text',false,'Network error: '+e.message)}
+            el('btn-text').disabled = false;
+        };
+
+        // Submit JSON
+        window.submitJson = async function(){
+            var text = el('json-input').value.trim();
+            if(!text){showResult('result-json',false,'Please enter JSON data.');return}
+            var parsed;
+            try{parsed=JSON.parse(text)}catch(e){showResult('result-json',false,'Invalid JSON: '+e.message);return}
+            el('btn-json').disabled = true;
+            try{
+                var r = await fetch(API+'/api/ingest/json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(parsed)});
+                var d = await r.json();
+                if(r.ok){
+                    showResult('result-json',true,'<strong>Event submitted!</strong> ID: '+esc(d.event_id)+' | '+esc(d.message));
+                    addSubmission('JSON', d.event_id, parsed.indicator || 'json event');
+                    el('json-input').value='';
+                }else{
+                    showResult('result-json',false,'Error: '+esc(d.detail));
+                }
+            }catch(e){showResult('result-json',false,'Network error: '+e.message)}
+            el('btn-json').disabled = false;
+        };
+
+        // Submit CSV
+        window.submitCsv = async function(){
+            var text = el('csv-input').value.trim();
+            if(!text){showResult('result-csv',false,'Please enter CSV data.');return}
+            el('btn-csv').disabled = true;
+            try{
+                var r = await fetch(API+'/api/ingest/csv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({csv_data:text})});
+                var d = await r.json();
+                if(r.ok){
+                    showResult('result-csv',true,'<strong>'+d.events_count+' events submitted!</strong> '+esc(d.message));
+                    addSubmission('CSV', d.events_count+' events', 'batch import');
+                    el('csv-input').value='';
+                }else{
+                    showResult('result-csv',false,'Error: '+esc(d.detail));
+                }
+            }catch(e){showResult('result-csv',false,'Network error: '+e.message)}
+            el('btn-csv').disabled = false;
+        };
+
+        // File upload
+        window.handleFile = async function(input){
+            if(!input.files||!input.files[0])return;
+            var file = input.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+            try{
+                var r = await fetch(API+'/api/ingest/file',{method:'POST',body:formData});
+                var d = await r.json();
+                if(r.ok){
+                    showResult('result-file',true,'<strong>File uploaded!</strong> "'+esc(d.filename)+'" saved as '+esc(d.saved_as)+'. '+esc(d.message));
+                    addSubmission('FILE', d.saved_as, file.name);
+                }else{
+                    showResult('result-file',false,'Error: '+esc(d.detail));
+                }
+            }catch(e){showResult('result-file',false,'Network error: '+e.message)}
+            input.value = '';
+        };
+
+        // Drag and drop
+        var drop = el('file-drop');
+        drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover')});
+        drop.addEventListener('dragleave',function(){drop.classList.remove('dragover')});
+        drop.addEventListener('drop',function(e){
+            e.preventDefault();drop.classList.remove('dragover');
+            if(e.dataTransfer.files&&e.dataTransfer.files[0]){
+                el('file-input').files = e.dataTransfer.files;
+                handleFile(el('file-input'));
+            }
+        });
+
+        // Poll pending count
+        async function updatePending(){
+            try{
+                var h = await fetch(API+'/api/health');
+                if(!h.ok)return;
+                el('status-dot').classList.remove('offline');
+                el('status-text').textContent='Online';
+                var p = await fetch(API+'/api/pending');
+                if(p.ok){var d = await p.json();el('pending-count').textContent = d.pending_count||0}
+            }catch(e){
+                el('status-dot').classList.add('offline');
+                el('status-text').textContent='Offline';
+            }
+        }
+        updatePending();
+        setInterval(updatePending, 3000);
+    })();
+    </script>
+</body>
+</html>

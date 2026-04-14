@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Feeds - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.15)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1200px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-weight:700;font-size:.9em;border:2px solid var(--green);background:var(--green-bg);color:var(--green)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .explain-box code{background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)}
+
+        /* Summary bar */
+        .summary-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px}
+        .summary-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;text-align:center}
+        .summary-card .sc-label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .summary-card .sc-value{font-size:2em;font-weight:700}
+        .summary-card .sc-sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .sc-streaming .sc-value{color:var(--green)}
+        .sc-total .sc-value{color:var(--cyan)}
+        .sc-feeds .sc-value{color:var(--orange)}
+
+        /* Feed cards */
+        .feed-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px}
+        .feed-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:0;overflow:hidden;transition:border-color .2s}
+        .feed-card:hover{border-color:var(--accent)}
+        .feed-header{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+        .feed-header .fh-left{display:flex;align-items:center;gap:14px}
+        .feed-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3em;font-weight:700}
+        .feed-icon.urlhaus{background:var(--red-bg);color:var(--red)}
+        .feed-icon.threatfox{background:var(--orange-bg);color:var(--orange)}
+        .feed-icon.feodo{background:var(--purple-bg);color:var(--purple)}
+        .feed-title{font-size:1em;font-weight:600}
+        .feed-desc{font-size:.8em;color:var(--text-muted);margin-top:2px}
+        .feed-badge{padding:4px 12px;border-radius:20px;font-size:.75em;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+        .badge-active{background:var(--green-bg);color:var(--green);animation:pulse-badge 3s infinite}
+        .badge-polling{background:var(--yellow-bg);color:var(--yellow);animation:pulse-badge 1s infinite}
+        .badge-waiting{background:rgba(100,116,139,.15);color:var(--text-muted)}
+        .badge-error{background:var(--red-bg);color:var(--red)}
+        @keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.6}}
+        .feed-body{padding:18px 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+        .feed-stat{text-align:center}
+        .feed-stat .fs-label{font-size:.72em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+        .feed-stat .fs-value{font-size:1.3em;font-weight:700;color:var(--text-primary)}
+        .feed-url{padding:10px 22px;background:var(--bg-primary);font-family:monospace;font-size:.78em;color:var(--text-muted);border-top:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .feed-error{padding:10px 22px;background:var(--red-bg);font-size:.82em;color:var(--red);border-top:1px solid rgba(239,68,68,.2)}
+
+        /* Recent streamed events */
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:16px 20px;max-height:400px;overflow-y:auto}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .event-item{padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;font-size:.84em;gap:12px}
+        .event-item .ei-left{flex:1;min-width:0}
+        .ei-source{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.75em;font-weight:600;margin-right:6px}
+        .ei-source.urlhaus{background:var(--red-bg);color:var(--red)}
+        .ei-source.threatfox{background:var(--orange-bg);color:var(--orange)}
+        .ei-source.feodo{background:var(--purple-bg);color:var(--purple)}
+        .ei-indicator{font-family:monospace;color:var(--cyan);font-size:.88em;word-break:break-all}
+        .ei-desc{color:var(--text-muted);font-size:.85em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:600px}
+        .ei-time{color:var(--text-muted);font-size:.78em;white-space:nowrap}
+        .sev-badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:.72em;font-weight:600;margin-left:6px}
+        .sev-2{background:var(--yellow-bg);color:var(--yellow)}
+        .sev-3{background:var(--orange-bg);color:var(--orange)}
+        .sev-4{background:var(--red-bg);color:var(--red)}
+        .sev-5{background:var(--red-bg);color:var(--red)}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+
+        /* Animated streaming indicator */
+        .streaming-indicator{display:flex;align-items:center;gap:8px;font-size:.85em;color:var(--green)}
+        .wave-bars{display:flex;align-items:center;gap:2px;height:16px}
+        .wave-bar{width:3px;background:var(--green);border-radius:2px;animation:wave 1.2s ease-in-out infinite}
+        .wave-bar:nth-child(1){animation-delay:0s;height:6px}
+        .wave-bar:nth-child(2){animation-delay:.15s;height:10px}
+        .wave-bar:nth-child(3){animation-delay:.3s;height:14px}
+        .wave-bar:nth-child(4){animation-delay:.45s;height:10px}
+        .wave-bar:nth-child(5){animation-delay:.6s;height:6px}
+        @keyframes wave{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.8)}}
+        .wave-bars.paused .wave-bar{animation:none;background:var(--text-muted)}
+
+        @media(max-width:768px){.summary-bar{grid-template-columns:1fr}.feed-body{grid-template-columns:1fr 1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds" class="active"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right">
+            <div class="streaming-indicator" id="stream-ind">
+                <div class="wave-bars paused" id="wave-bars"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
+                <span id="stream-label">Loading...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">&#9733;</span> Live Streaming Feeds</h1>
+            <div class="subtitle">Real-time threat intelligence from free public feeds. Data is automatically ingested into the 5-agent pipeline for analysis.</div>
+        </div>
+
+        <div class="explain-box">
+            <strong>Connected to 3 free threat intelligence feeds:</strong><br><br>
+            <strong>URLhaus</strong> (abuse.ch) &mdash; Live malicious URLs: malware distribution, phishing, exploit kits. Polled every 2 min.<br>
+            <strong>ThreatFox</strong> (abuse.ch) &mdash; Live IOCs: C2 IPs, malware hashes, domains. Polled every 3 min.<br>
+            <strong>Feodo Tracker</strong> (abuse.ch) &mdash; Botnet C2 IPs: Dridex, Emotet, TrickBot, QakBot. Polled every 5 min.<br><br>
+            All data is <strong>real</strong> and <strong>live</strong>. No API keys required. Events flow into the pending queue and are processed through Enrichment &rarr; Pattern Discovery &rarr; Mitigation &rarr; Validation.
+        </div>
+
+        <div class="summary-bar">
+            <div class="summary-card sc-streaming"><div class="sc-label">Status</div><div class="sc-value" id="su-status">--</div><div class="sc-sub" id="su-status-sub">checking...</div></div>
+            <div class="summary-card sc-total"><div class="sc-label">Total Events Streamed</div><div class="sc-value" id="su-total">0</div><div class="sc-sub">from all feeds combined</div></div>
+            <div class="summary-card sc-feeds"><div class="sc-label">Active Feeds</div><div class="sc-value" id="su-feeds">0</div><div class="sc-sub" id="su-feeds-sub">of 3 feeds</div></div>
+        </div>
+
+        <div class="feed-grid" id="feed-grid">
+            <div style="text-align:center;padding:40px;color:var(--text-muted)">Loading feed status...</div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><h2>Recent Streamed Events</h2><span class="count" id="ev-count">0</span></div>
+            <div class="panel-body" id="ev-body">
+                <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:.9em">Waiting for first feed poll...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var API = window.location.origin;
+        var recentEvents = [];
+        var lastEventsCount = 0;
+
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function el(id){return document.getElementById(id)}
+        function ts(iso){try{return new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){return iso||'--'}}
+        function ago(iso){if(!iso)return'never';try{var d=new Date(iso);var s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return s+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';return Math.floor(s/3600)+'h ago'}catch(e){return iso}}
+
+        function feedIcon(key){
+            var icons = {urlhaus:'!',threatfox:'&#9888;',feodo:'&#9760;'};
+            return icons[key]||'?';
+        }
+        function sourceClass(src){
+            if(!src)return'';
+            var s=src.toLowerCase();
+            if(s.indexOf('urlhaus')>=0)return'urlhaus';
+            if(s.indexOf('threatfox')>=0)return'threatfox';
+            if(s.indexOf('feodo')>=0)return'feodo';
+            return'';
+        }
+
+        async function update(){
+            try{
+                var fr=await fetch(API+'/api/feeds');
+                if(!fr.ok)return;
+                var data=await fr.json();
+
+                // Summary
+                el('su-status').textContent=data.streaming?'STREAMING':'OFFLINE';
+                el('su-status-sub').textContent=data.streaming?'receiving real-time data':'not connected';
+                el('su-total').textContent=data.total_ingested||0;
+
+                var wb=el('wave-bars');
+                if(data.streaming){wb.classList.remove('paused');el('stream-label').textContent='Streaming'}
+                else{wb.classList.add('paused');el('stream-label').textContent='Offline'}
+
+                // Feed cards
+                var feeds=data.feeds||{};
+                var keys=Object.keys(feeds);
+                var activeCount=0;
+                var html='';
+                for(var i=0;i<keys.length;i++){
+                    var k=keys[i];
+                    var f=feeds[k];
+                    if(f.status==='active'||f.status==='polling')activeCount++;
+                    var badgeClass='badge-'+f.status;
+                    if(f.status==='active')badgeClass='badge-active';
+                    else if(f.status==='polling')badgeClass='badge-polling';
+                    else if(f.status==='error')badgeClass='badge-error';
+                    else badgeClass='badge-waiting';
+
+                    html+='<div class="feed-card"><div class="feed-header"><div class="fh-left">';
+                    html+='<div class="feed-icon '+k+'">'+feedIcon(k)+'</div>';
+                    html+='<div><div class="feed-title">'+esc(f.name)+'</div>';
+                    html+='<div class="feed-desc">'+esc(f.description)+'</div></div></div>';
+                    html+='<span class="feed-badge '+badgeClass+'">'+esc(f.status)+'</span></div>';
+                    html+='<div class="feed-body">';
+                    html+='<div class="feed-stat"><div class="fs-label">Events Fetched</div><div class="fs-value">'+f.events_fetched+'</div></div>';
+                    html+='<div class="feed-stat"><div class="fs-label">Last Poll</div><div class="fs-value" style="font-size:1em">'+ago(f.last_poll)+'</div></div>';
+                    html+='<div class="feed-stat"><div class="fs-label">Interval</div><div class="fs-value" style="font-size:1em">'+f.interval+'s</div></div>';
+                    html+='<div class="feed-stat"><div class="fs-label">Status</div><div class="fs-value" style="font-size:1em;color:var(--'+(f.status==='active'||f.status==='polling'?'green':f.status==='error'?'red':'text-muted')+')">'+esc(f.status)+'</div></div>';
+                    html+='</div>';
+                    html+='<div class="feed-url">'+esc(f.url)+'</div>';
+                    if(f.last_error){html+='<div class="feed-error">Error: '+esc(f.last_error)+'</div>'}
+                    html+='</div>';
+                }
+                el('feed-grid').innerHTML=html;
+                el('su-feeds').textContent=activeCount;
+                el('su-feeds-sub').textContent='of '+keys.length+' feeds';
+
+                // Recent events from streaming
+                var er=await fetch(API+'/api/events');
+                if(er.ok){
+                    var events=await er.json();
+                    // filter to only feed-sourced events
+                    var feedEvents=events.filter(function(e){return e.source==='URLhaus'||e.source==='ThreatFox'||e.source==='Feodo Tracker'});
+                    // show latest 30
+                    feedEvents=feedEvents.slice(-30).reverse();
+                    el('ev-count').textContent=feedEvents.length;
+                    if(feedEvents.length){
+                        var eh='';
+                        for(var j=0;j<feedEvents.length;j++){
+                            var ev=feedEvents[j];
+                            var sc=sourceClass(ev.source);
+                            var sev=ev.severity||2;
+                            if(typeof sev==='string'){
+                                var map={LOW:1,MEDIUM:2,HIGH:3,CRITICAL:4,EMERGENCY:5};
+                                sev=map[sev]||2;
+                            }
+                            var sevLabels={1:'LOW',2:'MED',3:'HIGH',4:'CRIT',5:'EMRG'};
+                            eh+='<div class="event-item"><div class="ei-left">';
+                            eh+='<span class="ei-source '+sc+'">'+esc(ev.source)+'</span>';
+                            eh+='<span class="ei-indicator">'+esc(ev.indicator||'')+'</span>';
+                            eh+='<span class="sev-badge sev-'+sev+'">'+(sevLabels[sev]||'?')+'</span>';
+                            eh+='<div class="ei-desc">'+esc(ev.description||ev.raw_text||'')+'</div>';
+                            eh+='</div><span class="ei-time">'+ts(ev.timestamp)+'</span></div>';
+                        }
+                        el('ev-body').innerHTML=eh;
+                    }
+                }
+            }catch(e){
+                el('su-status').textContent='ERROR';
+                el('su-status-sub').textContent=e.message;
+            }
+        }
+
+        update();
+        setInterval(update, 3000);
+    })();
+    </script>
+</body>
+</html>

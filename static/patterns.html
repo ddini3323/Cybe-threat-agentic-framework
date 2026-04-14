@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 3: Pattern Discovery Agent - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1400px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--orange-bg);color:var(--orange);font-weight:700;font-size:.7em;border:2px solid var(--orange)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .nav-flow{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .nav-flow a{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--accent-light);text-decoration:none;font-size:.88em;transition:border-color .2s}
+        .nav-flow a:hover{border-color:var(--accent)}
+        .stats-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+        .stat-card .label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .stat-card .value{font-size:1.8em;font-weight:700}
+        .stat-card .sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:16px 20px;max-height:700px;overflow-y:auto}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase}
+        .badge-low{background:var(--green-bg);color:var(--green)}
+        .badge-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .badge-high{background:var(--orange-bg);color:var(--orange)}
+        .badge-critical{background:var(--red-bg);color:var(--red)}
+        .badge-emergency{background:var(--purple-bg);color:var(--purple)}
+        .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+        .tag{font-size:.72em;padding:3px 8px;border-radius:3px;background:var(--bg-primary);color:var(--text-secondary);border:1px solid var(--border)}
+        .tag-ttp{border-color:var(--orange);color:var(--orange)}
+        .tag-ioc{border-color:var(--cyan);color:var(--cyan)}
+        .pat-card{padding:20px;border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:8px;margin-bottom:16px;transition:border-color .2s}
+        .pat-card:hover{border-color:var(--accent)}
+        .pat-card .name{font-weight:700;font-size:1.05em;margin-bottom:6px}
+        .pat-card .desc{font-size:.88em;color:var(--text-secondary);line-height:1.6;margin-bottom:12px}
+        .pat-card .meta{display:flex;gap:16px;font-size:.82em;color:var(--text-muted);margin-top:12px;flex-wrap:wrap}
+        .pat-card .section-label{font-size:.72em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.4px}
+        .pat-card .event-list{margin-top:12px}
+        .pat-card .event-item{padding:8px 12px;background:var(--bg-primary);border-radius:6px;margin-bottom:6px;font-size:.84em;display:flex;justify-content:space-between;align-items:center}
+        .pat-card .event-item .ev-id{font-family:monospace;color:var(--cyan);cursor:pointer;text-decoration:none}
+        .pat-card .event-item .ev-id:hover{text-decoration:underline}
+        .explain-pattern{background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px;font-size:.88em;line-height:1.6;color:var(--text-secondary)}
+        .explain-pattern strong{color:var(--text-primary)}
+        @media(max-width:1100px){.stats-mini{grid-template-columns:1fr 1fr}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.stats-mini{grid-template-columns:1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns" class="active"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">3</span> Pattern Discovery Agent</h1>
+            <div class="subtitle">The third step. The Pattern Discovery Agent groups enriched events that share common TTPs, malware families, or attack vectors into threat patterns.</div>
+        </div>
+        <div class="explain-box">
+            <strong>What happens here:</strong> After the Enrichment Agent extracts TTPs (attack techniques) from each event, the Pattern Discovery Agent analyzes all enriched events together looking for commonalities. If multiple events share the same TTP (e.g., T1059 — Command and Scripting Interpreter), they are grouped into a <strong>threat pattern</strong>.
+            <br><br>
+            <strong>Why it matters:</strong> Individual alerts are noise. Patterns reveal coordinated attacks. If 3 different events all involve the same technique, it could indicate a single threat actor running a campaign — and that needs a unified response, not 3 separate ones.
+            <br><br>
+            <strong>In plain terms:</strong> This is like a detective connecting the dots between seemingly unrelated crimes — realizing they all use the same method (MO), happen in the same area, or target the same type of victim. The pattern tells you it's not random — it's organized.
+        </div>
+        <div class="nav-flow">
+            <a href="/enrichment">&#8592; Step 2: Enrichment</a>
+            <a href="/mitigations">Next: Step 4 — Mitigations &#8594;</a>
+        </div>
+        <div class="stats-mini">
+            <div class="stat-card"><div class="label">Enriched Events (Input)</div><div class="value" id="s-enriched">-</div><div class="sub">from Enrichment Agent</div></div>
+            <div class="stat-card"><div class="label">Patterns Discovered</div><div class="value" id="s-patterns">-</div><div class="sub">threat clusters found</div></div>
+            <div class="stat-card"><div class="label">Events in Patterns</div><div class="value" id="s-grouped">-</div><div class="sub">events matched</div></div>
+        </div>
+        <div class="panel">
+            <div class="panel-head"><h2>Discovered Threat Patterns</h2><span class="count" id="pat-count">0</span></div>
+            <div class="panel-body" id="pat-body"><div style="text-align:center;padding:40px;color:var(--text-muted)">No patterns discovered yet. Patterns emerge when multiple enriched events share common TTPs or attack techniques.</div></div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        var SEV={1:{label:'LOW',cls:'badge-low'},2:{label:'MEDIUM',cls:'badge-medium'},3:{label:'HIGH',cls:'badge-high'},4:{label:'CRITICAL',cls:'badge-critical'},5:{label:'EMERGENCY',cls:'badge-emergency'}};
+        function sev(v){return SEV[v]||SEV[3]}
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function tsDate(t){try{var d=new Date(t);return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}catch(e){return t||''}}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        async function updateAll(){
+            var res=await Promise.all([api('health'),api('enriched-events'),api('patterns')]);
+            var health=res[0],enriched=res[1],patterns=res[2];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+
+            var enrCount=enriched?enriched.length:0;
+            var patCount=patterns?patterns.length:0;
+            var grouped=0;
+            if(patterns)patterns.forEach(function(p){grouped+=p.event_count||0});
+
+            el('s-enriched').textContent=enrCount;
+            el('s-patterns').textContent=patCount;
+            el('s-grouped').textContent=grouped;
+            el('pat-count').textContent=patCount;
+
+            if(patterns&&patterns.length){
+                var html='';
+                for(var i=0;i<patterns.length;i++){
+                    var p=patterns[i],sv=sev(p.severity);
+                    var conf=p.confidence?Math.round(p.confidence*100):0;
+                    html+='<div class="pat-card">';
+                    html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="name">'+esc(p.pattern_name)+'</div><span class="badge '+sv.cls+'">'+sv.label+'</span></div>';
+                    html+='<div class="desc">'+esc(p.description)+'</div>';
+
+                    // Natural language explanation
+                    html+='<div class="explain-pattern"><strong>What this means:</strong> ';
+                    html+='This pattern was discovered because <strong>'+p.event_count+' separate events</strong> all involve ';
+                    if(p.common_ttps&&p.common_ttps.length){
+                        html+='the same attack technique(s): ';
+                        for(var j=0;j<p.common_ttps.length;j++){html+='<strong>'+esc(p.common_ttps[j])+'</strong>';if(j<p.common_ttps.length-1)html+=', '}
+                        html+='. ';
+                    }
+                    html+='This suggests a coordinated threat that requires a unified mitigation strategy rather than addressing each event individually.';
+                    html+='</div>';
+
+                    // TTPs
+                    if(p.common_ttps&&p.common_ttps.length){
+                        html+='<div class="section-label" style="margin-top:14px">Common TTPs</div><div class="tags">';
+                        for(var j=0;j<p.common_ttps.length;j++){html+='<span class="tag tag-ttp">'+esc(p.common_ttps[j])+'</span>'}
+                        html+='</div>';
+                    }
+                    // IOCs
+                    if(p.common_iocs&&p.common_iocs.length){
+                        html+='<div class="section-label" style="margin-top:10px">Common IOCs</div><div class="tags">';
+                        for(var j=0;j<p.common_iocs.length;j++){var ioc=p.common_iocs[j];html+='<span class="tag tag-ioc">'+esc((ioc.type||'')+': '+(ioc.value||''))+'</span>'}
+                        html+='</div>';
+                    }
+                    // Affected systems
+                    if(p.affected_systems&&p.affected_systems.length){
+                        html+='<div class="section-label" style="margin-top:10px">Affected Systems</div><div class="tags">';
+                        for(var j=0;j<p.affected_systems.length;j++){html+='<span class="tag" style="border-color:var(--purple);color:var(--purple)">'+esc(p.affected_systems[j])+'</span>'}
+                        html+='</div>';
+                    }
+                    // Related events
+                    if(p.event_ids&&p.event_ids.length){
+                        html+='<div class="event-list"><div class="section-label">Related Events</div>';
+                        for(var j=0;j<p.event_ids.length;j++){
+                            html+='<div class="event-item"><a class="ev-id" href="/flow-tracker?event='+esc(p.event_ids[j])+'">'+esc(p.event_ids[j].substring(0,12))+'...</a><span style="color:var(--text-muted);font-size:.8em">Click to trace flow</span></div>';
+                        }
+                        html+='</div>';
+                    }
+                    html+='<div class="meta"><span>Events: '+p.event_count+'</span><span>Confidence: '+conf+'%</span><span>'+tsDate(p.first_seen)+' &ndash; '+tsDate(p.last_seen)+'</span></div>';
+                    html+='</div>';
+                }
+                el('pat-body').innerHTML=html;
+            }else if(enrCount>0){
+                el('pat-body').innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Analyzing enriched events for patterns... This happens after events are enriched by the LLM.</div>';
+            }
+        }
+        updateAll();setInterval(updateAll,3000);
+    })();
+    </script>
+</body>
+</html>

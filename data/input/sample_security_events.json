@@ -1,0 +1,110 @@
+[
+  {
+    "timestamp": "2026-03-23T08:15:00Z",
+    "source": "IDS",
+    "event_type": "IP",
+    "raw_text": "Multiple failed SSH login attempts detected from IP 185.220.101.42. 47 attempts in 2 minutes targeting root account on production server db-prod-01. Attack pattern consistent with Hydra brute-force tool. Source IP is known Tor exit node.",
+    "indicator": "185.220.101.42",
+    "severity": 4,
+    "description": "SSH brute force attack from Tor exit node"
+  },
+  {
+    "timestamp": "2026-03-23T09:30:00Z",
+    "source": "Email Gateway",
+    "event_type": "Email",
+    "raw_text": "Phishing email campaign detected targeting 150 employees in finance department. Subject: 'Urgent: Invoice Payment Required'. Contains link to evil-phish-login.com mimicking Office 365 login. SPF/DKIM checks failed. 3 users clicked the link before blocking.",
+    "indicator": "evil-phish-login.com",
+    "severity": 4,
+    "description": "Phishing campaign targeting finance department via Office 365 credential harvesting"
+  },
+  {
+    "timestamp": "2026-03-23T10:45:00Z",
+    "source": "EDR",
+    "event_type": "Hash",
+    "raw_text": "Endpoint Detection and Response alert: Suspicious executable detected on workstation WS-FIN-023. File hash d41d8cd98f00b204e9800998ecf8427e matches known LockBit 3.0 ransomware. File was downloaded from malicious-update.xyz via browser. Process attempted to enumerate network shares and disable Windows Defender.",
+    "indicator": "d41d8cd98f00b204e9800998ecf8427e",
+    "severity": 5,
+    "description": "LockBit 3.0 ransomware detected on finance workstation"
+  },
+  {
+    "timestamp": "2026-03-23T11:20:00Z",
+    "source": "WAF",
+    "event_type": "IP",
+    "raw_text": "Web Application Firewall detected SQL injection attempts from IP 45.33.32.156 targeting customer login endpoint /api/auth/login. 23 distinct SQLi payloads attempted including UNION-based and blind SQL injection. Attack also included XSS probing on search endpoint with script injection payloads.",
+    "indicator": "45.33.32.156",
+    "severity": 3,
+    "description": "SQL injection and XSS attacks against web application"
+  },
+  {
+    "timestamp": "2026-03-23T12:00:00Z",
+    "source": "Network Monitor",
+    "event_type": "IP",
+    "raw_text": "Anomalous outbound traffic detected from server SRV-WEB-05 to IP 194.163.45.178 on port 443. Traffic pattern matches Emotet C2 communication protocol with periodic beaconing every 60 seconds. Server may be compromised and part of botnet. 4.2GB data transferred in last 24 hours.",
+    "indicator": "194.163.45.178",
+    "severity": 5,
+    "description": "Emotet C2 communication detected from internal server"
+  },
+  {
+    "timestamp": "2026-03-23T13:15:00Z",
+    "source": "SIEM",
+    "event_type": "URL",
+    "raw_text": "Multiple compromised e-commerce sites detected loading JavaScript from http://cdn-analytics.evil.net/tracker.js. The script is a Magecart credit card skimmer that captures payment card data during checkout and exfiltrates it to attacker-controlled server. 5 partner e-commerce sites affected.",
+    "indicator": "http://cdn-analytics.evil.net/tracker.js",
+    "severity": 4,
+    "description": "Magecart credit card skimmer affecting e-commerce partners"
+  },
+  {
+    "timestamp": "2026-03-23T14:30:00Z",
+    "source": "Threat Intel Platform",
+    "event_type": "Domain",
+    "raw_text": "APT29 (Cozy Bear) spear-phishing campaign identified targeting government agencies. Emails contain malicious Word documents with macro that drops Cobalt Strike beacon (SHA-256: a3f5b2c8d9e1f0a4b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5). C2 infrastructure uses domain government-update-service.com. Campaign exploits CVE-2023-36884.",
+    "indicator": "government-update-service.com",
+    "severity": 5,
+    "description": "APT29 spear-phishing campaign with Cobalt Strike beacon"
+  },
+  {
+    "timestamp": "2026-03-23T15:00:00Z",
+    "source": "Cloud Security",
+    "event_type": "IP",
+    "raw_text": "Cryptojacking detected on 3 Linux cloud instances (i-0a1b2c3d, i-4e5f6g7h, i-8i9j0k1l). Processes mining Monero cryptocurrency redirecting CPU to mining pool proxy at 103.87.12.44. Instances compromised via exposed Docker API. CPU utilization spiked to 98% across affected instances.",
+    "indicator": "103.87.12.44",
+    "severity": 3,
+    "description": "Cryptojacking on cloud instances via exposed Docker API"
+  },
+  {
+    "timestamp": "2026-03-23T16:00:00Z",
+    "source": "DevSecOps",
+    "event_type": "Domain",
+    "raw_text": "Supply chain attack detected: npm package 'lodash-utils-v2' from domain supply-chain-lib.npmjs.org.evil.com contains backdoor. Package was downloaded 2,300 times before detection. Backdoor exfiltrates environment variables including AWS keys and database credentials to attacker C2.",
+    "indicator": "supply-chain-lib.npmjs.org.evil.com",
+    "severity": 5,
+    "description": "npm supply chain attack with credential-stealing backdoor"
+  },
+  {
+    "timestamp": "2026-03-23T17:15:00Z",
+    "source": "DLP",
+    "event_type": "URL",
+    "raw_text": "Data Loss Prevention alert: Sensitive data exfiltration detected. Employee account E-4521 uploaded 3 files containing PII (12,000 customer records) to external endpoint. Traffic encrypted but destination http://data-exfil.darkweb.onion/upload identified from DNS logs. Possible insider threat or compromised account.",
+    "indicator": "http://data-exfil.darkweb.onion/upload",
+    "severity": 5,
+    "description": "Data exfiltration of customer PII to dark web endpoint"
+  },
+  {
+    "timestamp": "2026-03-23T17:45:00Z",
+    "source": "Email Security",
+    "event_type": "IP",
+    "raw_text": "Banking sector phishing campaign from bulletproof hosting IP 91.215.85.209. Multiple phishing kits detected serving fake login pages for Chase, Bank of America, and Wells Fargo. Campaign uses newly registered domains with Let's Encrypt certificates. Over 500 phishing emails distributed in last 6 hours.",
+    "indicator": "91.215.85.209",
+    "severity": 4,
+    "description": "Banking phishing campaign from bulletproof hosting"
+  },
+  {
+    "timestamp": "2026-03-23T18:00:00Z",
+    "source": "EDR",
+    "event_type": "Hash",
+    "raw_text": "Agent Tesla keylogger variant detected on workstation WS-HR-007. Hash e7b9a1c3d5f7e9b1a3c5d7f9e1b3a5c7 capturing keystrokes and screenshots. Malware exfiltrating data via SMTP to attacker email drop. Likely delivered via phishing email with malicious Excel attachment exploiting CVE-2022-30190 (Follina).",
+    "indicator": "e7b9a1c3d5f7e9b1a3c5d7f9e1b3a5c7",
+    "severity": 4,
+    "description": "Agent Tesla keylogger with SMTP exfiltration"
+  }
+]

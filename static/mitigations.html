@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steps 4-5: Mitigation &amp; Validation - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1400px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-weight:700;font-size:.7em;border:2px solid}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .nav-flow{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .nav-flow a{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--accent-light);text-decoration:none;font-size:.88em;transition:border-color .2s}
+        .nav-flow a:hover{border-color:var(--accent)}
+        .stats-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+        .stat-card .label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .stat-card .value{font-size:1.8em;font-weight:700}
+        .stat-card .sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:16px 20px;max-height:700px;overflow-y:auto}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase}
+        .badge-low{background:var(--green-bg);color:var(--green)}
+        .badge-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .badge-high{background:var(--orange-bg);color:var(--orange)}
+        .badge-critical{background:var(--red-bg);color:var(--red)}
+        .badge-emergency{background:var(--purple-bg);color:var(--purple)}
+        .badge-ok{background:var(--green-bg);color:var(--green)}
+        .badge-warn{background:var(--yellow-bg);color:var(--yellow)}
+        .mit-card{padding:20px;border:1px solid var(--border);border-radius:8px;margin-bottom:16px;transition:border-color .2s}
+        .mit-card:hover{border-color:var(--accent)}
+        .mit-card .head{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+        .mit-card .title{font-weight:700;font-size:1em}
+        .mit-card .desc{font-size:.88em;color:var(--text-secondary);margin-bottom:12px;line-height:1.6}
+        .mit-card .source-info{background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:.84em;line-height:1.5}
+        .mit-card .source-info strong{color:var(--text-primary)}
+        .mit-card .source-info .src-label{color:var(--text-muted);font-size:.8em;text-transform:uppercase;letter-spacing:.3px}
+        .steps-list{list-style:none;padding:0;margin-bottom:12px}
+        .steps-list li{padding:6px 0 6px 24px;position:relative;font-size:.88em;color:var(--text-secondary);line-height:1.5}
+        .steps-list li::before{content:attr(data-num);position:absolute;left:0;top:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:.7em;display:flex;align-items:center;justify-content:center;font-weight:600}
+        .rule-block{background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Courier New',monospace;font-size:.82em;color:var(--green);margin-top:10px;position:relative;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+        .copy-btn{position:absolute;top:8px;right:8px;background:var(--border);color:var(--text-secondary);border:none;padding:3px 10px;border-radius:4px;font-size:.8em;cursor:pointer}
+        .copy-btn:hover{background:var(--accent);color:#fff}
+        .mit-footer{display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap}
+        .btn-approve{background:var(--green);color:#fff;border:none;padding:6px 16px;border-radius:5px;font-size:.82em;font-weight:600;cursor:pointer;transition:opacity .2s}
+        .btn-approve:hover{opacity:.85}
+        .btn-approve:disabled{opacity:.4;cursor:default}
+        .btn-reject{background:var(--red);color:#fff;border:none;padding:6px 16px;border-radius:5px;font-size:.82em;font-weight:600;cursor:pointer;transition:opacity .2s}
+        .btn-reject:hover{opacity:.85}
+        .section-label{font-size:.72em;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;letter-spacing:.4px}
+        @media(max-width:1100px){.stats-mini{grid-template-columns:1fr 1fr}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.stats-mini{grid-template-columns:1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations" class="active"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge" style="background:var(--green-bg);color:var(--green);border-color:var(--green)">4</span> Mitigation &amp; Validation Agents</h1>
+            <div class="subtitle">Steps 4 and 5. The Mitigation Agent generates response plans using the LLM, then the Validation Agent safety-checks each recommendation before it can be approved.</div>
+        </div>
+        <div class="explain-box">
+            <strong>Step 4 — Mitigation Agent:</strong> The LLM generates actionable mitigation recommendations from two sources:
+            <br>&bull; <strong>Pattern-based</strong> — mitigations for discovered threat patterns (groups of related events)
+            <br>&bull; <strong>Event-based</strong> — mitigations for individual high-severity events (severity &ge; 3)
+            <br><br>
+            Each mitigation includes a title, description, step-by-step action plan, and optionally a sample security rule (firewall/SIEM/IDS).
+            <br><br>
+            <strong>Step 5 — Validation Agent:</strong> Before mitigations reach an analyst, they are automatically checked for:
+            <br>&bull; <strong>Dangerous commands</strong> — e.g., <code style="background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)">rm -rf /</code>, <code style="background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)">DROP DATABASE</code>
+            <br>&bull; <strong>Overly broad scope</strong> — e.g., "block all traffic", "disable all services"
+            <br>&bull; <strong>Completeness</strong> — at least 2 actionable steps with sufficient detail
+            <br><br>
+            <strong>In plain terms:</strong> Step 4 is the AI writing an incident response playbook. Step 5 is a safety reviewer making sure the playbook won't accidentally cause more damage than the threat itself. Only then can a human analyst approve it.
+        </div>
+        <div class="nav-flow">
+            <a href="/patterns">&#8592; Step 3: Patterns</a>
+            <a href="/flow-tracker">Flow Tracker &#8594;</a>
+        </div>
+        <div class="stats-mini">
+            <div class="stat-card"><div class="label">Patterns (Input)</div><div class="value" id="s-patterns">-</div><div class="sub">from Pattern Discovery</div></div>
+            <div class="stat-card"><div class="label">Mitigations Generated</div><div class="value" id="s-mits">-</div><div class="sub">response plans</div></div>
+            <div class="stat-card"><div class="label">Validated</div><div class="value" id="s-validated">-</div><div class="sub">passed safety checks</div></div>
+            <div class="stat-card"><div class="label">Approved</div><div class="value" id="s-approved">-</div><div class="sub">by analyst</div></div>
+        </div>
+        <div class="panel">
+            <div class="panel-head"><h2>Mitigation Recommendations</h2><span class="count" id="mit-count">0</span></div>
+            <div class="panel-body" id="mit-body"><div style="text-align:center;padding:40px;color:var(--text-muted)">No mitigations generated yet. Mitigations are created after patterns are discovered and high-severity events are identified.</div></div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        var SEV={1:{label:'LOW',cls:'badge-low'},2:{label:'MEDIUM',cls:'badge-medium'},3:{label:'HIGH',cls:'badge-high'},4:{label:'CRITICAL',cls:'badge-critical'},5:{label:'EMERGENCY',cls:'badge-emergency'}};
+        function sev(v){return SEV[v]||SEV[3]}
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        window.copyRule=function(btn){var pre=btn.parentElement.querySelector('pre');if(pre){navigator.clipboard.writeText(pre.textContent).then(function(){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy'},1500)})}};
+        window.setMitStatus=function(btn,id,status){
+            fetch(API+'/api/mitigations/'+encodeURIComponent(id)+'/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status})}).then(function(r){if(r.ok)updateAll()});
+        };
+
+        async function updateAll(){
+            var res=await Promise.all([api('health'),api('patterns'),api('mitigations')]);
+            var health=res[0],patterns=res[1],mits=res[2];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+
+            var patCount=patterns?patterns.length:0;
+            var mitCount=mits?mits.length:0;
+            var valCount=mits?mits.filter(function(m){return m.validated}).length:0;
+            var appCount=mits?mits.filter(function(m){return m.status==='approved'}).length:0;
+
+            el('s-patterns').textContent=patCount;
+            el('s-mits').textContent=mitCount;
+            el('s-validated').textContent=valCount;
+            el('s-approved').textContent=appCount;
+            el('mit-count').textContent=mitCount;
+
+            if(mits&&mits.length){
+                var html='';
+                for(var i=0;i<mits.length;i++){
+                    var m=mits[i],sv=sev(m.priority);
+                    html+='<div class="mit-card">';
+                    html+='<div class="head"><div class="title">'+esc(m.title)+'</div><span class="badge '+sv.cls+'">'+sv.label+'</span></div>';
+                    html+='<div class="desc">'+esc(m.description)+'</div>';
+
+                    // Source info with explanation
+                    html+='<div class="source-info">';
+                    if(m.pattern_id){
+                        html+='<div class="src-label">Generated from Pattern</div>';
+                        html+='<strong>Pattern-based mitigation</strong> — This response plan was created because the Pattern Discovery Agent (Step 3) identified a cluster of related events sharing common attack techniques. The LLM analyzed the pattern and generated a unified response strategy.';
+                    }else if(m.event_id){
+                        html+='<div class="src-label">Generated from High-Severity Event</div>';
+                        html+='<strong>Event-based mitigation</strong> — This response plan was created directly for a single high-severity event (severity &ge; 3) that requires immediate attention, independent of any pattern. <a href="/flow-tracker?event='+esc(m.event_id)+'" style="color:var(--cyan)">Trace this event\'s flow &rarr;</a>';
+                    }
+                    html+='</div>';
+
+                    // Steps
+                    if(m.steps&&m.steps.length){
+                        html+='<div class="section-label">Action Steps</div><ul class="steps-list">';
+                        for(var j=0;j<m.steps.length;j++){html+='<li data-num="'+(j+1)+'">'+esc(m.steps[j])+'</li>'}
+                        html+='</ul>';
+                    }
+
+                    // Sample rule
+                    if(m.sample_rule){
+                        html+='<div class="section-label">Sample Security Rule</div>';
+                        html+='<div class="rule-block"><button class="copy-btn" onclick="copyRule(this)">Copy</button><pre>'+esc(m.sample_rule)+'</pre></div>';
+                    }
+
+                    // Footer with validation and approve/reject
+                    var valBadge=m.validated?'<span class="badge badge-ok">&#10003; Validated</span>':'<span class="badge badge-warn">Pending Validation</span>';
+                    var statusText=(m.status||'').replace(/_/g,' ');
+                    html+='<div class="mit-footer">'+valBadge;
+                    html+='<span class="badge" style="background:var(--bg-primary);color:var(--text-muted)">'+esc(statusText)+'</span>';
+                    if(m.status==='approved'){
+                        html+='<span class="badge badge-ok">&#10003; Approved</span>';
+                    }else if(m.status==='rejected'){
+                        html+='<span class="badge" style="background:var(--red-bg);color:var(--red)">Rejected</span>';
+                    }else{
+                        html+='<button class="btn-approve" onclick="setMitStatus(this,\''+esc(m.mitigation_id)+'\',\'approved\')">Approve</button>';
+                        html+='<button class="btn-reject" onclick="setMitStatus(this,\''+esc(m.mitigation_id)+'\',\'rejected\')">Reject</button>';
+                    }
+                    html+='</div></div>';
+                }
+                el('mit-body').innerHTML=html;
+            }else if(patCount>0){
+                el('mit-body').innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">The Mitigation Agent is generating response plans using the LLM...</div>';
+            }
+        }
+        updateAll();setInterval(updateAll,3000);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 2: Enrichment Agent - CTI System</title>
+    <style>
+        :root{--bg-primary:#0f172a;--bg-secondary:#1e293b;--bg-card:#1e293b;--border:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;--accent:#3b82f6;--accent-light:#60a5fa;--green:#22c55e;--green-bg:rgba(34,197,94,.15);--yellow:#eab308;--yellow-bg:rgba(234,179,8,.15);--orange:#f97316;--orange-bg:rgba(249,115,22,.15);--red:#ef4444;--red-bg:rgba(239,68,68,.15);--purple:#a855f7;--purple-bg:rgba(168,85,247,.15);--cyan:#06b6d4}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh}
+        .navbar{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .navbar-brand{display:flex;align-items:center;gap:10px;font-size:1.1em;font-weight:700;text-decoration:none;color:var(--text-primary)}
+        .navbar-brand svg{width:28px;height:28px}
+        .nav-links{display:flex;gap:0;height:56px;align-items:stretch}
+        .nav-links a{display:flex;align-items:center;padding:0 14px;color:var(--text-muted);text-decoration:none;font-size:.82em;font-weight:500;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+        .nav-links a:hover{color:var(--text-primary);background:rgba(59,130,246,.05)}
+        .nav-links a.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+        .nav-links a .sn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--border);font-size:.72em;margin-right:5px;color:var(--text-secondary)}
+        .nav-links a.active .sn{background:var(--accent);color:#fff}
+        .navbar-right{display:flex;align-items:center;gap:12px;font-size:.85em}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite}
+        .status-dot.offline{background:var(--red);animation:none}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+        .main-container{padding:24px;max-width:1400px;margin:0 auto}
+        .page-header{margin-bottom:24px}
+        .page-header h1{font-size:1.5em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .page-header h1 .step-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--yellow-bg);color:var(--yellow);font-weight:700;font-size:.7em;border:2px solid var(--yellow)}
+        .page-header .subtitle{color:var(--text-secondary);font-size:.92em;line-height:1.6}
+        .explain-box{background:var(--bg-card);border:1px solid var(--border);border-left:4px solid var(--yellow);border-radius:8px;padding:20px 24px;margin-bottom:24px;line-height:1.7;color:var(--text-secondary);font-size:.9em}
+        .explain-box strong{color:var(--text-primary)}
+        .explain-box code{background:var(--bg-primary);padding:2px 6px;border-radius:3px;font-size:.88em;color:var(--cyan)}
+        .nav-flow{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .nav-flow a{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--accent-light);text-decoration:none;font-size:.88em;transition:border-color .2s}
+        .nav-flow a:hover{border-color:var(--accent)}
+        .stats-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+        .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+        .stat-card .label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .stat-card .value{font-size:1.8em;font-weight:700}
+        .stat-card .sub{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+        .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+        .panel-head h2{font-size:.95em;font-weight:600}
+        .panel-body{padding:16px 20px;max-height:700px;overflow-y:auto}
+        .panel-body::-webkit-scrollbar{width:6px}
+        .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        .count{font-size:.78em;background:var(--bg-primary);color:var(--text-secondary);padding:2px 10px;border-radius:10px}
+        .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.75em;font-weight:600;text-transform:uppercase}
+        .badge-low{background:var(--green-bg);color:var(--green)}
+        .badge-medium{background:var(--yellow-bg);color:var(--yellow)}
+        .badge-high{background:var(--orange-bg);color:var(--orange)}
+        .badge-critical{background:var(--red-bg);color:var(--red)}
+        .badge-emergency{background:var(--purple-bg);color:var(--purple)}
+        .badge-type{background:rgba(59,130,246,.12);color:var(--accent-light)}
+        .enr-card{padding:16px 18px;border:1px solid var(--border);border-radius:8px;margin-bottom:14px;transition:border-color .2s}
+        .enr-card:hover{border-color:var(--accent)}
+        .enr-card .top-row{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}
+        .enr-card .indicator{font-family:'Courier New',monospace;font-size:.85em;color:var(--cyan);word-break:break-all}
+        .enr-card .desc-text{font-size:.85em;color:var(--text-secondary);margin-top:6px;line-height:1.5}
+        .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+        .tag{font-size:.72em;padding:3px 8px;border-radius:3px;background:var(--bg-primary);color:var(--text-secondary);border:1px solid var(--border)}
+        .tag-ttp{border-color:var(--orange);color:var(--orange)}
+        .tag-ioc{border-color:var(--cyan);color:var(--cyan)}
+        .tag-cve{border-color:var(--red);color:var(--red)}
+        .tag-malware{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+        .tag-asset{border-color:var(--purple);color:var(--purple)}
+        .enr-card .section-label{font-size:.72em;color:var(--text-muted);text-transform:uppercase;margin-top:10px;margin-bottom:4px;letter-spacing:.4px}
+        .enr-card .confidence{font-size:.8em;color:var(--text-muted);margin-top:8px}
+        .enr-card .confidence .bar{display:inline-block;width:60px;height:6px;background:var(--bg-primary);border-radius:3px;vertical-align:middle;margin-left:6px;overflow:hidden}
+        .enr-card .confidence .bar-fill{height:100%;border-radius:3px;transition:width .3s}
+        .ev-id{font-family:'Courier New',monospace;font-size:.78em;color:var(--cyan);cursor:pointer;text-decoration:none}
+        .ev-id:hover{text-decoration:underline}
+        @media(max-width:1100px){.stats-mini{grid-template-columns:1fr 1fr}.nav-links a{padding:0 10px;font-size:.78em}}
+        @media(max-width:768px){.stats-mini{grid-template-columns:1fr}.nav-links{display:none}}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#3b82f6"/></svg>CTI Agentic System</a>
+        <div class="nav-links">
+            <a href="/"><span class="sn">H</span> Overview</a>
+            <a href="/ingestion"><span class="sn">1</span> Ingestion</a>
+            <a href="/enrichment" class="active"><span class="sn">2</span> Enrichment</a>
+            <a href="/patterns"><span class="sn">3</span> Patterns</a>
+            <a href="/mitigations"><span class="sn">4</span> Mitigations</a>
+            <a href="/flow-tracker"><span class="sn">T</span> Flow Tracker</a>
+            <a href="/live-input"><span class="sn">+</span> Live Input</a>
+            <a href="/feeds"><span class="sn">&#9733;</span> Live Feeds</a>
+        </div>
+        <div class="navbar-right"><span class="status-dot" id="status-dot"></span><span id="status-text" style="color:var(--text-secondary)">Connecting...</span></div>
+    </nav>
+    <div class="main-container">
+        <div class="page-header">
+            <h1><span class="step-badge">2</span> Enrichment Agent</h1>
+            <div class="subtitle">The second step. The Enrichment Agent sends each raw event to the local LLM and extracts structured threat intelligence from the unstructured text.</div>
+        </div>
+        <div class="explain-box">
+            <strong>What happens here:</strong> Each raw event from the Ingestion Agent is sent to the local <code>llama3.2:3b</code> LLM running on Ollama. The AI reads the event text and extracts:
+            <br><br>
+            &bull; <strong>IOCs</strong> (Indicators of Compromise) &mdash; IP addresses, domains, hashes, URLs<br>
+            &bull; <strong>TTPs</strong> (Tactics, Techniques, Procedures) &mdash; MITRE ATT&CK framework identifiers like T1059<br>
+            &bull; <strong>CVEs</strong> &mdash; Known vulnerability identifiers<br>
+            &bull; <strong>Affected Assets</strong> &mdash; Which systems or platforms are targeted<br>
+            &bull; <strong>Attack Vector</strong> &mdash; How the attack is being carried out<br>
+            &bull; <strong>Malware Family</strong> &mdash; If a known malware type is detected<br>
+            <br>
+            <strong>In plain terms:</strong> This is like having a cybersecurity analyst read every alert and highlight the important details &mdash; which IPs are malicious, what attack techniques are being used, and what systems are at risk. The AI does this automatically in 20-60 seconds per event.
+        </div>
+        <div class="nav-flow">
+            <a href="/ingestion">&#8592; Step 1: Ingestion</a>
+            <a href="/patterns">Next: Step 3 — Pattern Discovery &#8594;</a>
+        </div>
+        <div class="stats-mini">
+            <div class="stat-card"><div class="label">Raw Events (Input)</div><div class="value" id="s-raw">-</div><div class="sub">from Ingestion Agent</div></div>
+            <div class="stat-card"><div class="label">Enriched (Output)</div><div class="value" id="s-enriched">-</div><div class="sub">analyzed by LLM</div></div>
+            <div class="stat-card"><div class="label">Total IOCs Extracted</div><div class="value" id="s-iocs">-</div><div class="sub">indicators found</div></div>
+            <div class="stat-card"><div class="label">Total TTPs Found</div><div class="value" id="s-ttps">-</div><div class="sub">attack techniques</div></div>
+        </div>
+        <div class="panel">
+            <div class="panel-head"><h2>Enriched Events</h2><span class="count" id="enr-count">0</span></div>
+            <div class="panel-body" id="enr-body"><div style="text-align:center;padding:40px;color:var(--text-muted)">Waiting for LLM enrichment...</div></div>
+        </div>
+    </div>
+    <script>
+    (function(){
+        var API=window.location.origin;
+        var SEV={1:{label:'LOW',cls:'badge-low'},2:{label:'MEDIUM',cls:'badge-medium'},3:{label:'HIGH',cls:'badge-high'},4:{label:'CRITICAL',cls:'badge-critical'},5:{label:'EMERGENCY',cls:'badge-emergency'}};
+        function sev(v){return SEV[v]||SEV[3]}
+        function esc(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+        function ts(t){try{return new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){return t||''}}
+        function el(id){return document.getElementById(id)}
+        async function api(ep){try{var r=await fetch(API+'/api/'+ep);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+
+        async function updateAll(){
+            var res=await Promise.all([api('health'),api('enriched-events?limit=50')]);
+            var health=res[0],enriched=res[1];
+            if(!health){el('status-dot').classList.add('offline');el('status-text').textContent='Offline';return}
+            el('status-dot').classList.remove('offline');el('status-text').textContent='Online';
+
+            el('s-raw').textContent=health.events_count||0;
+            var enrCount=enriched?enriched.length:0;
+            el('s-enriched').textContent=enrCount;
+            el('enr-count').textContent=enrCount;
+
+            // Count IOCs and TTPs
+            var totalIOCs=0,totalTTPs=0;
+            if(enriched){for(var i=0;i<enriched.length;i++){totalIOCs+=(enriched[i].iocs||[]).length;totalTTPs+=(enriched[i].ttps||[]).length}}
+            el('s-iocs').textContent=totalIOCs;
+            el('s-ttps').textContent=totalTTPs;
+
+            // Render enriched events
+            if(enriched&&enriched.length){
+                var html='';
+                for(var i=0;i<enriched.length;i++){
+                    var e=enriched[i],orig=e.original_event||{},sv=sev(orig.severity);
+                    var conf=e.enrichment_confidence?Math.round(e.enrichment_confidence*100):0;
+                    var confColor=conf>=70?'var(--green)':conf>=40?'var(--yellow)':'var(--red)';
+                    html+='<div class="enr-card">';
+                    html+='<div class="top-row"><div><span class="badge '+sv.cls+'">'+sv.label+'</span> <span class="badge badge-type">'+esc(orig.event_type)+'</span> <a class="ev-id" href="/flow-tracker?event='+esc(e.event_id)+'">'+esc(e.event_id.substring(0,8))+'...</a></div><span style="font-size:.78em;color:var(--text-muted)">'+ts(e.enriched_at)+'</span></div>';
+                    if(orig.indicator)html+='<div class="indicator">'+esc(orig.indicator)+'</div>';
+                    var desc=orig.description||(orig.raw_text?orig.raw_text.substring(0,200)+'...':'');
+                    if(desc)html+='<div class="desc-text">'+esc(desc)+'</div>';
+
+                    // IOCs
+                    if(e.iocs&&e.iocs.length){
+                        html+='<div class="section-label">Indicators of Compromise (IOCs)</div><div class="tags">';
+                        for(var j=0;j<e.iocs.length;j++){var ioc=e.iocs[j];html+='<span class="tag tag-ioc">'+esc((ioc.type||'')+': '+(ioc.value||''))+'</span>'}
+                        html+='</div>';
+                    }
+                    // TTPs
+                    if(e.ttps&&e.ttps.length){
+                        html+='<div class="section-label">MITRE ATT&CK TTPs</div><div class="tags">';
+                        for(var j=0;j<e.ttps.length;j++){html+='<span class="tag tag-ttp">'+esc(e.ttps[j])+'</span>'}
+                        html+='</div>';
+                    }
+                    // CVEs
+                    if(e.cves&&e.cves.length){
+                        html+='<div class="section-label">CVEs</div><div class="tags">';
+                        for(var j=0;j<e.cves.length;j++){html+='<span class="tag tag-cve">'+esc(e.cves[j])+'</span>'}
+                        html+='</div>';
+                    }
+                    // Affected assets
+                    if(e.affected_assets&&e.affected_assets.length){
+                        html+='<div class="section-label">Affected Assets</div><div class="tags">';
+                        for(var j=0;j<e.affected_assets.length;j++){html+='<span class="tag tag-asset">'+esc(e.affected_assets[j])+'</span>'}
+                        html+='</div>';
+                    }
+                    // Attack vector & malware
+                    var extra=[];
+                    if(e.attack_vector)extra.push('<span class="tag" style="border-color:var(--orange);color:var(--orange)">Vector: '+esc(e.attack_vector)+'</span>');
+                    if(e.malware_family)extra.push('<span class="tag tag-malware">Malware: '+esc(e.malware_family)+'</span>');
+                    if(extra.length)html+='<div class="tags" style="margin-top:6px">'+extra.join('')+'</div>';
+
+                    // Confidence
+                    html+='<div class="confidence">Confidence: '+conf+'% <span class="bar"><span class="bar-fill" style="width:'+conf+'%;background:'+confColor+'"></span></span></div>';
+                    html+='</div>';
+                }
+                el('enr-body').innerHTML=html;
+            }else if(health.events_count>0){
+                el('enr-body').innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">LLM is enriching events... this takes 20-60 seconds per event.</div>';
+            }
+        }
+        updateAll();setInterval(updateAll,3000);
+    })();
+    </script>
+</body>
+</html>
