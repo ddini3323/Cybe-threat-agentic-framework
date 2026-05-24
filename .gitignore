@@ -22,6 +22,7 @@ env/
 
 # Logs (generated at runtime)
 logs/*.json
+logs/
 
 # OS
 Thumbs.db
@@ -30,3 +31,18 @@ desktop.ini
 
 # Runtime data
 *.pid
+
+# ChromaDB vector store (large binary, regenerated on first run)
+data/chroma_db/
+
+# MITRE ATT&CK STIX file (downloaded automatically on first run)
+data/mitre_attack.json
+
+# Local backup data
+data/input_backup/
+
+# Test output
+test_result.json
+
+# Claude Code local settings
+.claude/

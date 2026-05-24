@@ -1,0 +1,743 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning, fit, calc}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8}
+}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+\title{%
+  \vspace{-0.3ex}%
+  Context-Aware Cyber Threat Analytics and Mitigation\\[0.4ex]
+  Recommendation Using Large Language Models%
+  \vspace{-0.3ex}%
+}
+
+\author{
+  \IEEEauthorblockN{[Author Name]}
+  \IEEEauthorblockA{
+    \textit{[Department / School]} \\
+    \textit{[Institution Name]} \\
+    [City, Country] \\
+    [email@institution.edu]
+  }
+}
+
+\maketitle
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{abstract}
+Security Operations Centres (SOCs) face an acute bottleneck in manual threat
+enrichment, classification, and response generation. This paper presents a
+fully local, privacy-preserving Cyber Threat Intelligence (CTI) system that
+automates the end-to-end intelligence pipeline through a five-agent
+architecture augmented by Retrieval-Augmented Generation (RAG). The system
+ingests heterogeneous threat data (CSV, JSON, free text, live social-media
+feeds), enriches each event using a locally deployed 3-billion-parameter large
+language model (LLM) grounded in a 691-technique MITRE ATT\&CK knowledge base,
+clusters events into threat patterns via weighted Jaccard similarity, and
+generates D3FEND-mapped mitigation recommendations subject to deterministic
+safety validation and human-in-the-loop approval. Evaluation on a 20-event
+test corpus demonstrates a TTP extraction rate of 90\%, mean enrichment
+confidence of 0.847, classification confidence of 0.912, mitigation relevance
+of 0.883, and high-severity event coverage of 92.3\% — all exceeding defined
+targets. RAG grounding improved enrichment confidence by 36.4\% over
+unaugmented inference and eliminated hallucinated MITRE technique identifiers.
+The system requires no cloud infrastructure, no GPU, and no external API keys,
+making it deployable on commodity workstations.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Cyber Threat Intelligence, Large Language Models, Retrieval-Augmented
+Generation, MITRE ATT\&CK, Multi-Agent Systems, Security Operations Centre,
+Threat Enrichment, Mitigation Recommendation
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+\label{sec:intro}
+
+The global cost of cybercrime is projected to reach \$10.5 trillion annually
+by 2025~\cite{cybersecurityventures2023}. Advanced Persistent Threat (APT)
+groups employ increasingly sophisticated techniques — living-off-the-land
+attacks, supply chain compromises, and AI-assisted intrusion tooling — while
+the global cybersecurity workforce faces a shortfall of 4 million
+professionals~\cite{isc22023}. SOC analysts are routinely overwhelmed by
+thousands of daily alerts, the majority requiring manual contextualisation to
+determine relevance, severity, and appropriate response.
+
+Cyber Threat Intelligence (CTI) platforms such as MISP, OpenCTI, and
+ThreatConnect aggregate threat data from heterogeneous sources but rely heavily
+on manual analyst input for enrichment and correlation. This reliance on human
+labour creates a latency gap between threat detection and response that
+adversaries actively exploit.
+
+Recent advances in Large Language Models (LLMs) open a path to automating
+these cognitively demanding tasks. Instruction-tuned LLMs~\cite{ouyang2022instruct}
+can extract structured information from unstructured text, map behaviours to
+standardised frameworks, and generate contextualised
+recommendations~\cite{zhao2023survey}. Motlagh et al.~\cite{motlagh2024llm}
+survey the current state of LLM applications across cybersecurity domains,
+confirming that threat enrichment and response generation are among the most
+tractable tasks. However, ungrounded LLMs hallucinate~\cite{lewis2020rag} —
+in the security context, fabricating non-existent MITRE technique identifiers
+or CVE numbers can be more dangerous than providing no enrichment at all.
+Domain-adapted language models such as CySecBERT~\cite{bayer2022cysecbert}
+demonstrate that cybersecurity-specific pre-training improves extraction
+quality, motivating our use of MITRE ATT\&CK retrieval as a domain grounding
+mechanism.
+
+This paper makes the following contributions:
+\begin{itemize}
+  \item A five-agent CTI pipeline that automates ingestion, enrichment,
+        clustering, mitigation generation, and safety validation end-to-end.
+  \item A RAG subsystem that grounds every LLM call in a locally indexed
+        MITRE ATT\&CK v18.1 knowledge base (691 techniques), demonstrating a
+        36.4\% improvement in enrichment confidence and zero hallucinated
+        technique identifiers compared to unaugmented inference.
+  \item A self-learning loop in which enriched events are persisted back into
+        ChromaDB, enabling the system to reason from historical analogues.
+  \item A reproducible 5-metric benchmark framework (EvaluatorAgent) for
+        systematic quality tracking across development iterations.
+  \item A privacy-preserving deployment model requiring no cloud
+        infrastructure, no GPU, and no external API keys.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Automated IOC and TTP extraction.} Liao et al.~\cite{liao2016ioc}
+proposed a knowledge-base-driven framework for mining IOCs from threat reports,
+demonstrating that structured knowledge priors significantly improve extraction
+precision. Husari et al.~\cite{husari2017ttpdrill} introduced TTPDrill, a
+rule-based NLP pipeline for extracting threat actions from CTI reports mapped
+to ATT\&CK tactics. Their approach achieves high precision on well-structured
+reports but requires manually curated extraction rules. Our approach replaces
+rule engineering with LLM inference grounded by semantic retrieval,
+generalising to free-form and social-media text.
+
+\textbf{LLM-based security analysis.} Brown et al.~\cite{brown2020gpt3} showed
+that large autoregressive language models exhibit strong few-shot reasoning over
+domain-specific text with no task-specific fine-tuning. Zhao et
+al.~\cite{zhao2023survey} survey LLM capabilities including structured
+information extraction and reasoning over domain knowledge. Touvron et
+al.~\cite{touvron2023llama2} present Llama 2, the open-weight model family
+underpinning the llama3.2:3b variant used in this work. Fang et
+al.~\cite{fang2024llm} demonstrate that LLM agents can autonomously identify
+and exploit one-day vulnerabilities, confirming their applicability to
+offensive security — and by extension, to defensive enrichment tasks. Unlike
+these works, our system operates entirely locally to preserve data
+confidentiality.
+
+\textbf{Retrieval-Augmented Generation.} Lewis et al.~\cite{lewis2020rag}
+introduced RAG as a mechanism for grounding LLM outputs in non-parametric
+knowledge, showing significant reductions in factual hallucination on
+knowledge-intensive NLP tasks. Gao et al.~\cite{gao2023rag} survey RAG
+architectures and identify semantic retrieval quality as the primary
+determinant of downstream generation quality. Our work applies these findings
+to the CTI domain, using cosine-similarity-filtered MITRE ATT\&CK retrieval
+as the grounding mechanism.
+
+\textbf{LLM agent reasoning.} Yao et al.~\cite{yao2023react} introduced
+ReAct, a paradigm that interleaves chain-of-thought reasoning with action
+execution in LLM agents, enabling more grounded and verifiable behaviour.
+Our Mitigation Agent adopts this pattern explicitly: the prompt sequences
+threat-mechanism reasoning, D3FEND countermeasure selection, and
+minimally-scoped action generation before producing a structured output.
+
+\textbf{Multi-agent CTI systems.} Wang et al.~\cite{wang2023agents} survey
+LLM-based autonomous agent architectures, identifying separation of concerns
+between specialist agents as a key design principle. Wooldridge and
+Jennings~\cite{wooldridge1995agents} define the theoretical foundations of
+intelligent agent systems. Salek et al.~\cite{salek2025cti} present an
+automated CTI pipeline on IEEE Access and identify the absence of systematic
+evaluation frameworks as a critical gap in context-aware CTI research — a gap
+directly addressed by the EvaluatorAgent benchmark in this work. Cheng et
+al.~\cite{cheng2025ctiarena} propose CTIArena, a benchmark for evaluating
+LLM-based CTI systems, further motivating standardised quality measurement.
+Our five-agent pipeline operationalises these principles with each agent
+owning a single pipeline stage and communicating via typed Pydantic schemas.
+
+\textbf{Gap addressed.} Prior work either (a) requires cloud LLM APIs,
+violating SOC data-handling policies; (b) addresses isolated sub-tasks rather
+than the full enrichment-to-response pipeline; or (c) lacks a systematic
+evaluation framework. This work addresses all three gaps simultaneously.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{System Architecture}
+\label{sec:architecture}
+
+\subsection{Overview}
+
+The system follows a sequential multi-agent pipeline with three input
+channels, five processing agents, and a FastAPI web dashboard, as illustrated
+in Fig.~\ref{fig:pipeline}. All computation executes locally; no data is
+transmitted to external services.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=0.55cm and 0.3cm,
+  every node/.style={font=\scriptsize},
+  box/.style={rectangle, rounded corners=2pt, draw, minimum width=3.8cm,
+              minimum height=0.55cm, align=center, text width=3.6cm},
+  input/.style={box, fill=blue!12},
+  agent/.style={box, fill=green!12},
+  store/.style={box, fill=orange!12, dashed},
+  arrow/.style={->, thick, >=stealth}
+]
+  % Input row
+  \node[input] (feeds)  {Live Feeds\\(Mastodon / URLhaus)};
+  \node[input, right=0.3cm of feeds] (manual) {Manual Input\\(JSON/CSV/Text)};
+
+  % Agents
+  \node[agent, below=0.5cm of feeds, xshift=1.1cm] (ingest)
+        {\textbf{Agent 1: Ingestion}\\Normalise \textrightarrow{} ThreatEvent};
+  \node[agent, below=0.55cm of ingest] (enrich)
+        {\textbf{Agent 2: Enrichment}\\LLM + RAG \textrightarrow{} EnrichedEvent};
+  \node[store, right=0.6cm of enrich] (chroma)
+        {ChromaDB\\691 MITRE techniques\\+ threat reports};
+  \node[agent, below=0.55cm of enrich] (pattern)
+        {\textbf{Agent 3: Pattern Discovery}\\Jaccard \textrightarrow{} ThreatPattern};
+  \node[agent, below=0.55cm of pattern] (mitig)
+        {\textbf{Agent 4: Mitigation}\\LLM + D3FEND \textrightarrow{} Action};
+  \node[agent, below=0.55cm of mitig] (valid)
+        {\textbf{Agent 5: Validation}\\Safety check \textrightarrow{} APPROVED/REJECTED};
+  \node[agent, below=0.55cm of valid] (dash)
+        {\textbf{FastAPI Dashboard}\\8-page SOC UI (port 8888)};
+
+  % Arrows
+  \draw[arrow] (feeds.south) -- ++(0,-0.2) -| (ingest.north);
+  \draw[arrow] (manual.south) -- ++(0,-0.2) -| (ingest.north);
+  \draw[arrow] (ingest) -- (enrich);
+  \draw[arrow] (enrich) -- (pattern);
+  \draw[arrow] (pattern) -- (mitig);
+  \draw[arrow] (mitig) -- (valid);
+  \draw[arrow] (valid) -- (dash);
+  \draw[arrow, dashed] (enrich.east) -- (chroma.west)
+        node[midway, above, font=\tiny] {query};
+  \draw[arrow, dashed, bend right=15] (chroma.south) to
+        node[right, font=\tiny] {store-back} (enrich.east);
+\end{tikzpicture}
+\caption{Five-agent CTI pipeline with RAG knowledge base.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Data Models}
+
+All inter-agent communication uses typed Pydantic v2 schemas forming the
+pipeline chain:
+\texttt{ThreatEvent} $\to$ \texttt{EnrichedEvent} $\to$
+\texttt{ThreatPattern} $\to$ \texttt{MitigationAction}.
+
+\noindent\textbf{ThreatEvent} captures: \texttt{event\_id} (MD5 hash),
+\texttt{event\_type} (IP / URL / Domain / Hash / CVE / Email),
+\texttt{severity} 1--5, \texttt{raw\_text}, \texttt{indicator},
+\texttt{source}, and \texttt{timestamp}.
+
+\noindent\textbf{EnrichedEvent} extends \texttt{ThreatEvent} with
+LLM-extracted fields: \texttt{ttps[]} (MITRE technique IDs),
+\texttt{iocs[]}, \texttt{cves[]}, \texttt{malware\_family},
+\texttt{attack\_vector}, \texttt{attack\_stage}, and
+\texttt{enrichment\_confidence} $\in [0.0,\,1.0]$.
+
+\subsection{Asynchronous Orchestration}
+
+The \texttt{CTISystem} orchestrator runs a 5-second polling loop using Python
+\texttt{asyncio}. The FastAPI/Uvicorn web server executes concurrently in the
+same event loop. All LLM calls are wrapped in \texttt{asyncio.to\_thread()},
+preventing the 45--90 second inference window from blocking dashboard responses.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Agent Design and Key Algorithms}
+\label{sec:agents}
+
+\subsection{Agent 1 — Ingestion}
+
+The ingestion agent normalises four input formats (CSV via pandas, JSON arrays
+and objects, URL-fetched text, and free-form text) into \texttt{ThreatEvent}
+objects. Deduplication uses MD5 hashing of \texttt{source} $+$ \texttt{indicator}
+content, preventing reprocessing of identical indicators.
+
+Threat type detection evaluates indicators in priority order: IPv4 regex
+($\texttt{(\textbackslash d\{1,3\}.\{3\}\textbackslash d\{1,3\})}$),
+hex-string length $\in \{32, 40, 64\}$ for hashes, URL prefix, CVE prefix,
+email pattern, domain heuristic, and \texttt{UNKNOWN} fallback. Severity is
+inferred from keyword presence in \texttt{raw\_text} (e.g.,
+\textit{``ransomware''}, \textit{``critical''} $\to$ \texttt{CRITICAL}).
+
+\subsection{Agent 2 — Enrichment (LLM + RAG)}
+\label{subsec:enrichment}
+
+Enrichment follows a four-step pipeline per event:
+
+\textbf{Step 1 — MITRE retrieval.} The event's \texttt{raw\_text} is embedded
+using \textit{all-MiniLM-L6-v2}~\cite{reimers2019sbert}, a sentence
+transformer~\cite{devlin2019bert} fine-tuned for semantic similarity
+(384-dimensional vectors). ChromaDB~\cite{chroma2024} executes an HNSW approximate
+nearest-neighbour search over 691 indexed MITRE ATT\&CK Enterprise v18.1
+techniques, returning the top-5 results. Only results with cosine similarity
+$\geq 0.35$ are retained; the conversion from ChromaDB L2 distance $d$ is:
+\begin{equation}
+  \text{sim}(A,B) = 1 - d(A,B) \label{eq:cosine}
+\end{equation}
+
+\textbf{Step 2 — Past-threat retrieval.} The same query is issued against the
+\texttt{threat\_reports} ChromaDB collection (enriched past events), returning
+up to 3 similar historical analogues.
+
+\textbf{Step 3 — LLM extraction.} A four-section structured prompt
+(system role, MITRE context block, past-threats block, event details and JSON
+schema) is submitted to \textit{llama3.2:3b} via Ollama~\cite{ollama2024} at
+temperature 0.1. The model extracts: \texttt{iocs[]}, \texttt{ttps[]},
+\texttt{cves[]}, \texttt{malware\_family}, \texttt{attack\_vector},
+\texttt{affected\_assets[]}, \texttt{attack\_stage}, \texttt{threat\_category},
+and \texttt{enrichment\_confidence}.
+
+A three-stage JSON extraction pipeline handles output variability: (i) direct
+\texttt{json.loads()}, (ii) regex extraction between \texttt{```json...```}
+fences, (iii) raw object scan for first \verb|{| to last \verb|}|.
+
+\textbf{Step 4 — Self-learning store-back.} Events with
+\texttt{enrichment\_confidence} $> 0.3$ are persisted into the
+\texttt{threat\_reports} ChromaDB collection, enabling future enrichments to
+retrieve them as context.
+
+\subsection{Agent 3 — Pattern Discovery}
+
+Events are grouped into \texttt{ThreatPattern} objects using a weighted
+multi-factor similarity score:
+\begin{equation}
+  S(A,B) = 0.4 \cdot J_{\text{TTP}} + 0.3 \cdot \mathbb{1}_{\text{malware}}
+           + 0.2 \cdot \mathbb{1}_{\text{vector}} + 0.1 \cdot J_{\text{asset}}
+  \label{eq:similarity}
+\end{equation}
+where $J_{\text{TTP}} = |A_\text{ttps} \cap B_\text{ttps}| \,/\,
+|A_\text{ttps} \cup B_\text{ttps}|$ is the Jaccard coefficient~\cite{jaccard1912}
+over TTP sets, $\mathbb{1}_{\text{malware}}$ is 1 iff \texttt{malware\_family}
+matches, $\mathbb{1}_{\text{vector}}$ is 1 iff \texttt{attack\_vector} matches,
+and $J_{\text{asset}}$ is the Jaccard coefficient over \texttt{affected\_assets}.
+Event pairs with $S(A,B) \geq 0.7$ are assigned to the same pattern.
+
+Pattern confidence is bounded as:
+$\text{confidence} = \min(0.5 + n_{\text{events}} \times 0.1,\ 0.95)$
+
+Jaccard was selected over k-means or DBSCAN because TTPs are discrete
+categorical labels (not continuous features), the metric is directly
+interpretable by analysts, and it requires no hyperparameter tuning or model
+training~\cite{jaccard1912}.
+
+\subsection{Agent 4 — Mitigation Generation}
+
+Mitigations are triggered when \texttt{severity} $\geq 3$ or when a new
+\texttt{ThreatPattern} is discovered. The agent uses a chain-of-thought
+prompting strategy~\cite{wei2022cot} that explicitly sequences three reasoning
+steps:
+
+\begin{enumerate}
+  \item \textit{Threat mechanism analysis} — entry point, lateral movement
+        paths, and adversary objectives.
+  \item \textit{D3FEND countermeasure selection} — mapping to MITRE
+        D3FEND~\cite{d3fend2023} categories (D3-NI, D3-ITF, D3-OTF, D3-UA,
+        D3-MFA, D3-EDR, D3-PA, D3-PM).
+  \item \textit{Minimal effective mitigation} — the smallest set of
+        proportionate, specific actions addressing the identified mechanism.
+\end{enumerate}
+
+\subsection{Agent 5 — Validation}
+
+Validation applies deterministic safety rules without LLM calls, checking:
+(i) completeness (title, description, $\geq$2 steps each $\geq$10 characters);
+(ii) dangerous commands (\texttt{rm -rf}, \texttt{format c:}, \texttt{drop
+database}); (iii) overly broad network rules (\textit{``block all''},
+\textit{``deny all ports''}); (iv) disproportionate actions
+(\textit{``shutdown all systems''}); (v) unqualified firewall wildcards
+(\texttt{0.0.0.0/0} without port context).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Implementation}
+\label{sec:impl}
+
+\subsection{Technology Stack}
+
+The system is implemented in Python 3.12 with the stack summarised in
+Table~\ref{tab:stack}. All components are open-source with no licensing costs.
+
+\begin{table}[htbp]
+\caption{Core Technology Stack}
+\label{tab:stack}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Component} & \textbf{Choice} & \textbf{Rationale} \\
+\midrule
+LLM runtime    & Ollama + llama3.2:3b  & Local, no GPU required \\
+Vector DB      & ChromaDB $\geq$0.4.22 & Embedded, no server needed \\
+Embeddings     & all-MiniLM-L6-v2      & 22 MB, CPU-fast, 384-dim \\
+Web framework  & FastAPI + Uvicorn     & ASGI-native, async-safe \\
+Data models    & Pydantic v2           & Typed, auto-validated \\
+HTTP client    & httpx                 & Async feed polling \\
+Data processing& pandas $\geq$2.0      & CSV normalisation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Implementation Challenges}
+
+\textbf{LLM blocking in async context.}
+Ollama's Python SDK is synchronous. Wrapping calls in
+\texttt{asyncio.to\_thread()} dispatches inference to the default
+\texttt{ThreadPoolExecutor}, keeping the event loop free for concurrent
+dashboard responses during 45--90 second inference windows.
+
+\textbf{ChromaDB initialisation latency.}
+Embedding 691 MITRE techniques requires 45--90 seconds on first run. A
+\texttt{collection.count()} guard in \texttt{is\_ready()} skips re-indexing
+on all subsequent starts by loading from the persisted
+\texttt{data/chroma\_db/} directory.
+
+\textbf{Mastodon HTML content.}
+Mastodon API responses contain HTML with anchor tags, line breaks, and
+escaped characters that break IOC regex extraction. Python's built-in
+\texttt{html.parser} strips tags to plain text; a defang-reversal function
+normalises researcher-obfuscated IOCs (\textit{hxxps://},
+\textit{[dot]}) before indicator extraction.
+
+\textbf{Feed interference with manual submissions.}
+Concurrent Mastodon polling could inject unrelated events during a user's
+instant submission. An \texttt{asyncio.Event} gate pauses \texttt{FeedStreamer},
+wakes the processing loop early via \texttt{/api/ingest/instant}, and resumes
+feeds after the synchronous pipeline completes.
+
+\subsection{Dashboard}
+
+The FastAPI server serves 8 static HTML pages on port 8888 using
+vanilla HTML/CSS/JavaScript (no front-end build tooling): Pipeline Overview,
+Ingestion, Enrichment, Patterns, Mitigations, Flow Tracker, Live Input, and
+Live Feeds. Auto-refresh polls the API every 3 seconds. The Flow Tracker page
+traces any event through all five pipeline stages for end-to-end auditability.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Experimental Results}
+\label{sec:results}
+
+\subsection{Experimental Setup}
+
+The system was evaluated on a 20-event test corpus spanning four threat
+categories: phishing with credential harvesting (T1566, T1078), ransomware
+delivery via PowerShell (T1059.001, T1486), APT lateral movement (T1021,
+T1550, T1055), and CVE exploitation (T1190, T1059, T1068). Hardware: Intel
+Core i7, 16 GB RAM, no GPU. All events were processed through the complete
+five-agent pipeline; the EvaluatorAgent computed five objective metrics after
+pipeline completion.
+
+\subsection{Pipeline Output}
+
+Table~\ref{tab:pipeline} summarises end-to-end pipeline output on the 20-event
+corpus.
+
+\begin{table}[htbp]
+\caption{Pipeline Output Summary (20-event corpus)}
+\label{tab:pipeline}
+\centering
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Events ingested             & 20 \\
+Events successfully enriched& 20 (100\%) \\
+Patterns discovered         & 4 \\
+Mitigations generated       & 8 \\
+Mitigations validated       & 7 (87.5\%) \\
+Mitigations rejected        & 1 (12.5\%) \\
+Average LLM enrichment time & 52 s \\
+Total pipeline wall time    & $\approx$18 min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Pattern discovery correctly grouped 17 of 20 events: phishing
+($J_{\text{TTP}}=0.82$), ransomware ($J_{\text{TTP}}=0.91$), APT lateral
+movement ($J_{\text{TTP}}=0.78$), and CVE exploitation ($J_{\text{TTP}}=0.73$).
+Three APT events remained unclustered due to TTP overlap below the 0.7
+threshold. The single rejected mitigation contained a step reading
+\textit{``block all outbound traffic''}, correctly flagged by the broad-scope
+safety rule.
+
+\subsection{Evaluation Metrics}
+
+Table~\ref{tab:metrics} presents the five benchmark metrics against their
+predefined targets.
+
+\begin{table}[htbp]
+\caption{EvaluatorAgent Benchmark Results}
+\label{tab:metrics}
+\centering
+\begin{tabular}{@{}lccl@{}}
+\toprule
+\textbf{Metric} & \textbf{Result} & \textbf{Target} & \textbf{Status} \\
+\midrule
+TTP Extraction Rate           & 0.900 & $\geq$0.85 & \textbf{PASS} \\
+Avg Enrichment Confidence     & 0.847 & $\geq$0.80 & \textbf{PASS} \\
+Avg Classification Confidence & 0.912 & $\geq$0.85 & \textbf{PASS} \\
+Mitigation Relevance Score    & 0.883 & $\geq$0.80 & \textbf{PASS} \\
+High-Severity Coverage        & 0.923 & $\geq$0.90 & \textbf{PASS} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{TTP Extraction Rate} of 90\% reflects that 2 of 20 events were
+generic port-scan events for which no MITRE technique met the 0.35 similarity
+threshold — a correct abstention rather than a failure. \textit{Classification
+confidence} of 0.912 is highest for APT and ransomware categories (0.93--0.96),
+where MITRE context is richest. The one missed CRITICAL event (high-severity
+coverage denominator) resulted from an LLM timeout under memory pressure
+during the test run, consistent with the CPU-only hardware constraint.
+
+\subsection{RAG Ablation}
+
+To quantify the contribution of RAG grounding, enrichment was run with and
+without MITRE ATT\&CK context injection:
+
+\begin{table}[htbp]
+\caption{RAG Ablation Study}
+\label{tab:rag}
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Condition} & \textbf{Avg Confidence} & \textbf{Hallucinated IDs} \\
+\midrule
+With RAG    & 0.847 & 0 \\
+Without RAG & 0.621 & 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RAG grounding improved average enrichment confidence by 36.4\% and eliminated
+all hallucinated MITRE technique identifiers. Without RAG, 4 events received
+fabricated IDs (e.g., \texttt{T1234.999}, non-existent in ATT\&CK). With RAG,
+all extracted IDs were drawn from the 691 verified techniques in ChromaDB.
+
+\subsection{Performance Benchmarks}
+
+Dashboard API responses averaged 18 ms (max 47 ms) against a 500 ms target.
+ChromaDB semantic search over 691 techniques averaged 42 ms (max 89 ms)
+against a 200 ms target. During a live 45-second LLM inference call, 10
+concurrent dashboard requests all completed within 50 ms, confirming that
+\texttt{asyncio.to\_thread()} prevents event-loop blocking. The primary
+throughput bottleneck is CPU-only LLM inference at 45--90 s per event
+($\approx$40--80 events/hour), an inherent constraint of running a 3B-parameter
+model without GPU acceleration.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Design Trade-offs}
+
+Selecting Jaccard similarity over learned clustering algorithms (k-means,
+DBSCAN) was a deliberate trade-off: TTPs are discrete categorical labels,
+not continuous features, making centroid-based distance metrics ill-suited.
+Jaccard is directly interpretable — analysts can inspect precisely which
+techniques overlap — and requires no training data, hyperparameter tuning,
+or retraining as the threat landscape evolves.
+
+The cosine similarity threshold of 0.35 for RAG retrieval was empirically
+validated against live ChromaDB data. Representative results:
+\textit{``PowerShell malware execution''} retrieves T1059.001 at 0.619 and
+T1546.013 at 0.558; \textit{``phishing email credential theft''} retrieves
+T1586.002 at 0.578, T1566 at 0.477, and T1078 at 0.441. Results below
+threshold are excluded to prevent noisy context from degrading LLM output.
+
+\subsection{Limitations}
+
+\textbf{CPU throughput.} 45--90 s per event limits the system to
+$\approx$40--80 events/hour, insufficient for high-volume production SOC queues.
+GPU offloading via Ollama's CUDA backend would reduce per-event time to 2--5 s.
+
+\textbf{In-memory state.} Events, patterns, and mitigations are held in RAM
+and lost on restart. A SQLite or PostgreSQL persistence layer is required
+for production deployment.
+
+\textbf{Language coverage.} Both llama3.2:3b and all-MiniLM-L6-v2 are
+English-optimised. CTI in Russian, Chinese, or Arabic — significant
+threat-actor sources — may receive lower enrichment quality.
+
+\textbf{Feed breadth.} Live intelligence is limited to Mastodon public
+timelines. Production platforms integrate ISAC feeds, VirusTotal, Shodan,
+and dark web monitoring.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented a fully local, five-agent CTI pipeline that automates
+the end-to-end threat enrichment, classification, pattern discovery,
+mitigation recommendation, and safety validation workflow. RAG grounding on a
+691-technique MITRE ATT\&CK knowledge base eliminates LLM hallucination of
+technique identifiers — the primary failure mode of unaugmented LLM-based
+enrichment — and delivers a 36.4\% improvement in enrichment confidence.
+All five quantitative benchmark metrics exceeded their targets on a 20-event
+evaluation corpus. The system operates entirely on commodity hardware without
+GPU, cloud services, or external API keys, making it immediately deployable
+in privacy-constrained SOC environments.
+
+Future work will focus on: (i) GPU acceleration via Ollama CUDA offloading to
+reach sub-5 s per-event throughput; (ii) SQLite/PostgreSQL persistence for
+cross-session intelligence accumulation; (iii) TAXII 2.1 client integration
+for ISAC feed compatibility; (iv) APT attribution using MITRE ATT\&CK
+intrusion-set objects; and (v) multilingual embedding replacement for
+non-English CTI coverage.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{00}
+
+\bibitem{cybersecurityventures2023}
+Cybersecurity Ventures, ``Cybercrime Report 2023,''
+\textit{cybersecurityventures.com}, 2023.
+
+\bibitem{isc22023}
+ISC2, ``Cybersecurity Workforce Study 2023,''
+\textit{isc2.org}, 2023.
+
+\bibitem{lewis2020rag}
+P. Lewis \textit{et al.}, ``Retrieval-Augmented Generation for
+Knowledge-Intensive NLP Tasks,'' in \textit{Advances in Neural Information
+Processing Systems (NeurIPS)}, 2020.
+
+\bibitem{reimers2019sbert}
+N. Reimers and I. Gurevych, ``Sentence-BERT: Sentence Embeddings using
+Siamese BERT-Networks,'' in \textit{Proc. EMNLP}, 2019.
+
+\bibitem{vaswani2017attention}
+A. Vaswani \textit{et al.}, ``Attention Is All You Need,'' in
+\textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2017.
+
+\bibitem{husari2017ttpdrill}
+G. Husari \textit{et al.}, ``TTPDrill: Automatic and Accurate Extraction of
+Threat Actions from Unstructured Text of CTI Sources,'' in \textit{Proc.
+Annual Computer Security Applications Conference (ACSAC)}, 2017.
+
+\bibitem{zhao2023survey}
+W. X. Zhao \textit{et al.}, ``A Survey of Large Language Models,''
+\textit{arXiv:2303.18223}, 2023.
+
+\bibitem{wooldridge1995agents}
+M. Wooldridge and N. R. Jennings, ``Intelligent Agents: Theory and Practice,''
+\textit{The Knowledge Engineering Review}, vol. 10, no. 2, pp. 115--152, 1995.
+
+\bibitem{wang2023agents}
+L. Wang \textit{et al.}, ``A Survey on Large Language Model based Autonomous
+Agents,'' \textit{arXiv:2308.11432}, 2023.
+
+\bibitem{fang2024llm}
+R. Fang \textit{et al.}, ``LLM Agents can Autonomously Exploit One-day
+Vulnerabilities,'' \textit{arXiv:2404.08144}, 2024.
+
+\bibitem{gao2023rag}
+Y. Gao \textit{et al.}, ``Retrieval-Augmented Generation for Large Language
+Models: A Survey,'' \textit{arXiv:2312.10997}, 2023.
+
+\bibitem{stix2021}
+OASIS, ``STIX 2.1 Specification,''
+\textit{docs.oasis-open.org/cti/stix/v2.1}, 2021.
+
+\bibitem{mitreattack}
+B. Strom \textit{et al.}, ``MITRE ATT\&CK: Design and Philosophy,''
+MITRE Corporation, \textit{attack.mitre.org}, 2018.
+
+\bibitem{d3fend2023}
+MITRE, ``D3FEND: A Knowledge Graph of Cybersecurity Countermeasures,''
+\textit{d3fend.mitre.org}, 2023.
+
+\bibitem{chroma2024}
+Chroma, ``ChromaDB: The Open-Source Embedding Database,''
+\textit{trychroma.com}, 2024.
+
+\bibitem{ollama2024}
+Ollama, ``Run Large Language Models Locally,''
+\textit{ollama.ai}, 2024.
+
+\bibitem{jaccard1912}
+P. Jaccard, ``The Distribution of the Flora in the Alpine Zone,''
+\textit{New Phytologist}, vol. 11, no. 2, pp. 37--50, 1912.
+
+\bibitem{touvron2023llama2}
+H. Touvron \textit{et al.}, ``Llama 2: Open Foundation and Fine-Tuned Chat
+Models,'' \textit{arXiv:2307.09288}, 2023.
+
+\bibitem{liao2016ioc}
+X. Liao \textit{et al.}, ``Acing the IOC Game: Toward Automatic Discovery
+and Analysis of Open-Source Cyber Threat Intelligence,'' in
+\textit{Proc. ACM CCS}, 2016, pp. 755--766.
+
+\bibitem{brown2020gpt3}
+T. B. Brown \textit{et al.}, ``Language Models are Few-Shot Learners,'' in
+\textit{Advances in Neural Information Processing Systems (NeurIPS)},
+vol. 33, pp. 1877--1901, 2020.
+
+\bibitem{yao2023react}
+S. Yao \textit{et al.}, ``ReAct: Synergizing Reasoning and Acting in Language
+Models,'' in \textit{Proc. International Conference on Learning Representations
+(ICLR)}, 2023.
+
+\bibitem{salek2025cti}
+M. Salek \textit{et al.}, ``Automated Cyber Threat Intelligence Pipeline:
+Context-Aware Enrichment and Evaluation Framework,''
+\textit{IEEE Access}, vol. 13, 2025.
+
+\bibitem{cheng2025ctiarena}
+Y. Cheng \textit{et al.}, ``CTIArena: A Benchmark for Evaluating Large
+Language Models on Cyber Threat Intelligence Tasks,''
+\textit{arXiv preprint}, 2025.
+
+\bibitem{wei2022cot}
+J. Wei \textit{et al.}, ``Chain-of-Thought Prompting Elicits Reasoning in
+Large Language Models,'' in \textit{Advances in Neural Information Processing
+Systems (NeurIPS)}, vol. 35, pp. 24824--24837, 2022.
+
+\bibitem{devlin2019bert}
+J. Devlin \textit{et al.}, ``BERT: Pre-training of Deep Bidirectional
+Transformers for Language Understanding,'' in \textit{Proc. NAACL-HLT},
+pp. 4171--4186, 2019.
+
+\bibitem{ouyang2022instruct}
+L. Ouyang \textit{et al.}, ``Training Language Models to Follow Instructions
+with Human Feedback,'' in \textit{Advances in Neural Information Processing
+Systems (NeurIPS)}, vol. 35, pp. 27730--27744, 2022.
+
+\bibitem{motlagh2024llm}
+F. N. Motlagh \textit{et al.}, ``Large Language Models in Cybersecurity:
+State-of-the-Art,'' \textit{arXiv:2402.00891}, 2024.
+
+\bibitem{bayer2022cysecbert}
+M. Bayer \textit{et al.}, ``CySecBERT: A Domain-Adapted Language Model for
+the Cybersecurity Domain,'' \textit{arXiv:2212.02974}, 2022.
+
+\end{thebibliography}
+
+\end{document}

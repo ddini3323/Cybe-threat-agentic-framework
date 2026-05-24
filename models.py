@@ -56,7 +56,7 @@ class EnrichedEvent(BaseModel):
     """Event after LLM enrichment"""
     event_id: str
     original_event: ThreatEvent
-    
+
     # Extracted by LLM
     iocs: List[Dict[str, str]] = Field(default_factory=list)  # [{"type": "IP", "value": "1.2.3.4"}]
     cves: List[str] = Field(default_factory=list)  # ["CVE-2023-1234"]
@@ -64,7 +64,12 @@ class EnrichedEvent(BaseModel):
     affected_assets: List[str] = Field(default_factory=list)  # ["Windows", "Linux"]
     malware_family: Optional[str] = None
     attack_vector: Optional[str] = None
-    
+
+    # O1: MITRE ATT&CK context enrichment fields
+    mitre_tactics: List[str] = Field(default_factory=list)   # ["TA0001 - Initial Access"]
+    attack_stage: Optional[str] = None                        # e.g. "Initial Access"
+    threat_category: Optional[str] = None                     # e.g. "Ransomware", "APT"
+
     enriched_at: datetime = Field(default_factory=datetime.now)
     enrichment_confidence: float = 0.5  # 0-1
 
@@ -93,17 +98,45 @@ class MitigationAction(BaseModel):
     mitigation_id: str
     pattern_id: Optional[str] = None  # If for a pattern
     event_id: Optional[str] = None  # If for single event
-    
+
     title: str
     description: str
     steps: List[str]  # Action steps
     sample_rule: Optional[str] = None  # Firewall/SIEM rule
-    
+
+    # O3: Explainable mitigation fields
+    reasoning: Optional[str] = None          # Chain-of-thought justification
+    mitre_d3fend: List[str] = Field(default_factory=list)  # D3FEND countermeasure IDs
+
     priority: SeverityLevel = SeverityLevel.MEDIUM
     status: str = "under_review"  # "under_review", "applied", "rejected"
-    
+
     generated_at: datetime = Field(default_factory=datetime.now)
     validated: bool = False
+
+
+class ThreatClassification(BaseModel):
+    """O2: LLM-based threat classification result"""
+    event_id: str
+    threat_category: str       # APT, Ransomware, Phishing, DDoS, Insider Threat, etc.
+    attack_stage: str          # MITRE ATT&CK kill-chain stage name
+    severity_justification: str  # Why this severity was assigned
+    affected_asset_category: str  # Critical Infrastructure, Enterprise IT, IoT, Cloud, etc.
+    classification_confidence: float  # 0-1
+    classified_at: datetime = Field(default_factory=datetime.now)
+
+
+class BenchmarkResult(BaseModel):
+    """O4: System evaluation / benchmark result"""
+    run_id: str
+    timestamp: datetime = Field(default_factory=datetime.now)
+    total_events_tested: int
+    ttp_extraction_rate: float       # % of events with at least one TTP extracted
+    avg_enrichment_confidence: float
+    avg_classification_confidence: float
+    avg_mitigation_relevance: float  # LLM self-evaluation score 0-1
+    high_severity_coverage: float    # % of HIGH+ events that got mitigations
+    notes: str = ""
 
 
 class AgentLogEntry(BaseModel):

@@ -1,7 +1,6 @@
 """
 Configuration for CTI Agentic System
 """
-import os
 from pathlib import Path
 
 # Base paths
@@ -26,7 +25,8 @@ OLLAMA_HOST = "http://localhost:11434"
 LLM_TIMEOUT = 300  # seconds
 
 # Pattern discovery settings
-MIN_PATTERN_EVENTS = 2  # Minimum events to form a pattern
+# 1 = every single event forms a pattern and always gets a mitigation
+MIN_PATTERN_EVENTS = 1
 SIMILARITY_THRESHOLD = 0.7  # For clustering
 MAX_PATTERNS = 100
 
@@ -47,6 +47,10 @@ EXTERNAL_FEEDS = [
     # Example: "https://urlhaus.abuse.ch/downloads/csv_recent/",
     # Add your CTI feed URLs here
 ]
+
+# Set to False to disable Mastodon/live feed streaming at startup.
+# Useful when testing with manual input so feed events don't pollute the pipeline.
+ENABLE_FEEDS = False
 
 # Log settings
 LOG_LEVEL = "INFO"

@@ -89,6 +89,59 @@
 
         @media(max-width:1100px){.form-row{grid-template-columns:1fr}.nav-links a{padding:0 10px;font-size:.78em}}
         @media(max-width:768px){.nav-links{display:none}.template-grid{grid-template-columns:1fr}}
+
+        /* ── Instant Process panel ───────────────────────── */
+        .instant-panel{background:var(--bg-card);border:1px solid #f9731655;border-radius:12px;padding:20px 24px;margin-bottom:22px}
+        .instant-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+        .instant-title{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1em}
+        .instant-badge{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border-radius:8px;padding:4px 10px;font-size:.78em;font-weight:700;letter-spacing:.5px}
+        .feed-controls{display:flex;align-items:center;gap:8px;font-size:.82em}
+        .feed-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block}
+        .feed-dot.paused{background:var(--orange);animation:none}
+        .btn-stop{background:#ef444420;border:1px solid #ef444460;color:#ef4444;border-radius:6px;padding:6px 14px;font-size:.82em;font-weight:600;cursor:pointer;transition:all .15s}
+        .btn-stop:hover{background:#ef444440}
+        .btn-resume{background:#22c55e20;border:1px solid #22c55e60;color:#22c55e;border-radius:6px;padding:6px 14px;font-size:.82em;font-weight:600;cursor:pointer;transition:all .15s;display:none}
+        .btn-resume:hover{background:#22c55e40}
+        .instant-input{width:100%;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text-primary);font-size:.9em;font-family:'Courier New',monospace;min-height:90px;resize:vertical;transition:border-color .2s;margin-bottom:12px}
+        .instant-input:focus{outline:none;border-color:var(--orange)}
+        .btn-instant{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:.92em;font-weight:700;cursor:pointer;transition:all .2s;width:100%}
+        .btn-instant:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(249,115,22,.4)}
+        .btn-instant:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+        /* Pipeline progress steps */
+        .pipeline-steps{display:flex;align-items:center;gap:0;margin:18px 0;background:var(--bg-primary);border-radius:10px;padding:14px 18px;overflow-x:auto}
+        .ps-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:80px;position:relative}
+        .ps-item:not(:last-child)::after{content:'';position:absolute;top:18px;left:calc(50% + 18px);right:calc(-50% + 18px);height:2px;background:var(--border)}
+        .ps-item:not(:last-child).done::after{background:var(--green)}
+        .ps-item:not(:last-child).active::after{background:var(--orange)}
+        .ps-dot{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:700;color:var(--text-muted);background:var(--bg-card);z-index:1;transition:all .3s}
+        .ps-item.active .ps-dot{border-color:var(--orange);color:var(--orange);background:#f9731615;animation:pulse-step .8s infinite}
+        .ps-item.done .ps-dot{border-color:var(--green);color:#fff;background:var(--green)}
+        .ps-label{font-size:.72em;color:var(--text-muted);margin-top:5px;text-align:center}
+        .ps-item.active .ps-label{color:var(--orange)}
+        .ps-item.done .ps-label{color:var(--green)}
+        @keyframes pulse-step{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)}50%{box-shadow:0 0 0 6px rgba(249,115,22,0)}}
+
+        /* Instant results */
+        .instant-results{background:var(--bg-primary);border:1px solid var(--border);border-radius:10px;padding:20px;margin-top:16px}
+        .ir-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+        .ir-event-id{font-family:monospace;color:var(--cyan);font-size:.85em}
+        .ir-badge{padding:4px 12px;border-radius:20px;font-size:.75em;font-weight:700}
+        .ir-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+        .ir-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px}
+        .ir-card h4{font-size:.78em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:10px}
+        .ir-row{display:flex;justify-content:space-between;font-size:.83em;padding:3px 0;border-bottom:1px solid #ffffff08}
+        .ir-row .k{color:var(--text-muted)}
+        .ir-row .v{color:var(--text-primary);font-weight:500;text-align:right;max-width:60%;word-break:break-word}
+        .ir-bot{background:linear-gradient(135deg,#00d4ff10,#0d111720);border:1px solid #00d4ff30;border-radius:8px;padding:16px;font-size:.85em;white-space:pre-wrap;line-height:1.65;color:var(--text-secondary)}
+        .ir-bot strong{color:var(--cyan)}
+        .ir-bot code{background:#0d1117;color:#58a6ff;padding:1px 5px;border-radius:3px;font-family:monospace}
+        .ir-mit{background:var(--bg-card);border-left:3px solid var(--orange);border-radius:6px;padding:12px 14px;margin-bottom:8px;font-size:.84em}
+        .ir-mit .mit-action{font-weight:600;color:var(--text-primary);margin-bottom:4px}
+        .ir-mit .mit-d3{color:var(--text-muted);font-size:.88em}
+        .conf-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+        .conf-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--green));transition:width .6s ease}
+        @media(max-width:768px){.ir-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
@@ -117,8 +170,63 @@
             You can also <strong>upload CSV/JSON files</strong> which are saved to the <code>data/input/</code> directory and ingested on the next cycle. Use the <a href="/flow-tracker" style="color:var(--cyan)">Flow Tracker</a> to trace any submitted event through the pipeline.
         </div>
 
+        <!-- ⚡ INSTANT PROCESS PANEL -->
+        <div class="instant-panel">
+            <div class="instant-top">
+                <div class="instant-title">
+                    <span class="instant-badge">⚡ INSTANT</span>
+                    Stop feeds &amp; run all 5 agents NOW — full results in one click
+                </div>
+                <div class="feed-controls">
+                    <span class="feed-dot" id="feed-dot"></span>
+                    <span id="feed-label" style="color:var(--text-muted)">Feeds loading…</span>
+                    <button class="btn-stop" id="btn-stop-feeds" onclick="stopFeeds()">⏹ Stop Feeds</button>
+                    <button class="btn-resume" id="btn-resume-feeds" onclick="resumeFeeds()">▶ Resume Feeds</button>
+                </div>
+            </div>
+
+            <textarea class="instant-input" id="instant-input"
+                placeholder="Paste threat description, alert, log entry, or IOC…"></textarea>
+            <button class="btn-instant" id="btn-instant" onclick="submitInstant()">
+                ⚡ Stop Feeds &amp; Process Instantly — Full 5-Agent Pipeline
+            </button>
+
+            <div class="pipeline-steps" id="instant-progress" style="display:none">
+                <div class="ps-item" id="ps-1"><div class="ps-dot">1</div><div class="ps-label">Ingest</div></div>
+                <div class="ps-item" id="ps-2"><div class="ps-dot">2</div><div class="ps-label">Enrich O1</div></div>
+                <div class="ps-item" id="ps-3"><div class="ps-dot">3</div><div class="ps-label">Classify O2</div></div>
+                <div class="ps-item" id="ps-4"><div class="ps-dot">4</div><div class="ps-label">Patterns</div></div>
+                <div class="ps-item" id="ps-5"><div class="ps-dot">5</div><div class="ps-label">Mitigate O3</div></div>
+                <div class="ps-item" id="ps-6"><div class="ps-dot">✓</div><div class="ps-label">Validate</div></div>
+            </div>
+
+            <div class="instant-results" id="instant-results" style="display:none">
+                <div class="ir-header">
+                    <div>
+                        <strong style="color:var(--cyan)">Pipeline Complete</strong>
+                        <span class="ir-event-id" id="ir-event-id"></span>
+                    </div>
+                    <span class="ir-badge" id="ir-sev-badge"></span>
+                </div>
+                <div class="ir-grid">
+                    <div class="ir-card"><h4>Enrichment (O1)</h4><div id="ir-enrichment"></div></div>
+                    <div class="ir-card"><h4>Classification (O2)</h4><div id="ir-classification"></div></div>
+                </div>
+                <div style="margin-bottom:14px">
+                    <h4 style="font-size:.78em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:8px">Mitigations &amp; Validation (O3)</h4>
+                    <div id="ir-mitigations"></div>
+                </div>
+                <h4 style="font-size:.78em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:8px">🤖 CTI Assistant Summary</h4>
+                <div class="ir-bot" id="ir-bot"></div>
+                <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+                    <a href="/flow-tracker" class="btn btn-outline" style="font-size:.82em;padding:8px 16px;text-decoration:none">View in Flow Tracker</a>
+                    <a href="/benchmark" class="btn btn-outline" style="font-size:.82em;padding:8px 16px;text-decoration:none">Run Benchmark (O4)</a>
+                    <button class="btn btn-outline" style="font-size:.82em;padding:8px 16px" onclick="askChatbot()">Ask Chatbot</button>
+                </div>
+            </div>
+        </div>
+
         <div class="pending-bar">
-            <div class="pending-label">Events awaiting pipeline processing</div>
             <div class="pending-count" id="pending-count">0</div>
         </div>
 
@@ -437,7 +545,523 @@
         }
         updatePending();
         setInterval(updatePending, 3000);
+
+        // ── Feed status polling ──────────────────────────────────────────
+        async function updateFeedStatus(){
+            try{
+                var r = await fetch(API+'/api/feeds');
+                if(!r.ok) return;
+                var d = await r.json();
+                var dot = el('feed-dot'), lbl = el('feed-label');
+                if(!dot||!lbl) return;
+                var stopBtn = el('btn-stop-feeds'), resumeBtn = el('btn-resume-feeds');
+                if(d.streaming && !d.paused){
+                    dot.classList.remove('paused');
+                    lbl.textContent = 'Feeds live (' + (d.total_ingested||0) + ' ingested)';
+                    stopBtn.style.display = '';
+                    resumeBtn.style.display = 'none';
+                } else {
+                    dot.classList.add('paused');
+                    lbl.textContent = d.paused ? 'Feeds paused' : 'Feeds offline';
+                    stopBtn.style.display = 'none';
+                    resumeBtn.style.display = '';
+                }
+            }catch(e){}
+        }
+        updateFeedStatus();
+        setInterval(updateFeedStatus, 4000);
+
+        // ── Feed stop / resume ───────────────────────────────────────────
+        window.stopFeeds = async function(){
+            try{
+                await fetch(API+'/api/pipeline/stop',{method:'POST'});
+                el('feed-dot').classList.add('paused');
+                el('feed-label').textContent = 'Feeds paused';
+                el('btn-stop-feeds').style.display = 'none';
+                el('btn-resume-feeds').style.display = '';
+            }catch(e){}
+        };
+
+        window.resumeFeeds = async function(){
+            try{
+                await fetch(API+'/api/pipeline/start',{method:'POST'});
+                el('feed-dot').classList.remove('paused');
+                el('feed-label').textContent = 'Feeds live';
+                el('btn-stop-feeds').style.display = '';
+                el('btn-resume-feeds').style.display = 'none';
+            }catch(e){}
+        };
+
+        // ── Pipeline step helpers ────────────────────────────────────────
+        function psReset(){
+            for(var i=1;i<=6;i++){var item=el('ps-'+i);if(item)item.classList.remove('active','done');}
+        }
+        function psSet(step, cls){
+            var item=el('ps-'+step);
+            if(item){item.classList.remove('active','done');item.classList.add(cls);}
+        }
+        // Map backend current_pipeline_step → UI step states
+        // Backend: 2=Enrich, 3=Patterns, 4=Mitigate, 5=Validate
+        // UI:      1=Ingest, 2=EnrichO1, 3=ClassifyO2, 4=Patterns, 5=MitigateO3, 6=Validate
+        function applyPipelineStep(s){
+            psReset();
+            psSet(1,'done');  // ingest always completes first
+            if(s===2){psSet(2,'active');}
+            else if(s===3){psSet(2,'done');psSet(3,'done');psSet(4,'active');}
+            else if(s===4){psSet(2,'done');psSet(3,'done');psSet(4,'done');psSet(5,'active');}
+            else if(s===5){psSet(2,'done');psSet(3,'done');psSet(4,'done');psSet(5,'done');psSet(6,'active');}
+        }
+
+        // ── Instant process ──────────────────────────────────────────────
+        var _lastInstantId = null;
+
+        window.submitInstant = async function(){
+            var text = el('instant-input').value.trim();
+            if(!text){
+                el('instant-input').style.borderColor='var(--red)';
+                setTimeout(function(){el('instant-input').style.borderColor='';},2000);
+                return;
+            }
+            var btn = el('btn-instant');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing…';
+            el('instant-progress').style.display = 'flex';
+            el('instant-results').style.display = 'none';
+            psReset();
+            psSet(1,'active');
+
+            // Poll health for live step progress
+            var polling = true;
+            var pollTimer = setInterval(async function(){
+                if(!polling) return;
+                try{
+                    var h = await fetch(API+'/api/health');
+                    if(h.ok){var hd=await h.json();if(hd.current_pipeline_step>0)applyPipelineStep(hd.current_pipeline_step);}
+                }catch(e){}
+            },600);
+
+            try{
+                var r = await fetch(API+'/api/ingest/instant',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({text:text})
+                });
+                var d = await r.json();
+                polling = false;
+                clearInterval(pollTimer);
+                if(r.ok && !d.error){
+                    for(var i=1;i<=6;i++) psSet(i,'done');
+                    _lastInstantId = d.event_id;
+                    setTimeout(function(){showInstantResults(d);},400);
+                } else {
+                    psReset();
+                    psSet(1,'done');
+                    var msg = (d&&(d.error||d.detail))||'Unknown error';
+                    el('instant-results').innerHTML='<div style="color:var(--red);padding:16px">&#9888; '+esc(msg)+'</div>';
+                    el('instant-results').style.display='block';
+                }
+            }catch(e){
+                polling = false;
+                clearInterval(pollTimer);
+                psReset();
+                el('instant-results').innerHTML='<div style="color:var(--red);padding:16px">&#9888; Network error: '+esc(e.message)+'</div>';
+                el('instant-results').style.display='block';
+            }
+            btn.disabled = false;
+            btn.textContent = '&#9889; Stop Feeds &amp; Process Instantly — Full 5-Agent Pipeline';
+        };
+
+        function sevColor(s){
+            var m={CRITICAL:'var(--red)',HIGH:'var(--orange)',MEDIUM:'var(--yellow)',LOW:'var(--green)',INFO:'var(--cyan)'};
+            return m[(s||'').toUpperCase()]||'var(--text-muted)';
+        }
+        function irRow(k,v){
+            return '<div class="ir-row"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v==null?'—':String(v))+'</span></div>';
+        }
+        function mdLight(t){
+            return (t||'')
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+                .replace(/`([^`]+)`/g,'<code>$1</code>')
+                .replace(/\n/g,'<br>');
+        }
+
+        window.showInstantResults = function(data){
+            var panel = el('instant-results');
+            // Restore panel HTML if it was replaced by an error message
+            if(!el('ir-enrichment')){
+                panel.innerHTML = '<div class="ir-header"><div><strong style="color:var(--cyan)">Pipeline Complete</strong><span class="ir-event-id" id="ir-event-id"></span></div><span class="ir-badge" id="ir-sev-badge"></span></div><div class="ir-grid"><div class="ir-card"><h4>Enrichment (O1)</h4><div id="ir-enrichment"></div></div><div class="ir-card"><h4>Classification (O2)</h4><div id="ir-classification"></div></div></div><div style="margin-bottom:14px"><h4 style="font-size:.78em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:8px">Mitigations &amp; Validation (O3)</h4><div id="ir-mitigations"></div></div><h4 style="font-size:.78em;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);margin-bottom:8px">&#129302; CTI Assistant Summary</h4><div class="ir-bot" id="ir-bot"></div><div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap"><a href="/flow-tracker" class="btn btn-outline" style="font-size:.82em;padding:8px 16px;text-decoration:none">View in Flow Tracker</a><a href="/benchmark" class="btn btn-outline" style="font-size:.82em;padding:8px 16px;text-decoration:none">Run Benchmark (O4)</a><button class="btn btn-outline" style="font-size:.82em;padding:8px 16px" onclick="askChatbot()">Ask Chatbot</button></div>';
+            }
+            panel.style.display = 'block';
+
+            // Header
+            el('ir-event-id').textContent = ' — ' + data.event_id;
+            var badge = el('ir-sev-badge');
+            badge.textContent = data.severity||'';
+            badge.style.cssText = 'background:'+sevColor(data.severity)+'30;color:'+sevColor(data.severity)+';border:1px solid '+sevColor(data.severity)+'60;padding:4px 12px;border-radius:20px;font-size:.75em;font-weight:700';
+
+            // Enrichment (O1)
+            var en = data.enriched||{};
+            var enH = '';
+            if(en.threat_category) enH += irRow('Category', en.threat_category);
+            if(en.attack_stage) enH += irRow('Attack Stage', en.attack_stage);
+            if(en.malware_family) enH += irRow('Malware Family', en.malware_family);
+            if(en.attack_vector) enH += irRow('Attack Vector', en.attack_vector);
+            if(en.ttps&&en.ttps.length) enH += irRow('TTPs', en.ttps.slice(0,3).join(', '));
+            if(en.mitre_tactics&&en.mitre_tactics.length) enH += irRow('MITRE Tactics', en.mitre_tactics.slice(0,2).join(', '));
+            if(en.cves&&en.cves.length) enH += irRow('CVEs', en.cves.join(', '));
+            if(en.enrichment_confidence) enH += irRow('Confidence', Math.round(en.enrichment_confidence*100)+'%');
+            el('ir-enrichment').innerHTML = enH||'<span style="color:var(--text-muted)">No enrichment data</span>';
+
+            // Classification (O2)
+            var cl = data.classification||{};
+            var clH = '';
+            if(cl.threat_category) clH += irRow('Category', cl.threat_category);
+            if(cl.attack_stage) clH += irRow('Attack Stage', cl.attack_stage);
+            if(cl.affected_asset_category) clH += irRow('Asset Category', cl.affected_asset_category);
+            if(cl.severity_justification) clH += irRow('Justification', cl.severity_justification.slice(0,80));
+            if(cl.classification_confidence!=null){
+                var pct = Math.round((cl.classification_confidence||0)*100);
+                clH += '<div class="conf-bar" style="margin-top:8px"><div class="conf-fill" style="width:'+pct+'%"></div></div>';
+                clH += '<div style="font-size:.78em;color:var(--text-muted);margin-top:3px">Confidence: '+pct+'%</div>';
+            }
+            el('ir-classification').innerHTML = clH||'<span style="color:var(--text-muted)">No classification data</span>';
+
+            // Mitigations (O3)
+            var mits = data.mitigations||[];
+            var mitH = '';
+            for(var i=0;i<mits.length;i++){
+                var m=mits[i];
+                var priMap={CRITICAL:100,HIGH:80,MEDIUM:60,LOW:40,INFO:20};
+                var conf=priMap[(m.priority||'').toUpperCase()]||60;
+                var validated=m.validated?' <span style="color:var(--green);font-size:.78em">&#10003; Validated</span>':'';
+                mitH += '<div class="ir-mit">';
+                mitH += '<div class="mit-action">'+esc(m.title||m.mitigation_id||'Mitigation '+(i+1))+'</div>';
+                if(m.mitre_d3fend&&m.mitre_d3fend.length) mitH += '<div class="mit-d3">D3FEND: '+esc(m.mitre_d3fend.join(', '))+'</div>';
+                if(m.description) mitH += '<div style="font-size:.82em;color:var(--text-secondary);margin-top:3px">'+esc(m.description)+'</div>';
+                if(conf>0) mitH += '<div class="conf-bar"><div class="conf-fill" style="width:'+conf+'%"></div></div>';
+                mitH += validated+'</div>';
+            }
+            el('ir-mitigations').innerHTML = mitH||'<span style="color:var(--text-muted)">No mitigations generated</span>';
+
+            // Chatbot summary
+            el('ir-bot').innerHTML = data.chat_summary ? mdLight(data.chat_summary) : '<span style="color:var(--text-muted)">No summary available.</span>';
+
+            addSubmission('INSTANT', data.event_id, data.indicator||'instant');
+            panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+        };
+
+        window.askChatbot = function(){
+            var chatBtn = document.getElementById('cti-chat-btn');
+            if(chatBtn) chatBtn.click();
+            if(_lastInstantId){
+                setTimeout(function(){
+                    var inp = document.getElementById('cti-chat-input');
+                    if(inp){inp.value='Tell me about event '+_lastInstantId;inp.dispatchEvent(new Event('input'));inp.focus();}
+                },350);
+            }
+        };
     })();
     </script>
+  
+<script>
+/* CTI Assistant — floating chat widget */
+(function () {
+  'use strict';
+
+  /* ── Styles ─────────────────────────────────────────────────────── */
+  const CSS = `
+#cti-chat-btn {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9998;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #00d4ff; border: none; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,212,255,.45);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: transform .2s, box-shadow .2s;
+}
+#cti-chat-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 22px rgba(0,212,255,.65);
+}
+#cti-chat-panel {
+  position: fixed; bottom: 88px; right: 24px; z-index: 9999;
+  width: 370px; max-height: 560px;
+  display: flex; flex-direction: column;
+  background: #0d1117; border: 1px solid #00d4ff44;
+  border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.7);
+  font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px;
+  color: #c9d1d9; overflow: hidden;
+  transform: scale(0); transform-origin: bottom right;
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+  opacity: 0; pointer-events: none;
+}
+#cti-chat-panel.open {
+  transform: scale(1); opacity: 1; pointer-events: all;
+}
+#cti-chat-header {
+  padding: 12px 14px; background: #161b22;
+  border-bottom: 1px solid #30363d;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+#cti-chat-header span { font-weight: 700; color: #00d4ff; letter-spacing: .5px; }
+#cti-chat-header small { color: #8b949e; font-size: 11px; }
+#cti-chat-close {
+  background: none; border: none; color: #8b949e; cursor: pointer;
+  font-size: 16px; padding: 0 4px; line-height: 1;
+}
+#cti-chat-close:hover { color: #fff; }
+#cti-chat-msgs {
+  flex: 1; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  scroll-behavior: smooth;
+}
+#cti-chat-msgs::-webkit-scrollbar { width: 4px; }
+#cti-chat-msgs::-webkit-scrollbar-track { background: transparent; }
+#cti-chat-msgs::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.cti-msg { max-width: 88%; line-height: 1.55; word-break: break-word; }
+.cti-msg.user {
+  align-self: flex-end;
+  background: #1a3a4a; color: #cae8ff;
+  padding: 8px 12px; border-radius: 12px 12px 4px 12px;
+}
+.cti-msg.bot {
+  align-self: flex-start;
+  background: #161b22; color: #c9d1d9;
+  padding: 8px 12px; border-radius: 4px 12px 12px 12px;
+  border: 1px solid #30363d; white-space: pre-wrap;
+}
+.cti-msg.bot strong { color: #00d4ff; }
+.cti-msg.bot code {
+  background: #0d1117; color: #58a6ff;
+  padding: 1px 5px; border-radius: 4px; font-family: monospace;
+}
+.cti-typing { color: #8b949e; font-style: italic; font-size: 12px; }
+#cti-chat-footer {
+  padding: 10px 12px; border-top: 1px solid #30363d;
+  display: flex; gap: 8px; flex-shrink: 0; background: #161b22;
+}
+#cti-chat-input {
+  flex: 1; background: #0d1117; border: 1px solid #30363d;
+  border-radius: 8px; color: #c9d1d9; padding: 8px 10px;
+  font-size: 13px; outline: none; resize: none;
+  max-height: 80px; font-family: inherit;
+}
+#cti-chat-input:focus { border-color: #00d4ff66; }
+#cti-chat-send {
+  background: #00d4ff22; border: 1px solid #00d4ff55;
+  color: #00d4ff; border-radius: 8px; padding: 0 14px;
+  cursor: pointer; font-size: 16px; transition: background .15s;
+  flex-shrink: 0;
+}
+#cti-chat-send:hover { background: #00d4ff44; }
+#cti-chat-send:disabled { opacity: .4; cursor: not-allowed; }
+.cti-quick-btns {
+  display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 8px;
+}
+.cti-quick-btn {
+  background: #161b22; border: 1px solid #30363d;
+  color: #8b949e; border-radius: 20px;
+  padding: 3px 10px; font-size: 11px; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.cti-quick-btn:hover { border-color: #00d4ff55; color: #00d4ff; }
+`;
+
+  /* ── HTML ────────────────────────────────────────────────────────── */
+  const QUICK = [
+    "What's in the queue?",
+    "What's running?",
+    "What's complete?",
+    "Show patterns",
+    "Show mitigations",
+    "My last submission",
+    "Help",
+  ];
+
+  function buildUI() {
+    const style = document.createElement('style');
+    style.textContent = CSS;
+    document.head.appendChild(style);
+
+    // Floating button
+    const btn = document.createElement('button');
+    btn.id = 'cti-chat-btn';
+    btn.title = 'CTI Assistant';
+    btn.textContent = '🛡';
+    document.body.appendChild(btn);
+
+    // Panel
+    const panel = document.createElement('div');
+    panel.id = 'cti-chat-panel';
+    panel.innerHTML = `
+      <div id="cti-chat-header">
+        <span>🛡 CTI Assistant</span>
+        <small>Ask about any threat or stage</small>
+        <button id="cti-chat-close" title="Close">✕</button>
+      </div>
+      <div id="cti-chat-msgs"></div>
+      <div class="cti-quick-btns" id="cti-quick-btns"></div>
+      <div id="cti-chat-footer">
+        <textarea id="cti-chat-input" rows="1"
+          placeholder="Ask about a threat ID, queue status, patterns…"></textarea>
+        <button id="cti-chat-send" title="Send">➤</button>
+      </div>`;
+    document.body.appendChild(panel);
+
+    // Quick buttons
+    const qc = document.getElementById('cti-quick-btns');
+    QUICK.forEach(q => {
+      const b = document.createElement('button');
+      b.className = 'cti-quick-btn';
+      b.textContent = q;
+      b.addEventListener('click', () => sendMessage(q));
+      qc.appendChild(b);
+    });
+
+    // Toggle
+    btn.addEventListener('click', toggle);
+    document.getElementById('cti-chat-close').addEventListener('click', close);
+
+    // Send on button or Enter (Shift+Enter = newline)
+    document.getElementById('cti-chat-send').addEventListener('click', () => {
+      const v = document.getElementById('cti-chat-input').value.trim();
+      if (v) sendMessage(v);
+    });
+    document.getElementById('cti-chat-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const v = e.target.value.trim();
+        if (v) sendMessage(v);
+      }
+    });
+
+    // Auto-grow textarea
+    document.getElementById('cti-chat-input').addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+    });
+  }
+
+  /* ── State ───────────────────────────────────────────────────────── */
+  let open = false;
+  let busy = false;
+  const history = [];
+
+  function toggle() { open ? close() : openPanel(); }
+
+  function openPanel() {
+    open = true;
+    document.getElementById('cti-chat-panel').classList.add('open');
+    if (!history.length) {
+      addBotMsg(
+        'Hi! I\'m your CTI Assistant.\n\n' +
+        'Ask me about any submitted threat by its ID, check the queue, ' +
+        'pipeline status, patterns, or mitigations.\n\n' +
+        'Try one of the quick buttons below or type your question.'
+      );
+    }
+    setTimeout(() => document.getElementById('cti-chat-input').focus(), 200);
+  }
+
+  function close() {
+    open = false;
+    document.getElementById('cti-chat-panel').classList.remove('open');
+  }
+
+  /* ── Messaging ───────────────────────────────────────────────────── */
+  function addUserMsg(text) {
+    const div = document.createElement('div');
+    div.className = 'cti-msg user';
+    div.textContent = text;
+    document.getElementById('cti-chat-msgs').appendChild(div);
+    scrollBottom();
+  }
+
+  function addBotMsg(text) {
+    const div = document.createElement('div');
+    div.className = 'cti-msg bot';
+    // Render simple markdown: **bold**, `code`
+    div.innerHTML = renderMd(text);
+    document.getElementById('cti-chat-msgs').appendChild(div);
+    scrollBottom();
+    return div;
+  }
+
+  function addTyping() {
+    const div = document.createElement('div');
+    div.className = 'cti-msg bot cti-typing';
+    div.id = 'cti-typing';
+    div.textContent = 'Thinking…';
+    document.getElementById('cti-chat-msgs').appendChild(div);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('cti-typing');
+    if (t) t.remove();
+  }
+
+  function scrollBottom() {
+    const msgs = document.getElementById('cti-chat-msgs');
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function renderMd(text) {
+    return text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+
+  async function sendMessage(text) {
+    if (busy) return;
+    busy = true;
+
+    const input = document.getElementById('cti-chat-input');
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('cti-chat-send').disabled = true;
+
+    addUserMsg(text);
+    addTyping();
+
+    history.push({ role: 'user', content: text });
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: history.slice(-6) }),
+      });
+      removeTyping();
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.reply || 'No response received.';
+        history.push({ role: 'assistant', content: reply });
+        addBotMsg(reply);
+      } else {
+        addBotMsg('Error ' + res.status + ': Could not reach the CTI backend.');
+      }
+    } catch (err) {
+      removeTyping();
+      addBotMsg('Network error — make sure the CTI system is running.');
+    }
+
+    busy = false;
+    document.getElementById('cti-chat-send').disabled = false;
+    input.focus();
+  }
+
+  /* ── Init ────────────────────────────────────────────────────────── */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildUI);
+  } else {
+    buildUI();
+  }
+})();
+
+</script>
 </body>
 </html>

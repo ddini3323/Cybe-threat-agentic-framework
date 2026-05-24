@@ -3,15 +3,15 @@ Real-Time Threat Intelligence Feed Streamer
 Connects to free, public CTI feeds and streams live threat data into the pipeline.
 
 Supported feeds (no API key required):
-  1. URLhaus (abuse.ch)       — Live malicious URLs
-  2. ThreatFox (abuse.ch)     — Live IOCs (IPs, domains, URLs, hashes)
-  3. Feodo Tracker (abuse.ch) — Botnet C2 servers
+  1. Mastodon Local (infosec.exchange)        — Security community public timeline
+  2. Mastodon #threatintel (infosec.exchange) — Tagged threat intelligence posts
+  3. Mastodon #ioc (infosec.exchange)         — Tagged IOC posts
 """
 import asyncio
-import csv
 import hashlib
 import re
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 from typing import List, Dict, Optional
 
 import httpx
@@ -22,26 +22,26 @@ from models import ThreatEvent, ThreatType, SeverityLevel
 # ── Feed definitions ──────────────────────────────────────────────────
 
 FEEDS = {
-    "urlhaus": {
-        "name": "URLhaus (abuse.ch)",
-        "url": "https://urlhaus.abuse.ch/downloads/csv_recent/",
-        "type": "csv_download",
+    "mastodon_local": {
+        "name": "Mastodon Local (infosec.exchange)",
+        "url": "https://infosec.exchange/api/v1/timelines/public?local=true&limit=40",
+        "type": "mastodon_api",
         "interval": 120,
-        "description": "Live malicious URLs \u2014 malware distribution, phishing, exploit kits",
+        "description": "Local public timeline \u2014 security researchers sharing IOCs, advisories, incidents",
     },
-    "threatfox": {
-        "name": "ThreatFox (abuse.ch)",
-        "url": "https://threatfox.abuse.ch/export/csv/recent/",
-        "type": "csv_download",
+    "mastodon_threatintel": {
+        "name": "Mastodon #threatintel (infosec.exchange)",
+        "url": "https://infosec.exchange/api/v1/timelines/tag/threatintel?limit=40",
+        "type": "mastodon_api",
         "interval": 180,
-        "description": "Live IOCs \u2014 C2 IPs, malware hashes, phishing domains",
+        "description": "#threatintel tagged posts \u2014 malware families, C2 infrastructure, TTPs",
     },
-    "feodo": {
-        "name": "Feodo Tracker (abuse.ch)",
-        "url": "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt",
-        "type": "text_list",
+    "mastodon_ioc": {
+        "name": "Mastodon #ioc (infosec.exchange)",
+        "url": "https://infosec.exchange/api/v1/timelines/tag/ioc?limit=40",
+        "type": "mastodon_api",
         "interval": 300,
-        "description": "Botnet C2 server IPs (Dridex, Emotet, TrickBot, QakBot)",
+        "description": "#ioc tagged posts \u2014 indicators of compromise: IPs, hashes, domains, URLs",
     },
 }
 
@@ -65,157 +65,136 @@ def _detect_type(indicator: str) -> ThreatType:
     return ThreatType.UNKNOWN
 
 
-def _severity_from_tags(tags: list, threat_type: str = "") -> SeverityLevel:
-    text = " ".join(tags).lower() + " " + threat_type.lower()
-    if any(w in text for w in ["ransomware", "c2", "apt", "cobalt", "emotet", "trickbot"]):
+def _severity_from_text(text: str) -> SeverityLevel:
+    t = text.lower()
+    if any(w in t for w in ["ransomware", "apt", "c2", "command and control", "cobalt strike",
+                             "emotet", "trickbot", "zero-day", "0day", "critical"]):
         return SeverityLevel.CRITICAL
-    if any(w in text for w in ["trojan", "rat", "botnet", "stealer", "exploit"]):
+    if any(w in t for w in ["trojan", "rat", "botnet", "stealer", "exploit",
+                             "backdoor", "malware", "rootkit", "keylogger"]):
         return SeverityLevel.HIGH
-    if any(w in text for w in ["phishing", "miner", "dropper"]):
+    if any(w in t for w in ["phishing", "miner", "dropper", "ioc", "indicator",
+                             "threat", "suspicious", "vulnerability"]):
         return SeverityLevel.HIGH
     return SeverityLevel.MEDIUM
 
 
-# ── Per-feed parsers ──────────────────────────────────────────────────
+# ── HTML stripper & IOC patterns ──────────────────────────────────────
 
-def _parse_urlhaus(text_or_data) -> List[ThreatEvent]:
-    """Parse URLhaus CSV download.
-    Columns: id, dateadded, url, url_status, last_online, threat, tags, urlhaus_link, reporter
-    """
-    if isinstance(text_or_data, dict):
-        text = ""
-    else:
-        text = text_or_data
-    events = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith('#'):
-            continue
-        try:
-            row = next(csv.reader([line]))
-        except Exception:
-            continue
-        if len(row) < 7 or row[0] == 'id':
-            continue
-        url = row[2].strip('"')
-        if not url:
-            continue
-        eid = _event_id('urlhaus', url)
-        status = row[3].strip('"')
-        threat = row[5].strip('"')
-        tags = [t.strip() for t in row[6].strip('"').split(',') if t.strip()]
-        host = ''
-        try:
-            from urllib.parse import urlparse
-            host = urlparse(url).hostname or ''
-        except Exception:
-            pass
+class _HTMLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self._parts: List[str] = []
 
-        desc_parts = []
-        if threat:
-            desc_parts.append(f'Threat: {threat}.')
-        if tags:
-            desc_parts.append(f'Tags: {", ".join(tags)}.')
-        if host:
-            desc_parts.append(f'Host: {host}.')
-        if status:
-            desc_parts.append(f'Status: {status}.')
+    def handle_data(self, data: str):
+        self._parts.append(data)
 
-        events.append(ThreatEvent(
-            event_id=eid,
-            timestamp=datetime.now(timezone.utc),
-            source='URLhaus',
-            event_type=ThreatType.URL,
-            raw_text=f'[URLhaus] Malicious URL: {url}. {" ".join(desc_parts)}',
-            indicator=url,
-            description=' '.join(desc_parts) or 'Malicious URL reported to URLhaus',
-            severity=_severity_from_tags(tags, threat),
-            raw_data={'feed': 'urlhaus', 'tags': tags, 'threat': threat, 'host': host},
-        ))
-        if len(events) >= 25:
-            break
-    return events
+    def get_text(self) -> str:
+        return ' '.join(self._parts).strip()
 
 
-def _parse_threatfox(text_or_data) -> List[ThreatEvent]:
-    """Parse ThreatFox CSV export.
-    Columns: first_seen_utc, ioc_id, ioc_value, ioc_type, threat_type,
-             fk_malware, malware_alias, malware_printable, last_seen_utc,
-             confidence_level, reference, tags, anonymous, reporter
-    """
-    if isinstance(text_or_data, dict):
-        text = ""
-    else:
-        text = text_or_data
-    events = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith('#'):
-            continue
-        try:
-            row = next(csv.reader([line]))
-        except Exception:
-            continue
-        if len(row) < 10 or row[0] == 'first_seen_utc':
-            continue
-        ioc_value = row[2].strip('"').strip()
-        if not ioc_value:
-            continue
-        eid = _event_id('threatfox', ioc_value)
-        ioc_type = row[3].strip('"').strip()
-        threat_type = row[4].strip('"').strip()
-        malware = row[7].strip('"').strip() if len(row) > 7 else ''
-        confidence = row[9].strip('"').strip() if len(row) > 9 else '50'
-        tags_str = row[11].strip('"').strip() if len(row) > 11 else ''
-        tags = [t.strip() for t in tags_str.split(',') if t.strip()]
+def _strip_html(html: str) -> str:
+    s = _HTMLStripper()
+    s.feed(html or '')
+    return s.get_text()
 
-        desc = f'[ThreatFox] {threat_type}: {ioc_value}'
-        if malware:
-            desc += f' - Malware: {malware}'
-        if tags:
-            desc += f' - Tags: {", ".join(tags)}'
+
+def _refang(text: str) -> str:
+    """Normalize defanged IOCs written by security researchers."""
+    text = re.sub(r'hxxps?://', lambda m: m.group().replace('xx', 'tt'), text, flags=re.I)
+    text = re.sub(r'\[\.\]|\(\?\.\)|\[dot\]', '.', text, flags=re.I)
+    text = re.sub(r'\(\.\)', '.', text)
+    return text
+
+
+_RE_URL    = re.compile(r'https?://[^\s<>"\[\]]{6,}', re.I)
+_RE_IP     = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+_RE_SHA256 = re.compile(r'\b[a-f0-9]{64}\b', re.I)
+_RE_SHA1   = re.compile(r'\b[a-f0-9]{40}\b', re.I)
+_RE_MD5    = re.compile(r'\b[a-f0-9]{32}\b', re.I)
+
+
+# ── Mastodon parser ───────────────────────────────────────────────────
+
+_FEED_SOURCE_NAMES = {
+    "mastodon_local":       "Mastodon Local",
+    "mastodon_threatintel": "Mastodon #threatintel",
+    "mastodon_ioc":         "Mastodon #ioc",
+}
+
+
+def _parse_mastodon(data, feed_key: str) -> List[ThreatEvent]:
+    """Parse a Mastodon API JSON response (list of status objects)."""
+    if not isinstance(data, list):
+        return []
+
+    source_name = _FEED_SOURCE_NAMES.get(feed_key, f'Mastodon ({feed_key})')
+    events: List[ThreatEvent] = []
+
+    for status in data:
+        if not isinstance(status, dict):
+            continue
+        post_id = str(status.get('id', '')).strip()
+        if not post_id:
+            continue
+
+        raw_html = status.get('content', '')
+        plain = _strip_html(raw_html)
+        if not plain or len(plain) < 20:
+            continue
+
+        refanged = _refang(plain)
+
+        # Extract primary indicator (prefer URL > hash > IP)
+        urls   = _RE_URL.findall(refanged)
+        hashes = _RE_SHA256.findall(refanged) or _RE_SHA1.findall(refanged) or _RE_MD5.findall(refanged)
+        ips    = _RE_IP.findall(refanged)
+
+        if urls:
+            indicator  = urls[0]
+            event_type = ThreatType.URL
+        elif hashes:
+            indicator  = hashes[0]
+            event_type = ThreatType.HASH
+        elif ips:
+            indicator  = ips[0]
+            event_type = ThreatType.IP
+        else:
+            indicator  = post_id
+            event_type = ThreatType.UNKNOWN
+
+        tags   = [t.get('name', '') for t in status.get('tags', []) if t.get('name')]
+        author = status.get('account', {}).get('acct', 'unknown')
+        post_url = status.get('url', '')
+
+        summary = plain[:300]
+        desc = f'[{source_name}] @{author}: {summary}'
 
         events.append(ThreatEvent(
-            event_id=eid,
+            event_id=_event_id(feed_key, post_id),
             timestamp=datetime.now(timezone.utc),
-            source='ThreatFox',
-            event_type=_detect_type(ioc_value),
+            source=source_name,
+            event_type=event_type,
             raw_text=desc,
-            indicator=ioc_value,
+            indicator=indicator,
             description=desc,
-            severity=_severity_from_tags(tags + [malware, threat_type]),
-            raw_data={'feed': 'threatfox', 'malware': malware,
-                       'threat_type': threat_type, 'confidence': confidence},
+            severity=_severity_from_text(plain + ' ' + ' '.join(tags)),
+            raw_data={
+                'feed': feed_key,
+                'tags': tags,
+                'author': author,
+                'post_url': post_url,
+                'iocs_found': {
+                    'urls': urls[:5],
+                    'hashes': hashes[:5],
+                    'ips': ips[:5],
+                },
+            },
         ))
         if len(events) >= 25:
             break
+
     return events
-
-
-def _parse_feodo(text: str) -> List[ThreatEvent]:
-    events = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        ip = line.split(",")[0].strip()            # some formats have CSV
-        if not re.match(r'^\d{1,3}(\.\d{1,3}){3}$', ip):
-            continue
-        eid = _event_id("feodo", ip)
-        events.append(ThreatEvent(
-            event_id=eid,
-            timestamp=datetime.now(timezone.utc),
-            source="Feodo Tracker",
-            event_type=ThreatType.IP,
-            raw_text=f"[Feodo Tracker] Botnet C2 server IP: {ip}. "
-                     f"Known command-and-control infrastructure for banking trojans "
-                     f"(Dridex, Emotet, TrickBot, QakBot).",
-            indicator=ip,
-            description="Botnet C2 IP on Feodo recommended blocklist",
-            severity=SeverityLevel.CRITICAL,
-            raw_data={"feed": "feodo"},
-        ))
-    return events[:25]                              # cap per poll
 
 
 # ── Main streamer class ──────────────────────────────────────────────
@@ -230,6 +209,7 @@ class FeedStreamer:
         self.feed_status: Dict[str, dict] = {}
         self.total_ingested = 0
         self._running = False
+        self._paused = False
         self._tasks: List[asyncio.Task] = []
 
         for key in self.enabled_feeds:
@@ -250,6 +230,7 @@ class FeedStreamer:
     def start(self):
         """Launch one async task per feed (call from an already-running loop)."""
         self._running = True
+        self._paused = False
         for key in self.enabled_feeds:
             task = asyncio.create_task(self._poll_loop(key))
             self._tasks.append(task)
@@ -258,10 +239,34 @@ class FeedStreamer:
         self._running = False
         for t in self._tasks:
             t.cancel()
+        self._tasks.clear()
+
+    def pause(self):
+        """Pause streaming so a user-submitted event gets immediate attention."""
+        if not self._paused:
+            self._paused = True
+            for t in self._tasks:
+                t.cancel()
+            self._tasks.clear()
+            print("  [feeds] Streaming paused for user submission")
+
+    def resume(self):
+        """Resume streaming after user-submitted event processing completes."""
+        if self._running and self._paused:
+            self._paused = False
+            for key in self.enabled_feeds:
+                task = asyncio.create_task(self._poll_loop(key))
+                self._tasks.append(task)
+            print("  [feeds] Streaming resumed")
+
+    @property
+    def is_paused(self) -> bool:
+        return self._paused
 
     def get_status(self) -> dict:
         return {
             "streaming": self._running,
+            "paused": self._paused,
             "total_ingested": self.total_ingested,
             "feeds": self.feed_status,
         }
@@ -274,7 +279,7 @@ class FeedStreamer:
         fs = self.feed_status[feed_key]
 
         # stagger startup so feeds don't all fire at once
-        await asyncio.sleep({"urlhaus": 2, "threatfox": 5, "feodo": 8}.get(feed_key, 2))
+        await asyncio.sleep({"mastodon_local": 2, "mastodon_threatintel": 5, "mastodon_ioc": 8}.get(feed_key, 2))
 
         while self._running:
             try:
@@ -285,8 +290,9 @@ class FeedStreamer:
                     self.seen_ids.add(e.event_id)
 
                 if new_events:
-                    # push into the pending queue (same queue as live-input page)
-                    self.state.setdefault('pending_events', []).extend(new_events)
+                    # Feed events go to events list for display only.
+                    # pending_events is reserved for user-submitted live input so
+                    # it is not crowded out by high-volume streaming feeds.
                     self.state.setdefault('events', []).extend(new_events)
                     self.total_ingested += len(new_events)
                     fs["events_fetched"] += len(new_events)
@@ -306,21 +312,12 @@ class FeedStreamer:
     async def _fetch(self, key: str) -> List[ThreatEvent]:
         meta = FEEDS[key]
         timeout = httpx.Timeout(30.0, connect=10.0)
+        headers = {"User-Agent": "CTI-Agentic-System/1.0 (threat intelligence aggregator)"}
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            if key == "urlhaus":
-                r = await client.get(meta["url"])
-                r.raise_for_status()
-                return _parse_urlhaus(r.text)
-
-            elif key == "threatfox":
-                r = await client.get(meta["url"])
-                r.raise_for_status()
-                return _parse_threatfox(r.text)
-
-            elif key == "feodo":
-                r = await client.get(meta["url"])
-                r.raise_for_status()
-                return _parse_feodo(r.text)
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=headers) as client:
+            r = await client.get(meta["url"])
+            r.raise_for_status()
+            if meta["type"] == "mastodon_api":
+                return _parse_mastodon(r.json(), key)
 
         return []

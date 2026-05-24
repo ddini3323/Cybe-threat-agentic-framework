@@ -41,10 +41,15 @@ class MitigationAgent:
         return hashlib.md5(key.encode()).hexdigest()[:16]
     
     def _build_pattern_mitigation_prompt(self, pattern: ThreatPattern) -> str:
-        """Build prompt for pattern mitigation"""
-        prompt = f"""Generate cybersecurity mitigation recommendations for the following threat pattern.
+        """Build chain-of-thought prompt for pattern mitigation (Objective 3)"""
+        prompt = f"""You are a cybersecurity incident response expert. Generate explainable mitigation recommendations for the threat pattern below.
 
-Pattern Details:
+Think step-by-step before answering:
+1. What is the primary threat mechanism of this pattern?
+2. Which MITRE D3FEND countermeasures apply?
+3. What is the minimal effective mitigation that avoids disrupting operations?
+
+Threat Pattern:
 - Name: {pattern.pattern_name}
 - Description: {pattern.description}
 - Severity: {pattern.severity.name}
@@ -52,40 +57,49 @@ Pattern Details:
 - Common TTPs: {', '.join(pattern.common_ttps[:3]) if pattern.common_ttps else 'None'}
 - Affected Systems: {', '.join(pattern.affected_systems) if pattern.affected_systems else 'Unknown'}
 
-Provide mitigation in JSON format with:
-1. "title": Short mitigation title (5-10 words)
-2. "description": Brief overview of the mitigation strategy (1-2 sentences)
-3. "steps": Array of 3-5 specific, actionable mitigation steps
-4. "sample_rule": One sample security rule (firewall, IDS, SIEM) if applicable (or null)
-5. "priority": Integer 1-5 (1=low, 5=critical)
+MITRE D3FEND countermeasure categories (pick the most relevant 1-3):
+- D3-NI: Network Isolation | D3-ITF: Inbound Traffic Filtering | D3-OTF: Outbound Traffic Filtering
+- D3-UA: User Account Restrictions | D3-MFA: Multi-Factor Authentication | D3-EDR: Endpoint Detection & Response
+- D3-PA: Process Allowlisting | D3-PM: Process Monitoring | D3-FH: File Hash Denylisting
+- D3-NTA: Network Traffic Analysis | D3-DNSDL: DNS Denylisting | D3-EI: Email Filtering
 
-The mitigation should be:
-- Practical and implementable
-- Specific to the threat pattern
-- Include both preventive and detective controls
-- Consider the affected systems
+Provide mitigation in JSON format:
+1. "reasoning": 2-3 sentence chain-of-thought explanation of WHY these specific steps address this threat
+2. "title": Short mitigation title (5-10 words)
+3. "description": Brief overview of the mitigation strategy (1-2 sentences)
+4. "steps": Array of 3-5 specific, actionable mitigation steps
+5. "sample_rule": One sample security rule (firewall, IDS, SIEM) if applicable (or null)
+6. "mitre_d3fend": Array of 1-3 applicable D3FEND countermeasure IDs (e.g., ["D3-NI", "D3-ITF"])
+7. "priority": Integer 1-5 (1=low, 5=critical)
 
-Return ONLY valid JSON, no additional text.
+Return ONLY valid JSON.
 
-Example format:
+Example:
 {{
-  "title": "Block Malicious Phishing Domains",
-  "description": "Implement DNS and email filtering to block known phishing domains and prevent credential theft.",
+  "reasoning": "This phishing pattern exploits email trust to deliver malware. Blocking at the email gateway prevents delivery, while MFA limits credential theft impact. Network isolation stops lateral movement if a host is compromised.",
+  "title": "Block Phishing Domains and Enforce MFA",
+  "description": "Implement layered email filtering and enforce MFA to prevent phishing-driven credential theft.",
   "steps": [
     "Update DNS blocklists with identified malicious domains",
-    "Configure email gateway to quarantine emails from flagged domains",
-    "Enable MFA on all user accounts to mitigate credential theft",
-    "Conduct user awareness training on phishing identification",
-    "Monitor for authentication anomalies using SIEM"
+    "Configure email gateway to quarantine emails from flagged senders",
+    "Enforce MFA on all accounts to limit credential theft impact",
+    "Monitor SIEM for authentication anomalies from affected users",
+    "Conduct targeted phishing awareness training"
   ],
-  "sample_rule": "firewall rule deny ip any any to domain-list phishing-domains",
+  "sample_rule": "alert smtp any any -> $MAIL_SERVERS any (msg:\"Phishing domain detected\"; content:\"malicious-domain.com\"; sid:1000001;)",
+  "mitre_d3fend": ["D3-MFA", "D3-DNSDL", "D3-ITF"],
   "priority": 4
 }}"""
         return prompt
-    
+
     def _build_event_mitigation_prompt(self, event: EnrichedEvent) -> str:
-        """Build prompt for single high-severity event"""
-        prompt = f"""Generate cybersecurity mitigation recommendations for this high-severity threat event.
+        """Build chain-of-thought prompt for high-severity event (Objective 3)"""
+        prompt = f"""You are a cybersecurity incident responder. Generate explainable, immediate mitigation for this high-severity threat.
+
+Think step-by-step:
+1. What is the immediate risk if no action is taken?
+2. What is the fastest containment action?
+3. What detection or monitoring should be added?
 
 Event Details:
 - Type: {event.original_event.event_type}
@@ -93,33 +107,26 @@ Event Details:
 - Description: {event.original_event.raw_text[:500]}
 - Indicator: {event.original_event.indicator or 'N/A'}
 - TTPs: {', '.join(event.ttps[:3]) if event.ttps else 'None'}
-- IOCs: {', '.join([f"{ioc.get('type')}:{ioc.get('value')}" for ioc in event.iocs[:5]]) if event.iocs else 'None'}
+- IOCs: {', '.join([f"{i.get('type')}:{i.get('value')}" for i in event.iocs[:5]]) if event.iocs else 'None'}
+- Attack Stage: {event.attack_stage or 'Unknown'}
 - Attack Vector: {event.attack_vector or 'Unknown'}
 - Affected Assets: {', '.join(event.affected_assets) if event.affected_assets else 'Unknown'}
+- Threat Category: {event.threat_category or 'Unknown'}
 
-Provide mitigation in JSON format with:
-1. "title": Short mitigation title (5-10 words)
-2. "description": Brief overview (1-2 sentences)
-3. "steps": Array of 3-5 specific, actionable steps
-4. "sample_rule": One sample security rule if applicable (or null)
-5. "priority": Integer 1-5 based on severity
+MITRE D3FEND categories: D3-NI (Network Isolation), D3-ITF (Inbound Filtering), D3-OTF (Outbound Filtering),
+D3-UA (User Account Restrictions), D3-MFA (Multi-Factor Auth), D3-EDR (Endpoint Detection),
+D3-PA (Process Allowlisting), D3-FH (File Hash Denylisting), D3-NTA (Network Traffic Analysis)
 
-Return ONLY valid JSON.
+Provide mitigation in JSON format:
+1. "reasoning": 2-3 sentence explanation of WHY these steps address this specific threat context
+2. "title": Short mitigation title (5-10 words)
+3. "description": Brief overview (1-2 sentences)
+4. "steps": Array of 3-5 specific, actionable steps
+5. "sample_rule": One sample security rule if applicable (or null)
+6. "mitre_d3fend": Array of 1-3 applicable D3FEND IDs
+7. "priority": Integer 1-5 based on severity
 
-Example format:
-{{
-  "title": "Block Malicious IP and Isolate Affected Host",
-  "description": "Immediately block the malicious IP address and isolate potentially compromised systems for investigation.",
-  "steps": [
-    "Add IP 192.168.1.100 to firewall blocklist",
-    "Isolate affected host from network",
-    "Run full malware scan on isolated system",
-    "Review logs for lateral movement attempts",
-    "Reset credentials for accounts accessed from compromised host"
-  ],
-  "sample_rule": "iptables -A INPUT -s 192.168.1.100 -j DROP",
-  "priority": 4
-}}"""
+Return ONLY valid JSON."""
         return prompt
     
     async def generate_for_pattern(self, pattern: ThreatPattern) -> Optional[MitigationAction]:
@@ -142,7 +149,7 @@ Output only valid JSON matching the requested schema."""
                          pattern_id=pattern.pattern_id, status="warning")
                 return None
             
-            # Create mitigation action
+            # Create mitigation action with O3 explainability fields
             mitigation = MitigationAction(
                 mitigation_id=self._generate_mitigation_id(f"pattern_{pattern.pattern_id}"),
                 pattern_id=pattern.pattern_id,
@@ -150,6 +157,8 @@ Output only valid JSON matching the requested schema."""
                 description=result.get('description', ''),
                 steps=result.get('steps', []),
                 sample_rule=result.get('sample_rule'),
+                reasoning=result.get('reasoning'),
+                mitre_d3fend=result.get('mitre_d3fend', []),
                 priority=SeverityLevel(result.get('priority', 3)),
                 status='under_review'
             )
@@ -199,6 +208,8 @@ Output only valid JSON."""
                 description=result.get('description', ''),
                 steps=result.get('steps', []),
                 sample_rule=result.get('sample_rule'),
+                reasoning=result.get('reasoning'),
+                mitre_d3fend=result.get('mitre_d3fend', []),
                 priority=SeverityLevel(result.get('priority', 3)),
                 status='under_review'
             )

@@ -19,11 +19,29 @@ import config
 
 class IngestionAgent:
     """Agent responsible for ingesting and normalizing CTI data"""
-    
+
+    _PROCESSED_LOG = config.DATA_DIR / ".processed_files.json"
+
     def __init__(self):
         self.name = "IngestionAgent"
-        self.processed_files = set()
+        self.processed_files: set = self._load_processed()
         self.log_entries: List[AgentLogEntry] = []
+
+    def _load_processed(self) -> set:
+        try:
+            if self._PROCESSED_LOG.exists():
+                return set(json.loads(self._PROCESSED_LOG.read_text(encoding="utf-8")))
+        except Exception:
+            pass
+        return set()
+
+    def _save_processed(self):
+        try:
+            self._PROCESSED_LOG.write_text(
+                json.dumps(list(self.processed_files)), encoding="utf-8"
+            )
+        except Exception:
+            pass
     
     def _log(self, action: str, details: str, event_id: str = None, status: str = "success"):
         """Create log entry"""
@@ -275,11 +293,13 @@ class IngestionAgent:
                 events = self.normalize_csv(file_path, file_path.stem)
                 all_events.extend(events)
                 self.processed_files.add(file_key)
-            
+                self._save_processed()
+
             elif file_path.suffix.lower() == '.json':
                 events = self.normalize_json(file_path, file_path.stem)
                 all_events.extend(events)
                 self.processed_files.add(file_key)
+                self._save_processed()
         
         if all_events:
             self._log("ingest_from_directory", f"Ingested {len(all_events)} total events from {len([f for f in directory.iterdir()])} files")
