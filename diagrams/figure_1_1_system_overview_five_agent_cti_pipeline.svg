@@ -1,0 +1,129 @@
+<svg viewBox="0 0 780 840" width="780" height="840" xmlns="http://www.w3.org/2000/svg"><style>text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}</style>
+<defs>
+  <marker id="a1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#455A64"/></marker>
+  <marker id="a1o" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E65100"/></marker>
+  <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- INPUT SOURCES header band -->
+<rect x="10" y="8" width="760" height="20" rx="4" fill="#E8EAF6"/>
+<text x="385" y="22" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3949AB" letter-spacing="1.8">INPUT SOURCES</text>
+
+<!-- Box 1: Live CTI Feeds -->
+<rect x="12" y="34" width="224" height="80" rx="8" fill="#E1F5FE" stroke="#0288D1" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="12" y="34" width="224" height="28" rx="8" fill="#0288D1"/>
+<rect x="12" y="50" width="224" height="12" fill="#0288D1"/>
+<text x="124" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Live CTI Feeds</text>
+<text x="124" y="74" text-anchor="middle" font-size="10" fill="#01579B">URLhaus · ThreatFox</text>
+<text x="124" y="89" text-anchor="middle" font-size="10" fill="#01579B">Feodo Tracker</text>
+<text x="124" y="104" text-anchor="middle" font-size="9" fill="#0277BD" font-style="italic">streaming / polling</text>
+
+<!-- Box 2: Social Media -->
+<rect x="278" y="34" width="224" height="80" rx="8" fill="#E8F5E9" stroke="#388E3C" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="278" y="34" width="224" height="28" rx="8" fill="#388E3C"/>
+<rect x="278" y="50" width="224" height="12" fill="#388E3C"/>
+<text x="390" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Social Media</text>
+<text x="390" y="74" text-anchor="middle" font-size="10" fill="#1B5E20">Mastodon</text>
+<text x="390" y="89" text-anchor="middle" font-size="10" fill="#1B5E20">infosec.exchange</text>
+<text x="390" y="104" text-anchor="middle" font-size="9" fill="#2E7D32" font-style="italic">real-time OSINT</text>
+
+<!-- Box 3: Manual Input -->
+<rect x="544" y="34" width="224" height="80" rx="8" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="544" y="34" width="224" height="28" rx="8" fill="#F57F17"/>
+<rect x="544" y="50" width="224" height="12" fill="#F57F17"/>
+<text x="656" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Manual Input</text>
+<text x="656" y="74" text-anchor="middle" font-size="10" fill="#E65100">JSON / CSV / Free Text</text>
+<text x="656" y="89" text-anchor="middle" font-size="10" fill="#E65100">File Upload</text>
+<text x="656" y="104" text-anchor="middle" font-size="9" fill="#E65100" font-style="italic">analyst submission</text>
+
+<!-- Converge arrows to Agent 1 -->
+<line x1="124" y1="114" x2="310" y2="148" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+<line x1="390" y1="114" x2="390" y2="150" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+<line x1="656" y1="114" x2="470" y2="148" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 1: INGESTION -->
+<rect x="90" y="155" width="600" height="70" rx="10" fill="#1565C0" filter="url(#sh)"/>
+<rect x="90" y="155" width="600" height="28" rx="10" fill="#0D47A1"/>
+<rect x="90" y="171" width="600" height="12" fill="#0D47A1"/>
+<text x="390" y="173" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 1 · INGESTION</text>
+<text x="390" y="193" text-anchor="middle" font-size="10.5" fill="#BBDEFB">Normalise → ThreatEvent schema  ·  Deduplicate (MD5 hash)</text>
+<text x="390" y="210" text-anchor="middle" font-size="10" fill="#90CAF9">Event-Type Detection  ·  Severity Keyword Scoring (1–5)</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="225" x2="390" y2="255" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 2: ENRICHMENT -->
+<rect x="90" y="261" width="470" height="72" rx="10" fill="#4527A0" filter="url(#sh)"/>
+<rect x="90" y="261" width="470" height="28" rx="10" fill="#311B92"/>
+<rect x="90" y="277" width="470" height="12" fill="#311B92"/>
+<text x="325" y="279" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 2 · ENRICHMENT</text>
+<text x="325" y="299" text-anchor="middle" font-size="10.5" fill="#D1C4E9">LLM: llama3.2:3b via Ollama  +  MITRE ATT&amp;CK RAG</text>
+<text x="325" y="316" text-anchor="middle" font-size="10" fill="#B39DDB">Extracts TTPs · IOCs · CVEs · Malware Family → EnrichedEvent</text>
+
+<!-- ChromaDB RAG side box -->
+<rect x="578" y="246" width="190" height="106" rx="8" fill="#FFF3E0" stroke="#E65100" stroke-width="1.8" filter="url(#sh)"/>
+<rect x="578" y="246" width="190" height="27" rx="8" fill="#E65100"/>
+<rect x="578" y="262" width="190" height="11" fill="#E65100"/>
+<text x="673" y="264" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">ChromaDB  ·  RAG</text>
+<text x="673" y="284" text-anchor="middle" font-size="9.5" fill="#BF360C">691 MITRE ATT&amp;CK v18.1</text>
+<text x="673" y="298" text-anchor="middle" font-size="9.5" fill="#BF360C">Enterprise Techniques</text>
+<text x="673" y="313" text-anchor="middle" font-size="9.5" fill="#BF360C">+ Past Threat Reports</text>
+<text x="673" y="328" text-anchor="middle" font-size="9" fill="#E64A19" font-style="italic">384-dim embeddings (MiniLM)</text>
+
+<!-- Bidirectional arrows Agent2 ↔ ChromaDB -->
+<line x1="560" y1="287" x2="578" y2="287" stroke="#E65100" stroke-width="1.8" marker-end="url(#a1o)"/>
+<line x1="578" y1="300" x2="560" y2="300" stroke="#455A64" stroke-width="1.8" marker-end="url(#a1)"/>
+<text x="569" y="284" text-anchor="middle" font-size="8" fill="#E65100" font-weight="600">query</text>
+<text x="569" y="311" text-anchor="middle" font-size="8" fill="#455A64">context</text>
+
+<!-- Self-learning loop arc -->
+<path d="M768,352 C790,345 790,230 673,230" stroke="#E65100" stroke-width="1.4" stroke-dasharray="5,3" fill="none" marker-end="url(#a1o)"/>
+<text x="793" y="310" text-anchor="middle" font-size="8.5" fill="#E65100" transform="rotate(-90,793,310)">self-learning loop</text>
+
+<!-- Arrow down from Agent 2 -->
+<line x1="325" y1="333" x2="325" y2="352" stroke="#455A64" stroke-width="2"/>
+<line x1="325" y1="352" x2="390" y2="352" stroke="#455A64" stroke-width="2"/>
+<line x1="390" y1="352" x2="390" y2="370" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 3: PATTERN DISCOVERY -->
+<rect x="90" y="376" width="600" height="72" rx="10" fill="#00695C" filter="url(#sh)"/>
+<rect x="90" y="376" width="600" height="28" rx="10" fill="#004D40"/>
+<rect x="90" y="392" width="600" height="12" fill="#004D40"/>
+<text x="390" y="394" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 3 · PATTERN DISCOVERY</text>
+<text x="390" y="413" text-anchor="middle" font-size="10.5" fill="#B2DFDB">Weighted Jaccard Similarity — threshold ≥ 0.7</text>
+<text x="390" y="430" text-anchor="middle" font-size="10" fill="#80CBC4">0.4·J_TTP + 0.3·malware + 0.2·vector + 0.1·asset → ThreatPattern</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="448" x2="390" y2="478" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 4: MITIGATION GENERATION -->
+<rect x="90" y="484" width="600" height="72" rx="10" fill="#BF360C" filter="url(#sh)"/>
+<rect x="90" y="484" width="600" height="28" rx="10" fill="#8D0E00"/>
+<rect x="90" y="500" width="600" height="12" fill="#8D0E00"/>
+<text x="390" y="502" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 4 · MITIGATION GENERATION</text>
+<text x="390" y="521" text-anchor="middle" font-size="10.5" fill="#FFCCBC">Chain-of-Thought Prompting  +  MITRE D3FEND Mapping</text>
+<text x="390" y="538" text-anchor="middle" font-size="10" fill="#FFAB91">3-step CoT: threat mechanism → D3FEND codes → action steps + sample rule</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="556" x2="390" y2="586" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 5: VALIDATION -->
+<rect x="90" y="592" width="600" height="72" rx="10" fill="#1B5E20" filter="url(#sh)"/>
+<rect x="90" y="592" width="600" height="28" rx="10" fill="#0A3D00"/>
+<rect x="90" y="608" width="600" height="12" fill="#0A3D00"/>
+<text x="390" y="610" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 5 · VALIDATION</text>
+<text x="390" y="629" text-anchor="middle" font-size="10.5" fill="#C8E6C9">Deterministic Safety Rules (5 checks applied)</text>
+<text x="390" y="646" text-anchor="middle" font-size="10" fill="#A5D6A7">Status: APPROVED  ·  REJECTED  ·  PENDING_REVIEW</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="664" x2="390" y2="694" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- SOC DASHBOARD -->
+<rect x="50" y="700" width="680" height="84" rx="10" fill="#01579B" filter="url(#sh)"/>
+<rect x="50" y="700" width="680" height="32" rx="10" fill="#003C71"/>
+<rect x="50" y="720" width="680" height="12" fill="#003C71"/>
+<text x="390" y="721" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff" letter-spacing="1.2">SOC DASHBOARD  ·  port 8888</text>
+<text x="390" y="745" text-anchor="middle" font-size="10.5" fill="#B3E5FC">Pipeline  ·  Enrichment  ·  Attack Patterns  ·  Mitigations  ·  Flow Tracker</text>
+<text x="390" y="761" text-anchor="middle" font-size="10" fill="#81D4FA">Feeds  ·  Benchmark  ·  Live Input   (8-page FastAPI / Uvicorn web app)</text>
+<text x="390" y="775" text-anchor="middle" font-size="9.5" fill="#4FC3F7" font-style="italic">All processing local — no data leaves the host machine</text>
+</svg>

@@ -1,0 +1,75 @@
+<svg viewBox="0 0 880 540" width="880" height="540" xmlns="http://www.w3.org/2000/svg"><style>text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}</style>
+<defs>
+  <marker id="era" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh4"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- Helper: draw entity table at (x, y) with given fields -->
+<!-- ThreatEvent — top-left: x=20, y=30 -->
+<rect x="20" y="30" width="340" height="208" rx="8" fill="white" stroke="#1565C0" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="20" y="30" width="340" height="32" rx="8" fill="#1565C0"/>
+<rect x="20" y="50" width="340" height="12" fill="#1565C0"/>
+<text x="190" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="white">ThreatEvent</text>
+<!-- fields -->
+<rect x="20" y="62" width="340" height="24" fill="#DBEAFE"/><text x="30" y="78" font-size="10.5" fill="#1E3A8A"><tspan font-weight="700" fill="#1565C0">PK </tspan>event_id : string (MD5)</text>
+<rect x="20" y="86" width="340" height="24" fill="#EFF6FF"/><text x="30" y="102" font-size="10.5" fill="#1E3A8A">source : string</text>
+<rect x="20" y="110" width="340" height="24" fill="#DBEAFE"/><text x="30" y="126" font-size="10.5" fill="#1E3A8A">event_type : enum</text>
+<rect x="20" y="134" width="340" height="24" fill="#EFF6FF"/><text x="30" y="150" font-size="10.5" fill="#1E3A8A">severity : int  (1–5)</text>
+<rect x="20" y="158" width="340" height="24" fill="#DBEAFE"/><text x="30" y="174" font-size="10.5" fill="#1E3A8A">raw_text : string</text>
+<rect x="20" y="182" width="340" height="24" fill="#EFF6FF"/><text x="30" y="198" font-size="10.5" fill="#1E3A8A">indicator : string</text>
+<rect x="20" y="206" width="340" height="32" rx="4" fill="#DBEAFE"/><text x="30" y="227" font-size="10.5" fill="#1E3A8A">timestamp : datetime</text>
+
+<!-- EnrichedEvent — top-right: x=520, y=30 -->
+<rect x="520" y="30" width="340" height="208" rx="8" fill="white" stroke="#7B1FA2" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="520" y="30" width="340" height="32" rx="8" fill="#7B1FA2"/>
+<rect x="520" y="50" width="340" height="12" fill="#7B1FA2"/>
+<text x="690" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="white">EnrichedEvent</text>
+<rect x="520" y="62" width="340" height="24" fill="#F3E5F5"/><text x="530" y="78" font-size="10.5" fill="#4A148C"><tspan font-weight="700" fill="#7B1FA2">FK </tspan>event_id  (→ ThreatEvent)</text>
+<rect x="520" y="86" width="340" height="24" fill="#EDE7F6"/><text x="530" y="102" font-size="10.5" fill="#4A148C">ttps[ ] : list</text>
+<rect x="520" y="110" width="340" height="24" fill="#F3E5F5"/><text x="530" y="126" font-size="10.5" fill="#4A148C">iocs[ ] : list</text>
+<rect x="520" y="134" width="340" height="24" fill="#EDE7F6"/><text x="530" y="150" font-size="10.5" fill="#4A148C">cves[ ] : list</text>
+<rect x="520" y="158" width="340" height="24" fill="#F3E5F5"/><text x="530" y="174" font-size="10.5" fill="#4A148C">malware_family : string</text>
+<rect x="520" y="182" width="340" height="24" fill="#EDE7F6"/><text x="530" y="198" font-size="10.5" fill="#4A148C">attack_vector : string</text>
+<rect x="520" y="206" width="340" height="32" rx="4" fill="#F3E5F5"/><text x="530" y="227" font-size="10.5" fill="#4A148C">enrichment_confidence : float</text>
+
+<!-- ThreatPattern — bottom-left: x=20, y=320 -->
+<rect x="20" y="320" width="340" height="184" rx="8" fill="white" stroke="#2E7D32" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="20" y="320" width="340" height="32" rx="8" fill="#2E7D32"/>
+<rect x="20" y="340" width="340" height="12" fill="#2E7D32"/>
+<text x="190" y="341" text-anchor="middle" font-size="13" font-weight="700" fill="white">ThreatPattern</text>
+<rect x="20" y="352" width="340" height="24" fill="#E8F5E9"/><text x="30" y="368" font-size="10.5" fill="#1B5E20"><tspan font-weight="700" fill="#2E7D32">PK </tspan>pattern_id : string</text>
+<rect x="20" y="376" width="340" height="24" fill="#F1F8E9"/><text x="30" y="392" font-size="10.5" fill="#1B5E20">pattern_name : string</text>
+<rect x="20" y="400" width="340" height="24" fill="#E8F5E9"/><text x="30" y="416" font-size="10.5" fill="#1B5E20">event_ids[ ] : list</text>
+<rect x="20" y="424" width="340" height="24" fill="#F1F8E9"/><text x="30" y="440" font-size="10.5" fill="#1B5E20">primary_ttp : string</text>
+<rect x="20" y="448" width="340" height="24" fill="#E8F5E9"/><text x="30" y="464" font-size="10.5" fill="#1B5E20">severity : int</text>
+<rect x="20" y="472" width="340" height="32" rx="4" fill="#F1F8E9"/><text x="30" y="493" font-size="10.5" fill="#1B5E20">pattern_confidence : float</text>
+
+<!-- MitigationAction — bottom-right: x=520, y=320 -->
+<rect x="520" y="320" width="340" height="208" rx="8" fill="white" stroke="#C62828" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="520" y="320" width="340" height="32" rx="8" fill="#C62828"/>
+<rect x="520" y="340" width="340" height="12" fill="#C62828"/>
+<text x="690" y="341" text-anchor="middle" font-size="13" font-weight="700" fill="white">MitigationAction</text>
+<rect x="520" y="352" width="340" height="24" fill="#FFEBEE"/><text x="530" y="368" font-size="10.5" fill="#B71C1C"><tspan font-weight="700" fill="#C62828">PK </tspan>mitigation_id : string</text>
+<rect x="520" y="376" width="340" height="24" fill="#FCE4EC"/><text x="530" y="392" font-size="10.5" fill="#B71C1C"><tspan font-weight="700" fill="#C62828">FK </tspan>pattern_id  (→ ThreatPattern)</text>
+<rect x="520" y="400" width="340" height="24" fill="#FFEBEE"/><text x="530" y="416" font-size="10.5" fill="#B71C1C">title : string</text>
+<rect x="520" y="424" width="340" height="24" fill="#FCE4EC"/><text x="530" y="440" font-size="10.5" fill="#B71C1C">d3fend_codes[ ] : list</text>
+<rect x="520" y="448" width="340" height="24" fill="#FFEBEE"/><text x="530" y="464" font-size="10.5" fill="#B71C1C">priority : int  (1–5)</text>
+<rect x="520" y="472" width="340" height="24" fill="#FCE4EC"/><text x="530" y="488" font-size="10.5" fill="#B71C1C">action_steps[ ] : list</text>
+<rect x="520" y="496" width="340" height="32" rx="4" fill="#FFEBEE"/><text x="530" y="517" font-size="10.5" fill="#B71C1C">validated : bool</text>
+
+<!-- Relationship arrows -->
+<!-- ThreatEvent → EnrichedEvent -->
+<line x1="360" y1="140" x2="520" y2="140" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="393" y="125" width="94" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="440" y="137" text-anchor="middle" font-size="10" fill="#333" font-weight="600">enriches →</text>
+
+<!-- ThreatEvent → ThreatPattern -->
+<line x1="190" y1="238" x2="190" y2="320" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="130" y="271" width="120" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="190" y="283" text-anchor="middle" font-size="10" fill="#333" font-weight="600">clusters into ↓</text>
+
+<!-- ThreatPattern → MitigationAction -->
+<line x1="360" y1="412" x2="520" y2="412" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="393" y="397" width="94" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="440" y="409" text-anchor="middle" font-size="10" fill="#333" font-weight="600">triggers →</text>
+</svg>

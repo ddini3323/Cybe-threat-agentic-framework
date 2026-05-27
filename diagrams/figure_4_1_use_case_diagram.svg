@@ -1,0 +1,71 @@
+<svg viewBox="0 0 860 560" width="860" height="560" xmlns="http://www.w3.org/2000/svg"><style>text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}</style>
+<defs>
+  <marker id="ua" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#555"/></marker>
+</defs>
+
+<!-- System boundary -->
+<rect x="200" y="25" width="510" height="510" rx="10" fill="#F8F9FA" stroke="#555" stroke-width="1.8"/>
+<text x="455" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#333">CTI Agentic System</text>
+
+<!-- USE CASE ELLIPSES -->
+<!-- UC1 -->
+<ellipse cx="455" cy="105" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="110" text-anchor="middle" font-size="11" fill="#1E3A8A">Submit Threat (Text / File / Feed)</text>
+<!-- UC2 -->
+<ellipse cx="455" cy="185" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="190" text-anchor="middle" font-size="11" fill="#1E3A8A">View Enriched Events</text>
+<!-- UC3 -->
+<ellipse cx="455" cy="265" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="270" text-anchor="middle" font-size="11" fill="#1E3A8A">View Attack Patterns</text>
+<!-- UC4 -->
+<ellipse cx="455" cy="345" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="350" text-anchor="middle" font-size="11" fill="#1E3A8A">Approve / Review Mitigation</text>
+<!-- UC5 -->
+<ellipse cx="455" cy="425" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="430" text-anchor="middle" font-size="11" fill="#1E3A8A">Run Benchmark</text>
+<!-- UC6 -->
+<ellipse cx="455" cy="497" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="502" text-anchor="middle" font-size="11" fill="#1E3A8A">Configure Feeds</text>
+
+<!-- ACTOR: Security Analyst (left, upper) -->
+<circle cx="90" cy="175" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="191" x2="90" y2="230" stroke="#455A64" stroke-width="1.8"/>
+<line x1="65" y1="210" x2="115" y2="210" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="230" x2="70" y2="258" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="230" x2="110" y2="258" stroke="#455A64" stroke-width="1.8"/>
+<text x="90" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Security</text>
+<text x="90" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Analyst</text>
+
+<!-- ACTOR: System Admin (left, lower) -->
+<circle cx="90" cy="375" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="391" x2="90" y2="430" stroke="#455A64" stroke-width="1.8"/>
+<line x1="65" y1="410" x2="115" y2="410" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="430" x2="70" y2="458" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="430" x2="110" y2="458" stroke="#455A64" stroke-width="1.8"/>
+<text x="90" y="473" text-anchor="middle" font-size="11" font-weight="600" fill="#333">System</text>
+<text x="90" y="487" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Admin</text>
+
+<!-- ACTOR: Live Feed (right) -->
+<circle cx="770" cy="200" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="216" x2="770" y2="255" stroke="#455A64" stroke-width="1.8"/>
+<line x1="745" y1="235" x2="795" y2="235" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="255" x2="750" y2="283" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="255" x2="790" y2="283" stroke="#455A64" stroke-width="1.8"/>
+<text x="770" y="300" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Live Feed</text>
+<text x="770" y="314" text-anchor="middle" font-size="11" font-weight="600" fill="#333">(Mastodon)</text>
+
+<!-- Arrows: Security Analyst → use cases 1-5 -->
+<line x1="120" y1="175" x2="289" y2="105" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="190" x2="289" y2="185" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="205" x2="289" y2="263" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="215" x2="289" y2="343" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="120" y1="225" x2="289" y2="422" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+
+<!-- Arrows: System Admin → use cases 4,5,6 -->
+<line x1="120" y1="380" x2="289" y2="348" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="400" x2="289" y2="428" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="425" x2="289" y2="497" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+
+<!-- Arrows: Live Feed → UC1 -->
+<line x1="740" y1="195" x2="621" y2="108" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+</svg>

@@ -1,0 +1,112 @@
+<svg viewBox="0 0 660 960" width="660" height="960" xmlns="http://www.w3.org/2000/svg"><style>text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}</style>
+<defs>
+  <marker id="fa" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh6"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- START -->
+<ellipse cx="290" cy="32" rx="70" ry="22" fill="#37474F" filter="url(#sh6)"/>
+<text x="290" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="white">START</text>
+
+<line x1="290" y1="54" x2="290" y2="80" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P1: Receive Input -->
+<rect x="100" y="86" width="380" height="52" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="108" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0D47A1">Receive Threat Input</text>
+<text x="290" y="126" text-anchor="middle" font-size="10" fill="#1565C0">Text · JSON · CSV · File Upload · Live Feed</text>
+
+<line x1="290" y1="138" x2="290" y2="164" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P2: Ingestion -->
+<rect x="100" y="170" width="380" height="52" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="192" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0D47A1">Agent 1: Ingestion</text>
+<text x="290" y="210" text-anchor="middle" font-size="10" fill="#1565C0">Normalise  ·  Type detection  ·  Deduplicate (MD5)</text>
+
+<line x1="290" y1="222" x2="290" y2="252" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC1: Duplicate? -->
+<polygon points="290,258 370,285 290,312 210,285" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Duplicate?</text>
+
+<!-- Yes → Discard -->
+<line x1="370" y1="285" x2="430" y2="285" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="400" y="278" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">Yes</text>
+<rect x="436" y="265" width="148" height="42" rx="6" fill="#FFEBEE" stroke="#C62828" stroke-width="1.4" filter="url(#sh6)"/>
+<text x="510" y="282" text-anchor="middle" font-size="10" font-weight="600" fill="#B71C1C">Discard</text>
+<text x="510" y="298" text-anchor="middle" font-size="9.5" fill="#C62828">(duplicate skip)</text>
+
+<!-- No → continue -->
+<line x1="290" y1="312" x2="290" y2="342" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="300" y="332" font-size="9.5" fill="#1B5E20" font-weight="700">No</text>
+
+<!-- P3: Enrichment -->
+<rect x="100" y="348" width="380" height="52" rx="8" fill="#EDE7F6" stroke="#4527A0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="370" text-anchor="middle" font-size="11.5" font-weight="600" fill="#311B92">Agent 2: Enrichment</text>
+<text x="290" y="388" text-anchor="middle" font-size="10" fill="#4527A0">LLM (llama3.2:3b) + ChromaDB RAG (MITRE ATT&amp;CK)</text>
+
+<line x1="290" y1="400" x2="290" y2="430" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC2: Confidence > 0.3? -->
+<polygon points="290,436 380,465 290,494 200,465" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="463" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Confidence</text>
+<text x="290" y="479" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">&gt; 0.3?</text>
+
+<!-- No → skip store (bypass line) -->
+<line x1="200" y1="465" x2="150" y2="465" stroke="#37474F" stroke-width="1.8"/>
+<line x1="150" y1="465" x2="150" y2="572" stroke="#37474F" stroke-width="1.8"/>
+<line x1="150" y1="572" x2="186" y2="572" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="175" y="458" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">No</text>
+<rect x="12" y="498" width="132" height="36" rx="5" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.3"/>
+<text x="78" y="514" text-anchor="middle" font-size="9.5" fill="#E65100">Low confidence</text>
+<text x="78" y="528" text-anchor="middle" font-size="9.5" fill="#F57F17">log only</text>
+
+<!-- Yes → Store to ChromaDB -->
+<line x1="290" y1="494" x2="290" y2="524" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="302" y="514" font-size="9.5" fill="#1B5E20" font-weight="700">Yes</text>
+<rect x="100" y="530" width="380" height="42" rx="8" fill="#FFF3E0" stroke="#E65100" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="548" text-anchor="middle" font-size="11.5" font-weight="600" fill="#BF360C">Store Enriched Event → ChromaDB</text>
+<text x="290" y="564" text-anchor="middle" font-size="10" fill="#E65100">Self-learning loop  ·  384-dim vector embedding</text>
+
+<line x1="290" y1="572" x2="290" y2="606" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P4: Pattern Discovery -->
+<rect x="100" y="612" width="380" height="52" rx="8" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="634" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1B5E20">Agent 3: Pattern Discovery</text>
+<text x="290" y="652" text-anchor="middle" font-size="10" fill="#2E7D32">Weighted Jaccard Similarity on TTP sets</text>
+
+<line x1="290" y1="664" x2="290" y2="694" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC3: Severity >= 3? -->
+<polygon points="290,700 375,727 290,754 205,727" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="724" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Severity</text>
+<text x="290" y="740" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">≥ 3?</text>
+
+<!-- No → Log Only -->
+<line x1="375" y1="727" x2="436" y2="727" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="406" y="720" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">No</text>
+<rect x="442" y="707" width="148" height="42" rx="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="1.4" filter="url(#sh6)"/>
+<text x="516" y="724" text-anchor="middle" font-size="10" font-weight="600" fill="#E65100">Log Only</text>
+<text x="516" y="740" text-anchor="middle" font-size="9.5" fill="#F57F17">(no mitigation)</text>
+
+<!-- Yes → Mitigation -->
+<line x1="290" y1="754" x2="290" y2="784" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="302" y="773" font-size="9.5" fill="#1B5E20" font-weight="700">Yes</text>
+
+<!-- P5: Mitigation Generation -->
+<rect x="100" y="790" width="380" height="52" rx="8" fill="#FFEBEE" stroke="#C62828" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="812" text-anchor="middle" font-size="11.5" font-weight="600" fill="#B71C1C">Agent 4: Mitigation Generation</text>
+<text x="290" y="830" text-anchor="middle" font-size="10" fill="#C62828">Chain-of-Thought  ·  D3FEND codes  ·  action steps</text>
+
+<line x1="290" y1="842" x2="290" y2="872" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P6: Validation -->
+<rect x="100" y="878" width="380" height="52" rx="8" fill="#E8F5E9" stroke="#1B5E20" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="900" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1B5E20">Agent 5: Validation</text>
+<text x="290" y="918" text-anchor="middle" font-size="10" fill="#2E7D32">5 deterministic safety-rule checks</text>
+
+<line x1="290" y1="930" x2="290" y2="944" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- END -->
+<ellipse cx="290" cy="953" rx="70" ry="20" fill="#1B5E20" filter="url(#sh6)"/>
+<text x="290" y="958" text-anchor="middle" font-size="12" font-weight="700" fill="white">END</text>
+</svg>

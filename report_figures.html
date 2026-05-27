@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTI Agentic System — Report Figures</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#EEF2F7;color:#1A1A2E}
+.sidebar{position:fixed;top:0;left:0;width:230px;height:100vh;background:linear-gradient(160deg,#0D47A1 0%,#1565C0 60%,#1976D2 100%);overflow-y:auto;z-index:999;box-shadow:3px 0 15px rgba(0,0,0,.25)}
+.sidebar-header{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.18)}
+.sidebar-logo{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:5px}
+.sidebar-header h2{font-size:13px;color:#fff;font-weight:600;line-height:1.4}
+.nav-label{padding:12px 16px 3px;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.42);font-weight:700}
+.sidebar nav a{display:flex;align-items:center;gap:9px;padding:8px 16px;color:rgba(255,255,255,.82);text-decoration:none;font-size:12px;line-height:1.35;border-left:3px solid transparent;transition:all .18s}
+.sidebar nav a:hover{background:rgba(255,255,255,.11);border-left-color:#90CAF9;color:#fff}
+.badge{background:rgba(255,255,255,.2);color:#fff;border-radius:4px;padding:2px 7px;font-size:10.5px;font-weight:700;white-space:nowrap;flex-shrink:0}
+main{margin-left:230px;padding:28px 28px 60px}
+.page-header{background:#fff;border-radius:12px;padding:24px 28px;margin-bottom:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);display:flex;gap:18px;align-items:center}
+.ph-icon{width:50px;height:50px;background:#E3F2FD;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.ph-icon svg{width:28px;height:28px}
+.page-header h1{font-size:19px;color:#0D47A1;margin-bottom:5px}
+.page-header p{color:#666;font-size:12.5px;line-height:1.6}
+.fig-card{background:#fff;border-radius:12px;margin-bottom:46px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.09);border:1px solid #E0E7EF}
+.fig-header{background:linear-gradient(90deg,#0D47A1 0%,#1976D2 100%);padding:14px 22px;display:flex;align-items:center;gap:14px}
+.fig-num{background:rgba(255,255,255,.22);color:#fff;padding:3px 12px;border-radius:18px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.fig-header h2{color:#fff;font-size:14.5px;font-weight:600}
+.fig-body{padding:24px}
+.fig-desc{font-size:12.5px;color:#555;line-height:1.68;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #EEF2F7}
+.svg-frame{display:flex;justify-content:center;background:#FAFBFF;border-radius:8px;border:1px solid #E0E7EF;padding:18px;overflow-x:auto}
+.fig-caption{margin-top:12px;padding:9px 15px;background:#F0F4FF;border-radius:6px;font-size:12px;color:#333;text-align:center;border-left:3px solid #1565C0}
+.fig-caption strong{color:#0D47A1}
+svg text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+
+/* ── Download bar ── */
+.download-bar{display:flex;gap:10px;justify-content:center;align-items:center;margin:16px 0 6px;flex-wrap:wrap}
+.dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:background .18s,transform .15s,box-shadow .15s;letter-spacing:.3px;font-family:inherit}
+.dl-btn:hover{transform:translateY(-2px)}
+.dl-btn:active{transform:translateY(0)}
+.dl-btn-svg{background:#1565C0;color:#fff}
+.dl-btn-svg:hover{background:#0D47A1;box-shadow:0 5px 14px rgba(21,101,192,.38)}
+.dl-btn-png{background:#2E7D32;color:#fff}
+.dl-btn-png:hover{background:#1B5E20;box-shadow:0 5px 14px rgba(46,125,50,.38)}
+.dl-btn svg{width:15px;height:15px;flex-shrink:0}
+.dl-label{font-size:11px;color:#888;text-align:center;margin-bottom:4px;letter-spacing:.5px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">CTI Agentic System</div>
+    <h2>Report Figures Reference</h2>
+  </div>
+  <nav>
+    <div class="nav-label">Chapter 1 · Introduction</div>
+    <a href="#fig1-1"><span class="badge">1.1</span>System Overview Pipeline</a>
+    <div class="nav-label">Chapter 4 · High Level Design</div>
+    <a href="#fig4-1"><span class="badge">4.1</span>Use Case Diagram</a>
+    <a href="#fig4-2"><span class="badge">4.2</span>DFD Level 0 Context</a>
+    <a href="#fig4-3"><span class="badge">4.3</span>DFD Level 1 Pipeline</a>
+    <div class="nav-label">Chapter 5 · Detailed Design</div>
+    <a href="#fig5-1"><span class="badge">5.1</span>ER / Data Model</a>
+    <a href="#fig5-2"><span class="badge">5.2</span>Sequence Diagram</a>
+    <a href="#fig5-3"><span class="badge">5.3</span>Activity / Flowchart</a>
+  </nav>
+</aside>
+
+<main>
+
+<div class="page-header">
+  <div class="ph-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+  </div>
+  <div>
+    <h1>CTI Agentic System — Report Figures</h1>
+    <p>All 7 figures referenced in the project report, rendered as crisp vector diagrams. Use the sidebar to navigate. Screenshot each figure card for insertion into the report at the labelled positions.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 1.1 — System Overview Pipeline
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig1-1">
+  <div class="fig-header">
+    <span class="fig-num">Figure 1.1</span>
+    <h2>System Overview — Five-Agent CTI Pipeline</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">High-level architecture showing how raw threat data from three input channels flows sequentially through five AI agents — Ingestion, Enrichment (with ChromaDB RAG), Pattern Discovery, Mitigation Generation, and Validation — to produce actionable intelligence displayed on the SOC Dashboard. The self-learning loop stores enriched events back into ChromaDB, improving future retrievals.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 780 840" width="780" height="840" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#455A64"/></marker>
+  <marker id="a1o" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#E65100"/></marker>
+  <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- INPUT SOURCES header band -->
+<rect x="10" y="8" width="760" height="20" rx="4" fill="#E8EAF6"/>
+<text x="385" y="22" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3949AB" letter-spacing="1.8">INPUT SOURCES</text>
+
+<!-- Box 1: Live CTI Feeds -->
+<rect x="12" y="34" width="224" height="80" rx="8" fill="#E1F5FE" stroke="#0288D1" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="12" y="34" width="224" height="28" rx="8" fill="#0288D1"/>
+<rect x="12" y="50" width="224" height="12" fill="#0288D1"/>
+<text x="124" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Live CTI Feeds</text>
+<text x="124" y="74" text-anchor="middle" font-size="10" fill="#01579B">URLhaus · ThreatFox</text>
+<text x="124" y="89" text-anchor="middle" font-size="10" fill="#01579B">Feodo Tracker</text>
+<text x="124" y="104" text-anchor="middle" font-size="9" fill="#0277BD" font-style="italic">streaming / polling</text>
+
+<!-- Box 2: Social Media -->
+<rect x="278" y="34" width="224" height="80" rx="8" fill="#E8F5E9" stroke="#388E3C" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="278" y="34" width="224" height="28" rx="8" fill="#388E3C"/>
+<rect x="278" y="50" width="224" height="12" fill="#388E3C"/>
+<text x="390" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Social Media</text>
+<text x="390" y="74" text-anchor="middle" font-size="10" fill="#1B5E20">Mastodon</text>
+<text x="390" y="89" text-anchor="middle" font-size="10" fill="#1B5E20">infosec.exchange</text>
+<text x="390" y="104" text-anchor="middle" font-size="9" fill="#2E7D32" font-style="italic">real-time OSINT</text>
+
+<!-- Box 3: Manual Input -->
+<rect x="544" y="34" width="224" height="80" rx="8" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.5" filter="url(#sh)"/>
+<rect x="544" y="34" width="224" height="28" rx="8" fill="#F57F17"/>
+<rect x="544" y="50" width="224" height="12" fill="#F57F17"/>
+<text x="656" y="52" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Manual Input</text>
+<text x="656" y="74" text-anchor="middle" font-size="10" fill="#E65100">JSON / CSV / Free Text</text>
+<text x="656" y="89" text-anchor="middle" font-size="10" fill="#E65100">File Upload</text>
+<text x="656" y="104" text-anchor="middle" font-size="9" fill="#E65100" font-style="italic">analyst submission</text>
+
+<!-- Converge arrows to Agent 1 -->
+<line x1="124" y1="114" x2="310" y2="148" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+<line x1="390" y1="114" x2="390" y2="150" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+<line x1="656" y1="114" x2="470" y2="148" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 1: INGESTION -->
+<rect x="90" y="155" width="600" height="70" rx="10" fill="#1565C0" filter="url(#sh)"/>
+<rect x="90" y="155" width="600" height="28" rx="10" fill="#0D47A1"/>
+<rect x="90" y="171" width="600" height="12" fill="#0D47A1"/>
+<text x="390" y="173" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 1 · INGESTION</text>
+<text x="390" y="193" text-anchor="middle" font-size="10.5" fill="#BBDEFB">Normalise → ThreatEvent schema  ·  Deduplicate (MD5 hash)</text>
+<text x="390" y="210" text-anchor="middle" font-size="10" fill="#90CAF9">Event-Type Detection  ·  Severity Keyword Scoring (1–5)</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="225" x2="390" y2="255" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 2: ENRICHMENT -->
+<rect x="90" y="261" width="470" height="72" rx="10" fill="#4527A0" filter="url(#sh)"/>
+<rect x="90" y="261" width="470" height="28" rx="10" fill="#311B92"/>
+<rect x="90" y="277" width="470" height="12" fill="#311B92"/>
+<text x="325" y="279" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 2 · ENRICHMENT</text>
+<text x="325" y="299" text-anchor="middle" font-size="10.5" fill="#D1C4E9">LLM: llama3.2:3b via Ollama  +  MITRE ATT&amp;CK RAG</text>
+<text x="325" y="316" text-anchor="middle" font-size="10" fill="#B39DDB">Extracts TTPs · IOCs · CVEs · Malware Family → EnrichedEvent</text>
+
+<!-- ChromaDB RAG side box -->
+<rect x="578" y="246" width="190" height="106" rx="8" fill="#FFF3E0" stroke="#E65100" stroke-width="1.8" filter="url(#sh)"/>
+<rect x="578" y="246" width="190" height="27" rx="8" fill="#E65100"/>
+<rect x="578" y="262" width="190" height="11" fill="#E65100"/>
+<text x="673" y="264" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">ChromaDB  ·  RAG</text>
+<text x="673" y="284" text-anchor="middle" font-size="9.5" fill="#BF360C">691 MITRE ATT&amp;CK v18.1</text>
+<text x="673" y="298" text-anchor="middle" font-size="9.5" fill="#BF360C">Enterprise Techniques</text>
+<text x="673" y="313" text-anchor="middle" font-size="9.5" fill="#BF360C">+ Past Threat Reports</text>
+<text x="673" y="328" text-anchor="middle" font-size="9" fill="#E64A19" font-style="italic">384-dim embeddings (MiniLM)</text>
+
+<!-- Bidirectional arrows Agent2 ↔ ChromaDB -->
+<line x1="560" y1="287" x2="578" y2="287" stroke="#E65100" stroke-width="1.8" marker-end="url(#a1o)"/>
+<line x1="578" y1="300" x2="560" y2="300" stroke="#455A64" stroke-width="1.8" marker-end="url(#a1)"/>
+<text x="569" y="284" text-anchor="middle" font-size="8" fill="#E65100" font-weight="600">query</text>
+<text x="569" y="311" text-anchor="middle" font-size="8" fill="#455A64">context</text>
+
+<!-- Self-learning loop arc -->
+<path d="M768,352 C790,345 790,230 673,230" stroke="#E65100" stroke-width="1.4" stroke-dasharray="5,3" fill="none" marker-end="url(#a1o)"/>
+<text x="793" y="310" text-anchor="middle" font-size="8.5" fill="#E65100" transform="rotate(-90,793,310)">self-learning loop</text>
+
+<!-- Arrow down from Agent 2 -->
+<line x1="325" y1="333" x2="325" y2="352" stroke="#455A64" stroke-width="2"/>
+<line x1="325" y1="352" x2="390" y2="352" stroke="#455A64" stroke-width="2"/>
+<line x1="390" y1="352" x2="390" y2="370" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 3: PATTERN DISCOVERY -->
+<rect x="90" y="376" width="600" height="72" rx="10" fill="#00695C" filter="url(#sh)"/>
+<rect x="90" y="376" width="600" height="28" rx="10" fill="#004D40"/>
+<rect x="90" y="392" width="600" height="12" fill="#004D40"/>
+<text x="390" y="394" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 3 · PATTERN DISCOVERY</text>
+<text x="390" y="413" text-anchor="middle" font-size="10.5" fill="#B2DFDB">Weighted Jaccard Similarity — threshold ≥ 0.7</text>
+<text x="390" y="430" text-anchor="middle" font-size="10" fill="#80CBC4">0.4·J_TTP + 0.3·malware + 0.2·vector + 0.1·asset → ThreatPattern</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="448" x2="390" y2="478" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 4: MITIGATION GENERATION -->
+<rect x="90" y="484" width="600" height="72" rx="10" fill="#BF360C" filter="url(#sh)"/>
+<rect x="90" y="484" width="600" height="28" rx="10" fill="#8D0E00"/>
+<rect x="90" y="500" width="600" height="12" fill="#8D0E00"/>
+<text x="390" y="502" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 4 · MITIGATION GENERATION</text>
+<text x="390" y="521" text-anchor="middle" font-size="10.5" fill="#FFCCBC">Chain-of-Thought Prompting  +  MITRE D3FEND Mapping</text>
+<text x="390" y="538" text-anchor="middle" font-size="10" fill="#FFAB91">3-step CoT: threat mechanism → D3FEND codes → action steps + sample rule</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="556" x2="390" y2="586" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- AGENT 5: VALIDATION -->
+<rect x="90" y="592" width="600" height="72" rx="10" fill="#1B5E20" filter="url(#sh)"/>
+<rect x="90" y="592" width="600" height="28" rx="10" fill="#0A3D00"/>
+<rect x="90" y="608" width="600" height="12" fill="#0A3D00"/>
+<text x="390" y="610" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".8">AGENT 5 · VALIDATION</text>
+<text x="390" y="629" text-anchor="middle" font-size="10.5" fill="#C8E6C9">Deterministic Safety Rules (5 checks applied)</text>
+<text x="390" y="646" text-anchor="middle" font-size="10" fill="#A5D6A7">Status: APPROVED  ·  REJECTED  ·  PENDING_REVIEW</text>
+
+<!-- Arrow down -->
+<line x1="390" y1="664" x2="390" y2="694" stroke="#455A64" stroke-width="2" marker-end="url(#a1)"/>
+
+<!-- SOC DASHBOARD -->
+<rect x="50" y="700" width="680" height="84" rx="10" fill="#01579B" filter="url(#sh)"/>
+<rect x="50" y="700" width="680" height="32" rx="10" fill="#003C71"/>
+<rect x="50" y="720" width="680" height="12" fill="#003C71"/>
+<text x="390" y="721" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff" letter-spacing="1.2">SOC DASHBOARD  ·  port 8888</text>
+<text x="390" y="745" text-anchor="middle" font-size="10.5" fill="#B3E5FC">Pipeline  ·  Enrichment  ·  Attack Patterns  ·  Mitigations  ·  Flow Tracker</text>
+<text x="390" y="761" text-anchor="middle" font-size="10" fill="#81D4FA">Feeds  ·  Benchmark  ·  Live Input   (8-page FastAPI / Uvicorn web app)</text>
+<text x="390" y="775" text-anchor="middle" font-size="9.5" fill="#4FC3F7" font-style="italic">All processing local — no data leaves the host machine</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 1.1:</strong> System Overview — Five-Agent CTI Pipeline. Raw threat data enters from three independent input channels and is processed sequentially through five AI agents before results are presented on the SOC Dashboard.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 4.1 — Use Case Diagram
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig4-1">
+  <div class="fig-header">
+    <span class="fig-num">Figure 4.1</span>
+    <h2>Use Case Diagram</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">Shows the interactions between three actors — Security Analyst, System Administrator, and Live Feed — and the six core use cases within the CTI Agentic System boundary. The Security Analyst drives the primary analytical workflow; the System Admin manages configuration; the Live Feed actor represents autonomous ingest from external CTI sources.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 860 560" width="860" height="560" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ua" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#555"/></marker>
+</defs>
+
+<!-- System boundary -->
+<rect x="200" y="25" width="510" height="510" rx="10" fill="#F8F9FA" stroke="#555" stroke-width="1.8"/>
+<text x="455" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#333">CTI Agentic System</text>
+
+<!-- USE CASE ELLIPSES -->
+<!-- UC1 -->
+<ellipse cx="455" cy="105" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="110" text-anchor="middle" font-size="11" fill="#1E3A8A">Submit Threat (Text / File / Feed)</text>
+<!-- UC2 -->
+<ellipse cx="455" cy="185" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="190" text-anchor="middle" font-size="11" fill="#1E3A8A">View Enriched Events</text>
+<!-- UC3 -->
+<ellipse cx="455" cy="265" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="270" text-anchor="middle" font-size="11" fill="#1E3A8A">View Attack Patterns</text>
+<!-- UC4 -->
+<ellipse cx="455" cy="345" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="350" text-anchor="middle" font-size="11" fill="#1E3A8A">Approve / Review Mitigation</text>
+<!-- UC5 -->
+<ellipse cx="455" cy="425" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="430" text-anchor="middle" font-size="11" fill="#1E3A8A">Run Benchmark</text>
+<!-- UC6 -->
+<ellipse cx="455" cy="497" rx="165" ry="28" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.4"/>
+<text x="455" y="502" text-anchor="middle" font-size="11" fill="#1E3A8A">Configure Feeds</text>
+
+<!-- ACTOR: Security Analyst (left, upper) -->
+<circle cx="90" cy="175" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="191" x2="90" y2="230" stroke="#455A64" stroke-width="1.8"/>
+<line x1="65" y1="210" x2="115" y2="210" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="230" x2="70" y2="258" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="230" x2="110" y2="258" stroke="#455A64" stroke-width="1.8"/>
+<text x="90" y="275" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Security</text>
+<text x="90" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Analyst</text>
+
+<!-- ACTOR: System Admin (left, lower) -->
+<circle cx="90" cy="375" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="391" x2="90" y2="430" stroke="#455A64" stroke-width="1.8"/>
+<line x1="65" y1="410" x2="115" y2="410" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="430" x2="70" y2="458" stroke="#455A64" stroke-width="1.8"/>
+<line x1="90" y1="430" x2="110" y2="458" stroke="#455A64" stroke-width="1.8"/>
+<text x="90" y="473" text-anchor="middle" font-size="11" font-weight="600" fill="#333">System</text>
+<text x="90" y="487" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Admin</text>
+
+<!-- ACTOR: Live Feed (right) -->
+<circle cx="770" cy="200" r="16" fill="#CFD8DC" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="216" x2="770" y2="255" stroke="#455A64" stroke-width="1.8"/>
+<line x1="745" y1="235" x2="795" y2="235" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="255" x2="750" y2="283" stroke="#455A64" stroke-width="1.8"/>
+<line x1="770" y1="255" x2="790" y2="283" stroke="#455A64" stroke-width="1.8"/>
+<text x="770" y="300" text-anchor="middle" font-size="11" font-weight="600" fill="#333">Live Feed</text>
+<text x="770" y="314" text-anchor="middle" font-size="11" font-weight="600" fill="#333">(Mastodon)</text>
+
+<!-- Arrows: Security Analyst → use cases 1-5 -->
+<line x1="120" y1="175" x2="289" y2="105" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="190" x2="289" y2="185" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="205" x2="289" y2="263" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="215" x2="289" y2="343" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="120" y1="225" x2="289" y2="422" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+
+<!-- Arrows: System Admin → use cases 4,5,6 -->
+<line x1="120" y1="380" x2="289" y2="348" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="400" x2="289" y2="428" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+<line x1="122" y1="425" x2="289" y2="497" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+
+<!-- Arrows: Live Feed → UC1 -->
+<line x1="740" y1="195" x2="621" y2="108" stroke="#555" stroke-width="1.3" marker-end="url(#ua)"/>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 4.1:</strong> Use Case Diagram — three actors interact with six use cases inside the CTI Agentic System boundary. The Security Analyst is the primary user; the System Admin manages operational configuration; the Live Feed actor triggers automated ingest.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 4.2 — DFD Level 0 (Context Diagram)
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig4-2">
+  <div class="fig-header">
+    <span class="fig-num">Figure 4.2</span>
+    <h2>DFD Level 0 — Context Diagram</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">The context diagram (DFD Level 0) shows the system as a single process surrounded by four external entities. It defines the system boundary and all data flows crossing that boundary: threat submissions from the analyst, live feed events, knowledge-base queries to MITRE ATT&CK, and mitigation reports delivered to the SOC Dashboard.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 720 500" width="720" height="500" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="da" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh2"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- Central system circle -->
+<circle cx="360" cy="250" r="90" fill="#D4EDDA" stroke="#2E7D32" stroke-width="2" filter="url(#sh2)"/>
+<text x="360" y="238" text-anchor="middle" font-size="14" font-weight="700" fill="#1B5E20">CTI</text>
+<text x="360" y="256" text-anchor="middle" font-size="14" font-weight="700" fill="#1B5E20">Agentic</text>
+<text x="360" y="274" text-anchor="middle" font-size="14" font-weight="700" fill="#1B5E20">System</text>
+
+<!-- External entity boxes -->
+<!-- TL: Security Analyst -->
+<rect x="15" y="30" width="185" height="70" rx="8" fill="#DBEAFE" stroke="#1565C0" stroke-width="1.6" filter="url(#sh2)"/>
+<text x="107" y="61" text-anchor="middle" font-size="12" font-weight="600" fill="#0D47A1">Security Analyst</text>
+<text x="107" y="78" text-anchor="middle" font-size="10" fill="#1565C0">SOC / CTI team</text>
+
+<!-- BL: Live Feed -->
+<rect x="15" y="400" width="185" height="70" rx="8" fill="#E8F5E9" stroke="#388E3C" stroke-width="1.6" filter="url(#sh2)"/>
+<text x="107" y="428" text-anchor="middle" font-size="12" font-weight="600" fill="#1B5E20">Live Feed</text>
+<text x="107" y="445" text-anchor="middle" font-size="10" fill="#388E3C">Mastodon / URLhaus</text>
+<text x="107" y="460" text-anchor="middle" font-size="10" fill="#388E3C">ThreatFox / Feodo</text>
+
+<!-- TR: MITRE ATT&CK -->
+<rect x="520" y="30" width="185" height="70" rx="8" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.6" filter="url(#sh2)"/>
+<text x="612" y="55" text-anchor="middle" font-size="12" font-weight="600" fill="#E65100">MITRE ATT&amp;CK</text>
+<text x="612" y="72" text-anchor="middle" font-size="10" fill="#F57F17">Knowledge Base</text>
+<text x="612" y="88" text-anchor="middle" font-size="9.5" fill="#F57F17">(ChromaDB vector store)</text>
+
+<!-- BR: SOC Dashboard -->
+<rect x="520" y="400" width="185" height="70" rx="8" fill="#FCE4EC" stroke="#C62828" stroke-width="1.6" filter="url(#sh2)"/>
+<text x="612" y="428" text-anchor="middle" font-size="12" font-weight="600" fill="#B71C1C">SOC Dashboard</text>
+<text x="612" y="445" text-anchor="middle" font-size="10" fill="#C62828">Analyst Output</text>
+<text x="612" y="460" text-anchor="middle" font-size="9.5" fill="#C62828">port 8888</text>
+
+<!-- Arrows with labels -->
+<!-- Analyst → System -->
+<line x1="200" y1="80" x2="278" y2="195" stroke="#37474F" stroke-width="1.8" marker-end="url(#da)"/>
+<rect x="178" y="128" width="130" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="243" y="141" text-anchor="middle" font-size="9.5" fill="#333">Threat Text / File</text>
+
+<!-- Feed → System -->
+<line x1="200" y1="425" x2="278" y2="310" stroke="#37474F" stroke-width="1.8" marker-end="url(#da)"/>
+<rect x="176" y="355" width="138" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="245" y="368" text-anchor="middle" font-size="9.5" fill="#333">Live CTI Feed Events</text>
+
+<!-- System → MITRE -->
+<line x1="446" y1="195" x2="522" y2="80" stroke="#37474F" stroke-width="1.8" marker-end="url(#da)"/>
+<rect x="454" y="120" width="118" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="513" y="133" text-anchor="middle" font-size="9.5" fill="#333">TTP / RAG Queries</text>
+
+<!-- MITRE → System -->
+<line x1="520" y1="95" x2="444" y2="210" stroke="#37474F" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#da)"/>
+<rect x="468" y="150" width="120" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="528" y="163" text-anchor="middle" font-size="9.5" fill="#333">Technique Context</text>
+
+<!-- System → SOC Dashboard -->
+<line x1="446" y1="305" x2="522" y2="420" stroke="#37474F" stroke-width="1.8" marker-end="url(#da)"/>
+<rect x="452" y="355" width="130" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="517" y="368" text-anchor="middle" font-size="9.5" fill="#333">Mitigations / Reports</text>
+
+<!-- SOC → System (approval) -->
+<line x1="520" y1="408" x2="444" y2="295" stroke="#37474F" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#da)"/>
+<rect x="448" y="338" width="116" height="20" rx="3" fill="white" opacity=".85"/>
+<text x="506" y="351" text-anchor="middle" font-size="9.5" fill="#333">Approval Decision</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 4.2:</strong> DFD Level 0 Context Diagram — the CTI Agentic System (central circle) surrounded by four external entities with labelled data flows crossing the system boundary.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 4.3 — DFD Level 1
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig4-3">
+  <div class="fig-header">
+    <span class="fig-num">Figure 4.3</span>
+    <h2>DFD Level 1 — Internal Pipeline Flows</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">Expands the single system circle into five internal processes (P1–P5), each mapping to one AI agent. Data flows are shown between processes and two persistent data stores: D1 (ChromaDB, holding MITRE ATT&CK techniques and enriched threat history) and D2 (Pattern Store). Analyst and Feed input enters at the top; validated output reaches the SOC Dashboard at the bottom.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 680 820" width="680" height="820" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="d1a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh3"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".12"/></filter>
+</defs>
+
+<!-- External: Analyst/Feed Input -->
+<rect x="190" y="10" width="300" height="52" rx="8" fill="#DBEAFE" stroke="#1565C0" stroke-width="1.6" filter="url(#sh3)"/>
+<text x="340" y="33" text-anchor="middle" font-size="12" font-weight="600" fill="#0D47A1">Analyst / Feed Input</text>
+<text x="340" y="51" text-anchor="middle" font-size="10" fill="#1565C0">text · file · live CTI streams</text>
+
+<!-- Arrow to P1 -->
+<line x1="340" y1="62" x2="340" y2="102" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="288" y="75" width="104" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="87" text-anchor="middle" font-size="9" fill="#333">raw threat data</text>
+
+<!-- P1: Ingestion -->
+<rect x="155" y="108" width="370" height="65" rx="10" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.8" filter="url(#sh3)"/>
+<text x="250" y="130" text-anchor="middle" font-size="11" font-weight="700" fill="#0D47A1">P1</text>
+<text x="340" y="130" text-anchor="middle" font-size="12" font-weight="700" fill="#0D47A1">Ingestion &amp; Normalisation</text>
+<text x="340" y="148" text-anchor="middle" font-size="10" fill="#1565C0">Event-type detection  ·  MD5 deduplication  ·  severity scoring</text>
+<text x="340" y="163" text-anchor="middle" font-size="9.5" fill="#1976D2" font-style="italic">→ ThreatEvent (source, type, severity, raw_text, indicator)</text>
+
+<!-- Arrow P1 → P2 -->
+<line x1="340" y1="173" x2="340" y2="213" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="278" y="186" width="124" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="198" text-anchor="middle" font-size="9" fill="#333">ThreatEvent</text>
+
+<!-- P2: Enrichment -->
+<rect x="155" y="219" width="370" height="65" rx="10" fill="#EDE7F6" stroke="#4527A0" stroke-width="1.8" filter="url(#sh3)"/>
+<text x="250" y="241" text-anchor="middle" font-size="11" font-weight="700" fill="#311B92">P2</text>
+<text x="340" y="241" text-anchor="middle" font-size="12" font-weight="700" fill="#311B92">LLM Enrichment (RAG)</text>
+<text x="340" y="259" text-anchor="middle" font-size="10" fill="#4527A0">llama3.2:3b + MITRE context  ·  3-stage JSON extraction</text>
+<text x="340" y="274" text-anchor="middle" font-size="9.5" fill="#5E35B1" font-style="italic">→ EnrichedEvent (ttps, iocs, cves, malware_family, confidence)</text>
+
+<!-- D1: ChromaDB -->
+<rect x="556" y="222" width="108" height="62" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.5" filter="url(#sh3)"/>
+<line x1="556" y1="222" x2="556" y2="284" stroke="#F57F17" stroke-width="2"/>
+<line x1="664" y1="222" x2="664" y2="284" stroke="#F57F17" stroke-width="2"/>
+<text x="610" y="243" text-anchor="middle" font-size="9.5" font-weight="700" fill="#E65100">D1</text>
+<text x="610" y="257" text-anchor="middle" font-size="9" fill="#E65100">ChromaDB</text>
+<text x="610" y="270" text-anchor="middle" font-size="9" fill="#F57F17">MITRE + History</text>
+
+<!-- Arrows P2 ↔ D1 -->
+<line x1="525" y1="244" x2="556" y2="244" stroke="#F57F17" stroke-width="1.6" marker-end="url(#d1a)" stroke-dasharray="5,3"/>
+<line x1="556" y1="258" x2="525" y2="258" stroke="#37474F" stroke-width="1.6" marker-end="url(#d1a)" stroke-dasharray="5,3"/>
+<text x="540" y="241" text-anchor="middle" font-size="8" fill="#E65100">query</text>
+<text x="540" y="268" text-anchor="middle" font-size="8" fill="#37474F">context</text>
+
+<!-- Arrow P2 → P3 -->
+<line x1="340" y1="284" x2="340" y2="324" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="272" y="297" width="136" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="309" text-anchor="middle" font-size="9" fill="#333">EnrichedEvent</text>
+
+<!-- P3: Pattern Discovery -->
+<rect x="155" y="330" width="370" height="65" rx="10" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.8" filter="url(#sh3)"/>
+<text x="250" y="352" text-anchor="middle" font-size="11" font-weight="700" fill="#1B5E20">P3</text>
+<text x="340" y="352" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">Pattern Discovery</text>
+<text x="340" y="370" text-anchor="middle" font-size="10" fill="#2E7D32">Weighted Jaccard similarity on TTP sets  ·  threshold ≥ 0.7</text>
+<text x="340" y="385" text-anchor="middle" font-size="9.5" fill="#388E3C" font-style="italic">→ ThreatPattern (event_ids, primary_ttp, severity, confidence)</text>
+
+<!-- D2: Pattern Store -->
+<rect x="556" y="333" width="108" height="62" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.5" filter="url(#sh3)"/>
+<line x1="556" y1="333" x2="556" y2="395" stroke="#F57F17" stroke-width="2"/>
+<line x1="664" y1="333" x2="664" y2="395" stroke="#F57F17" stroke-width="2"/>
+<text x="610" y="354" text-anchor="middle" font-size="9.5" font-weight="700" fill="#E65100">D2</text>
+<text x="610" y="368" text-anchor="middle" font-size="9" fill="#E65100">Pattern Store</text>
+<text x="610" y="381" text-anchor="middle" font-size="9" fill="#F57F17">in-memory cache</text>
+
+<!-- Arrow P3 ↔ D2 -->
+<line x1="525" y1="355" x2="556" y2="355" stroke="#37474F" stroke-width="1.6" marker-end="url(#d1a)" stroke-dasharray="5,3"/>
+<line x1="556" y1="369" x2="525" y2="369" stroke="#37474F" stroke-width="1.6" marker-end="url(#d1a)" stroke-dasharray="5,3"/>
+<text x="540" y="351" text-anchor="middle" font-size="8" fill="#37474F">write</text>
+<text x="540" y="380" text-anchor="middle" font-size="8" fill="#37474F">read</text>
+
+<!-- Arrow P3 → P4 -->
+<line x1="340" y1="395" x2="340" y2="435" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="270" y="408" width="140" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="420" text-anchor="middle" font-size="9" fill="#333">ThreatPattern</text>
+
+<!-- P4: Mitigation -->
+<rect x="155" y="441" width="370" height="65" rx="10" fill="#FFEBEE" stroke="#C62828" stroke-width="1.8" filter="url(#sh3)"/>
+<text x="250" y="463" text-anchor="middle" font-size="11" font-weight="700" fill="#B71C1C">P4</text>
+<text x="340" y="463" text-anchor="middle" font-size="12" font-weight="700" fill="#B71C1C">Mitigation Generation</text>
+<text x="340" y="481" text-anchor="middle" font-size="10" fill="#C62828">Chain-of-Thought prompting  ·  MITRE D3FEND code mapping</text>
+<text x="340" y="496" text-anchor="middle" font-size="9.5" fill="#E53935" font-style="italic">→ MitigationAction (d3fend_codes, priority, action_steps)</text>
+
+<!-- Arrow P4 → P5 -->
+<line x1="340" y1="506" x2="340" y2="546" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="266" y="519" width="148" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="531" text-anchor="middle" font-size="9" fill="#333">MitigationAction</text>
+
+<!-- P5: Validation -->
+<rect x="155" y="552" width="370" height="65" rx="10" fill="#E8F5E9" stroke="#1B5E20" stroke-width="1.8" filter="url(#sh3)"/>
+<text x="250" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="#1B5E20">P5</text>
+<text x="340" y="574" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E20">Validation</text>
+<text x="340" y="592" text-anchor="middle" font-size="10" fill="#2E7D32">5 deterministic safety checks  ·  status assignment</text>
+<text x="340" y="607" text-anchor="middle" font-size="9.5" fill="#388E3C" font-style="italic">→ APPROVED / REJECTED / PENDING_REVIEW</text>
+
+<!-- Arrow P5 → SOC -->
+<line x1="340" y1="617" x2="340" y2="657" stroke="#37474F" stroke-width="1.8" marker-end="url(#d1a)"/>
+<rect x="278" y="630" width="124" height="16" rx="3" fill="white" opacity=".85"/>
+<text x="340" y="642" text-anchor="middle" font-size="9" fill="#333">validated result</text>
+
+<!-- SOC Dashboard output -->
+<rect x="190" y="663" width="300" height="52" rx="8" fill="#FCE4EC" stroke="#C62828" stroke-width="1.6" filter="url(#sh3)"/>
+<text x="340" y="686" text-anchor="middle" font-size="12" font-weight="600" fill="#B71C1C">SOC Dashboard</text>
+<text x="340" y="703" text-anchor="middle" font-size="10" fill="#C62828">8-page analyst interface — port 8888</text>
+
+<!-- D1 store-back label -->
+<path d="M610,222 C610,195 460,185 340,200" stroke="#E65100" stroke-width="1.3" stroke-dasharray="4,3" fill="none" marker-end="url(#d1a)"/>
+<rect x="400" y="185" width="90" height="15" rx="3" fill="white" opacity=".8"/>
+<text x="445" y="196" text-anchor="middle" font-size="8" fill="#E65100">store-back</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 4.3:</strong> DFD Level 1 — the five internal processes (P1–P5) with data flows and two persistent stores (D1: ChromaDB and D2: Pattern Store). The store-back arc from D1 shows the self-learning loop.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 5.1 — ER / Data Model Diagram
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig5-1">
+  <div class="fig-header">
+    <span class="fig-num">Figure 5.1</span>
+    <h2>ER / Data Model Diagram</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">Shows the four core Pydantic data entities and their relationships. ThreatEvent is created by the Ingestion agent; Enrichment extends it to EnrichedEvent; Pattern Discovery clusters events into ThreatPattern; Mitigation Generation produces a MitigationAction for each pattern. Primary keys (PK) are generated as MD5 hashes or UUID strings; foreign keys (FK) maintain referential integrity through the pipeline.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 880 540" width="880" height="540" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="era" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh4"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- Helper: draw entity table at (x, y) with given fields -->
+<!-- ThreatEvent — top-left: x=20, y=30 -->
+<rect x="20" y="30" width="340" height="208" rx="8" fill="white" stroke="#1565C0" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="20" y="30" width="340" height="32" rx="8" fill="#1565C0"/>
+<rect x="20" y="50" width="340" height="12" fill="#1565C0"/>
+<text x="190" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="white">ThreatEvent</text>
+<!-- fields -->
+<rect x="20" y="62" width="340" height="24" fill="#DBEAFE"/><text x="30" y="78" font-size="10.5" fill="#1E3A8A"><tspan font-weight="700" fill="#1565C0">PK </tspan>event_id : string (MD5)</text>
+<rect x="20" y="86" width="340" height="24" fill="#EFF6FF"/><text x="30" y="102" font-size="10.5" fill="#1E3A8A">source : string</text>
+<rect x="20" y="110" width="340" height="24" fill="#DBEAFE"/><text x="30" y="126" font-size="10.5" fill="#1E3A8A">event_type : enum</text>
+<rect x="20" y="134" width="340" height="24" fill="#EFF6FF"/><text x="30" y="150" font-size="10.5" fill="#1E3A8A">severity : int  (1–5)</text>
+<rect x="20" y="158" width="340" height="24" fill="#DBEAFE"/><text x="30" y="174" font-size="10.5" fill="#1E3A8A">raw_text : string</text>
+<rect x="20" y="182" width="340" height="24" fill="#EFF6FF"/><text x="30" y="198" font-size="10.5" fill="#1E3A8A">indicator : string</text>
+<rect x="20" y="206" width="340" height="32" rx="4" fill="#DBEAFE"/><text x="30" y="227" font-size="10.5" fill="#1E3A8A">timestamp : datetime</text>
+
+<!-- EnrichedEvent — top-right: x=520, y=30 -->
+<rect x="520" y="30" width="340" height="208" rx="8" fill="white" stroke="#7B1FA2" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="520" y="30" width="340" height="32" rx="8" fill="#7B1FA2"/>
+<rect x="520" y="50" width="340" height="12" fill="#7B1FA2"/>
+<text x="690" y="51" text-anchor="middle" font-size="13" font-weight="700" fill="white">EnrichedEvent</text>
+<rect x="520" y="62" width="340" height="24" fill="#F3E5F5"/><text x="530" y="78" font-size="10.5" fill="#4A148C"><tspan font-weight="700" fill="#7B1FA2">FK </tspan>event_id  (→ ThreatEvent)</text>
+<rect x="520" y="86" width="340" height="24" fill="#EDE7F6"/><text x="530" y="102" font-size="10.5" fill="#4A148C">ttps[ ] : list</text>
+<rect x="520" y="110" width="340" height="24" fill="#F3E5F5"/><text x="530" y="126" font-size="10.5" fill="#4A148C">iocs[ ] : list</text>
+<rect x="520" y="134" width="340" height="24" fill="#EDE7F6"/><text x="530" y="150" font-size="10.5" fill="#4A148C">cves[ ] : list</text>
+<rect x="520" y="158" width="340" height="24" fill="#F3E5F5"/><text x="530" y="174" font-size="10.5" fill="#4A148C">malware_family : string</text>
+<rect x="520" y="182" width="340" height="24" fill="#EDE7F6"/><text x="530" y="198" font-size="10.5" fill="#4A148C">attack_vector : string</text>
+<rect x="520" y="206" width="340" height="32" rx="4" fill="#F3E5F5"/><text x="530" y="227" font-size="10.5" fill="#4A148C">enrichment_confidence : float</text>
+
+<!-- ThreatPattern — bottom-left: x=20, y=320 -->
+<rect x="20" y="320" width="340" height="184" rx="8" fill="white" stroke="#2E7D32" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="20" y="320" width="340" height="32" rx="8" fill="#2E7D32"/>
+<rect x="20" y="340" width="340" height="12" fill="#2E7D32"/>
+<text x="190" y="341" text-anchor="middle" font-size="13" font-weight="700" fill="white">ThreatPattern</text>
+<rect x="20" y="352" width="340" height="24" fill="#E8F5E9"/><text x="30" y="368" font-size="10.5" fill="#1B5E20"><tspan font-weight="700" fill="#2E7D32">PK </tspan>pattern_id : string</text>
+<rect x="20" y="376" width="340" height="24" fill="#F1F8E9"/><text x="30" y="392" font-size="10.5" fill="#1B5E20">pattern_name : string</text>
+<rect x="20" y="400" width="340" height="24" fill="#E8F5E9"/><text x="30" y="416" font-size="10.5" fill="#1B5E20">event_ids[ ] : list</text>
+<rect x="20" y="424" width="340" height="24" fill="#F1F8E9"/><text x="30" y="440" font-size="10.5" fill="#1B5E20">primary_ttp : string</text>
+<rect x="20" y="448" width="340" height="24" fill="#E8F5E9"/><text x="30" y="464" font-size="10.5" fill="#1B5E20">severity : int</text>
+<rect x="20" y="472" width="340" height="32" rx="4" fill="#F1F8E9"/><text x="30" y="493" font-size="10.5" fill="#1B5E20">pattern_confidence : float</text>
+
+<!-- MitigationAction — bottom-right: x=520, y=320 -->
+<rect x="520" y="320" width="340" height="208" rx="8" fill="white" stroke="#C62828" stroke-width="1.5" filter="url(#sh4)"/>
+<rect x="520" y="320" width="340" height="32" rx="8" fill="#C62828"/>
+<rect x="520" y="340" width="340" height="12" fill="#C62828"/>
+<text x="690" y="341" text-anchor="middle" font-size="13" font-weight="700" fill="white">MitigationAction</text>
+<rect x="520" y="352" width="340" height="24" fill="#FFEBEE"/><text x="530" y="368" font-size="10.5" fill="#B71C1C"><tspan font-weight="700" fill="#C62828">PK </tspan>mitigation_id : string</text>
+<rect x="520" y="376" width="340" height="24" fill="#FCE4EC"/><text x="530" y="392" font-size="10.5" fill="#B71C1C"><tspan font-weight="700" fill="#C62828">FK </tspan>pattern_id  (→ ThreatPattern)</text>
+<rect x="520" y="400" width="340" height="24" fill="#FFEBEE"/><text x="530" y="416" font-size="10.5" fill="#B71C1C">title : string</text>
+<rect x="520" y="424" width="340" height="24" fill="#FCE4EC"/><text x="530" y="440" font-size="10.5" fill="#B71C1C">d3fend_codes[ ] : list</text>
+<rect x="520" y="448" width="340" height="24" fill="#FFEBEE"/><text x="530" y="464" font-size="10.5" fill="#B71C1C">priority : int  (1–5)</text>
+<rect x="520" y="472" width="340" height="24" fill="#FCE4EC"/><text x="530" y="488" font-size="10.5" fill="#B71C1C">action_steps[ ] : list</text>
+<rect x="520" y="496" width="340" height="32" rx="4" fill="#FFEBEE"/><text x="530" y="517" font-size="10.5" fill="#B71C1C">validated : bool</text>
+
+<!-- Relationship arrows -->
+<!-- ThreatEvent → EnrichedEvent -->
+<line x1="360" y1="140" x2="520" y2="140" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="393" y="125" width="94" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="440" y="137" text-anchor="middle" font-size="10" fill="#333" font-weight="600">enriches →</text>
+
+<!-- ThreatEvent → ThreatPattern -->
+<line x1="190" y1="238" x2="190" y2="320" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="130" y="271" width="120" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="190" y="283" text-anchor="middle" font-size="10" fill="#333" font-weight="600">clusters into ↓</text>
+
+<!-- ThreatPattern → MitigationAction -->
+<line x1="360" y1="412" x2="520" y2="412" stroke="#37474F" stroke-width="1.8" marker-end="url(#era)"/>
+<rect x="393" y="397" width="94" height="17" rx="3" fill="white" opacity=".9"/>
+<text x="440" y="409" text-anchor="middle" font-size="10" fill="#333" font-weight="600">triggers →</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 5.1:</strong> ER / Data Model Diagram — four Pydantic entities with field definitions, PK/FK markers, and three inter-entity relationships: enriches, clusters into, and triggers.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 5.2 — Sequence Diagram
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig5-2">
+  <div class="fig-header">
+    <span class="fig-num">Figure 5.2</span>
+    <h2>Sequence Diagram — Threat Processing Flow</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">Chronological message sequence for a single threat submission via POST /api/ingest/instant. Solid arrows are synchronous calls; dashed arrows are return values. The self-call loop on the Enrich lifeline represents the local LLM inference step (llama3.2:3b), which is offloaded to a thread via asyncio.to_thread() to avoid blocking the event loop. Store-back writes the enriched event to ChromaDB for the self-learning loop.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 980 720" width="980" height="720" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="sa" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1A237E"/></marker>
+  <marker id="sr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#888"/></marker>
+  <filter id="sh5"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity=".14"/></filter>
+</defs>
+
+<!-- Actor boxes -->
+<!-- Analyst: cx=60 -->
+<rect x="15" y="18" width="90" height="38" rx="6" fill="#1565C0" filter="url(#sh5)"/>
+<text x="60" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Analyst</text>
+<!-- FastAPI: cx=180 -->
+<rect x="135" y="18" width="90" height="38" rx="6" fill="#1565C0" filter="url(#sh5)"/>
+<text x="180" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">FastAPI</text>
+<!-- Ingest: cx=300 -->
+<rect x="255" y="18" width="90" height="38" rx="6" fill="#2E7D32" filter="url(#sh5)"/>
+<text x="300" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Ingest</text>
+<!-- Enrich: cx=430 -->
+<rect x="383" y="18" width="94" height="38" rx="6" fill="#4527A0" filter="url(#sh5)"/>
+<text x="430" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Enrich</text>
+<!-- ChromaDB: cx=570 -->
+<rect x="518" y="18" width="104" height="38" rx="6" fill="#E65100" filter="url(#sh5)"/>
+<text x="570" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="white">ChromaDB</text>
+<text x="570" y="52" text-anchor="middle" font-size="9.5" fill="white">(RAG)</text>
+<!-- Pattern: cx=700 -->
+<rect x="655" y="18" width="90" height="38" rx="6" fill="#00695C" filter="url(#sh5)"/>
+<text x="700" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Pattern</text>
+<!-- Mitigate: cx=820 -->
+<rect x="775" y="18" width="90" height="38" rx="6" fill="#C62828" filter="url(#sh5)"/>
+<text x="820" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Mitigate</text>
+<!-- Validate: cx=940 -->
+<rect x="895" y="18" width="90" height="38" rx="6" fill="#37474F" filter="url(#sh5)"/>
+<text x="940" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="white">Validate</text>
+
+<!-- Lifelines -->
+<line x1="60"  y1="56" x2="60"  y2="700" stroke="#1565C0" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="180" y1="56" x2="180" y2="700" stroke="#1565C0" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="300" y1="56" x2="300" y2="700" stroke="#2E7D32" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="430" y1="56" x2="430" y2="700" stroke="#4527A0" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="570" y1="56" x2="570" y2="700" stroke="#E65100" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="700" y1="56" x2="700" y2="700" stroke="#00695C" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="820" y1="56" x2="820" y2="700" stroke="#C62828" stroke-width="1.2" stroke-dasharray="6,4"/>
+<line x1="940" y1="56" x2="940" y2="700" stroke="#37474F" stroke-width="1.2" stroke-dasharray="6,4"/>
+
+<!-- MSG 1: Analyst → FastAPI: POST /api/ingest/instant -->
+<line x1="60" y1="90" x2="174" y2="90" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="62" y="75" width="174" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="149" y="87" text-anchor="middle" font-size="9.5" fill="#0D47A1">POST /api/ingest/instant</text>
+
+<!-- MSG 2: FastAPI → Ingest: raw_text -->
+<line x1="180" y1="130" x2="294" y2="130" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="196" y="117" width="80" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="236" y="129" text-anchor="middle" font-size="9.5" fill="#0D47A1">raw_text</text>
+
+<!-- MSG 3: Ingest → FastAPI: ThreatEvent (return, dashed) -->
+<line x1="300" y1="170" x2="186" y2="170" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sr)"/>
+<rect x="202" y="157" width="80" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="242" y="169" text-anchor="middle" font-size="9.5" fill="#555">ThreatEvent</text>
+
+<!-- MSG 4: FastAPI → Enrich: ThreatEvent -->
+<line x1="180" y1="210" x2="424" y2="210" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="237" y="197" width="80" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="277" y="209" text-anchor="middle" font-size="9.5" fill="#0D47A1">ThreatEvent</text>
+
+<!-- MSG 5: Enrich → ChromaDB: embed + query -->
+<line x1="430" y1="250" x2="564" y2="250" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="452" y="237" width="90" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="497" y="249" text-anchor="middle" font-size="9.5" fill="#0D47A1">embed + query</text>
+
+<!-- MSG 6: ChromaDB → Enrich: MITRE context (return, dashed) -->
+<line x1="570" y1="290" x2="436" y2="290" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sr)"/>
+<rect x="450" y="277" width="92" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="496" y="289" text-anchor="middle" font-size="9.5" fill="#555">MITRE context</text>
+
+<!-- MSG 7: Enrich self-loop (LLM call) -->
+<path d="M430,325 L468,325 L468,345 L430,345" stroke="#1A237E" stroke-width="1.5" fill="none" marker-end="url(#sa)"/>
+<text x="475" y="333" font-size="9" fill="#0D47A1">LLM prompt</text>
+<text x="475" y="347" font-size="9" fill="#0D47A1">(llama3.2:3b)</text>
+
+<!-- MSG 8: Enrich self-loop return (LLM output, dashed) -->
+<path d="M430,375 L475,375 L475,395 L430,395" stroke="#888" stroke-width="1.4" stroke-dasharray="4,3" fill="none" marker-end="url(#sr)"/>
+<text x="481" y="383" font-size="9" fill="#555">LLM JSON</text>
+<text x="481" y="397" font-size="9" fill="#555">output</text>
+
+<!-- MSG 9: Enrich → ChromaDB: store-back -->
+<line x1="430" y1="430" x2="564" y2="430" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="452" y="417" width="80" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="492" y="429" text-anchor="middle" font-size="9.5" fill="#0D47A1">store-back</text>
+
+<!-- MSG 10: Enrich → FastAPI: EnrichedEvent (return, dashed) -->
+<line x1="430" y1="470" x2="186" y2="470" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sr)"/>
+<rect x="222" y="457" width="90" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="267" y="469" text-anchor="middle" font-size="9.5" fill="#555">EnrichedEvent</text>
+
+<!-- MSG 11: FastAPI → Pattern: EnrichedEvent -->
+<line x1="180" y1="510" x2="694" y2="510" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="380" y="497" width="90" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="425" y="509" text-anchor="middle" font-size="9.5" fill="#0D47A1">EnrichedEvent</text>
+
+<!-- MSG 12: Pattern → FastAPI: ThreatPattern (return, dashed) -->
+<line x1="700" y1="548" x2="186" y2="548" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sr)"/>
+<rect x="370" y="535" width="90" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="415" y="547" text-anchor="middle" font-size="9.5" fill="#555">ThreatPattern</text>
+
+<!-- MSG 13: FastAPI → Mitigate: ThreatPattern -->
+<line x1="180" y1="586" x2="814" y2="586" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="432" y="573" width="90" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="477" y="585" text-anchor="middle" font-size="9.5" fill="#0D47A1">ThreatPattern</text>
+
+<!-- MSG 14: Mitigate → FastAPI: MitigationAction (return, dashed) -->
+<line x1="820" y1="624" x2="186" y2="624" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sr)"/>
+<rect x="424" y="611" width="108" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="478" y="623" text-anchor="middle" font-size="9.5" fill="#555">MitigationAction</text>
+
+<!-- MSG 15: FastAPI → Validate: MitigationAction -->
+<line x1="180" y1="662" x2="934" y2="662" stroke="#1A237E" stroke-width="1.8" marker-end="url(#sa)"/>
+<rect x="490" y="649" width="110" height="16" rx="3" fill="white" opacity=".9"/>
+<text x="545" y="661" text-anchor="middle" font-size="9.5" fill="#0D47A1">MitigationAction</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 5.2:</strong> Sequence Diagram — 15 messages between Analyst, FastAPI orchestrator, and five agents for a single threat submission. Dashed lines are return values; the self-loop on Enrich represents local LLM inference.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FIGURE 5.3 — Activity / Flowchart
+═══════════════════════════════════════════════════════════════ -->
+<div class="fig-card" id="fig5-3">
+  <div class="fig-header">
+    <span class="fig-num">Figure 5.3</span>
+    <h2>Activity Diagram — Pipeline Decision Logic</h2>
+  </div>
+  <div class="fig-body">
+    <p class="fig-desc">Complete end-to-end activity flowchart for a single threat event through the pipeline. Four key decision gates are shown: duplicate detection, enrichment confidence threshold, severity threshold, and validation pass/fail. Side branches capture discarded, low-confidence, low-severity, and rejected events. Only events that clear all four gates are published to the SOC Dashboard.</p>
+    <div class="svg-frame">
+<svg viewBox="0 0 660 960" width="660" height="960" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="fa" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#37474F"/></marker>
+  <filter id="sh6"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- START -->
+<ellipse cx="290" cy="32" rx="70" ry="22" fill="#37474F" filter="url(#sh6)"/>
+<text x="290" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="white">START</text>
+
+<line x1="290" y1="54" x2="290" y2="80" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P1: Receive Input -->
+<rect x="100" y="86" width="380" height="52" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="108" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0D47A1">Receive Threat Input</text>
+<text x="290" y="126" text-anchor="middle" font-size="10" fill="#1565C0">Text · JSON · CSV · File Upload · Live Feed</text>
+
+<line x1="290" y1="138" x2="290" y2="164" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P2: Ingestion -->
+<rect x="100" y="170" width="380" height="52" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="192" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0D47A1">Agent 1: Ingestion</text>
+<text x="290" y="210" text-anchor="middle" font-size="10" fill="#1565C0">Normalise  ·  Type detection  ·  Deduplicate (MD5)</text>
+
+<line x1="290" y1="222" x2="290" y2="252" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC1: Duplicate? -->
+<polygon points="290,258 370,285 290,312 210,285" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="289" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Duplicate?</text>
+
+<!-- Yes → Discard -->
+<line x1="370" y1="285" x2="430" y2="285" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="400" y="278" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">Yes</text>
+<rect x="436" y="265" width="148" height="42" rx="6" fill="#FFEBEE" stroke="#C62828" stroke-width="1.4" filter="url(#sh6)"/>
+<text x="510" y="282" text-anchor="middle" font-size="10" font-weight="600" fill="#B71C1C">Discard</text>
+<text x="510" y="298" text-anchor="middle" font-size="9.5" fill="#C62828">(duplicate skip)</text>
+
+<!-- No → continue -->
+<line x1="290" y1="312" x2="290" y2="342" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="300" y="332" font-size="9.5" fill="#1B5E20" font-weight="700">No</text>
+
+<!-- P3: Enrichment -->
+<rect x="100" y="348" width="380" height="52" rx="8" fill="#EDE7F6" stroke="#4527A0" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="370" text-anchor="middle" font-size="11.5" font-weight="600" fill="#311B92">Agent 2: Enrichment</text>
+<text x="290" y="388" text-anchor="middle" font-size="10" fill="#4527A0">LLM (llama3.2:3b) + ChromaDB RAG (MITRE ATT&amp;CK)</text>
+
+<line x1="290" y1="400" x2="290" y2="430" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC2: Confidence > 0.3? -->
+<polygon points="290,436 380,465 290,494 200,465" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="463" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Confidence</text>
+<text x="290" y="479" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">&gt; 0.3?</text>
+
+<!-- No → skip store (bypass line) -->
+<line x1="200" y1="465" x2="150" y2="465" stroke="#37474F" stroke-width="1.8"/>
+<line x1="150" y1="465" x2="150" y2="572" stroke="#37474F" stroke-width="1.8"/>
+<line x1="150" y1="572" x2="186" y2="572" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="175" y="458" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">No</text>
+<rect x="12" y="498" width="132" height="36" rx="5" fill="#FFF8E1" stroke="#F57F17" stroke-width="1.3"/>
+<text x="78" y="514" text-anchor="middle" font-size="9.5" fill="#E65100">Low confidence</text>
+<text x="78" y="528" text-anchor="middle" font-size="9.5" fill="#F57F17">log only</text>
+
+<!-- Yes → Store to ChromaDB -->
+<line x1="290" y1="494" x2="290" y2="524" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="302" y="514" font-size="9.5" fill="#1B5E20" font-weight="700">Yes</text>
+<rect x="100" y="530" width="380" height="42" rx="8" fill="#FFF3E0" stroke="#E65100" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="548" text-anchor="middle" font-size="11.5" font-weight="600" fill="#BF360C">Store Enriched Event → ChromaDB</text>
+<text x="290" y="564" text-anchor="middle" font-size="10" fill="#E65100">Self-learning loop  ·  384-dim vector embedding</text>
+
+<line x1="290" y1="572" x2="290" y2="606" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P4: Pattern Discovery -->
+<rect x="100" y="612" width="380" height="52" rx="8" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="634" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1B5E20">Agent 3: Pattern Discovery</text>
+<text x="290" y="652" text-anchor="middle" font-size="10" fill="#2E7D32">Weighted Jaccard Similarity on TTP sets</text>
+
+<line x1="290" y1="664" x2="290" y2="694" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- DEC3: Severity >= 3? -->
+<polygon points="290,700 375,727 290,754 205,727" fill="#FFF9C4" stroke="#F9A825" stroke-width="1.8" filter="url(#sh6)"/>
+<text x="290" y="724" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">Severity</text>
+<text x="290" y="740" text-anchor="middle" font-size="11" font-weight="600" fill="#E65100">≥ 3?</text>
+
+<!-- No → Log Only -->
+<line x1="375" y1="727" x2="436" y2="727" stroke="#37474F" stroke-width="1.8" marker-end="url(#fa)"/>
+<text x="406" y="720" text-anchor="middle" font-size="9.5" fill="#C62828" font-weight="700">No</text>
+<rect x="442" y="707" width="148" height="42" rx="6" fill="#FFF8E1" stroke="#F9A825" stroke-width="1.4" filter="url(#sh6)"/>
+<text x="516" y="724" text-anchor="middle" font-size="10" font-weight="600" fill="#E65100">Log Only</text>
+<text x="516" y="740" text-anchor="middle" font-size="9.5" fill="#F57F17">(no mitigation)</text>
+
+<!-- Yes → Mitigation -->
+<line x1="290" y1="754" x2="290" y2="784" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+<text x="302" y="773" font-size="9.5" fill="#1B5E20" font-weight="700">Yes</text>
+
+<!-- P5: Mitigation Generation -->
+<rect x="100" y="790" width="380" height="52" rx="8" fill="#FFEBEE" stroke="#C62828" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="812" text-anchor="middle" font-size="11.5" font-weight="600" fill="#B71C1C">Agent 4: Mitigation Generation</text>
+<text x="290" y="830" text-anchor="middle" font-size="10" fill="#C62828">Chain-of-Thought  ·  D3FEND codes  ·  action steps</text>
+
+<line x1="290" y1="842" x2="290" y2="872" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- P6: Validation -->
+<rect x="100" y="878" width="380" height="52" rx="8" fill="#E8F5E9" stroke="#1B5E20" stroke-width="1.6" filter="url(#sh6)"/>
+<text x="290" y="900" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1B5E20">Agent 5: Validation</text>
+<text x="290" y="918" text-anchor="middle" font-size="10" fill="#2E7D32">5 deterministic safety-rule checks</text>
+
+<line x1="290" y1="930" x2="290" y2="944" stroke="#37474F" stroke-width="2" marker-end="url(#fa)"/>
+
+<!-- END -->
+<ellipse cx="290" cy="953" rx="70" ry="20" fill="#1B5E20" filter="url(#sh6)"/>
+<text x="290" y="958" text-anchor="middle" font-size="12" font-weight="700" fill="white">END</text>
+</svg>
+    </div>
+    <div class="fig-caption"><strong>Figure 5.3:</strong> Activity Diagram — complete pipeline decision logic from START to END. Four decision gates (duplicate, confidence, severity, validation) filter events; only those passing all gates are published to the SOC Dashboard.</div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ── Sidebar smooth scroll ── */
+document.querySelectorAll('.sidebar nav a').forEach(link=>{
+  link.addEventListener('click',e=>{
+    e.preventDefault();
+    const el=document.getElementById(link.getAttribute('href').slice(1));
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+
+/* ── Download helpers ── */
+const dlIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+function getSvgFilename(card){
+  const num = (card.querySelector('.fig-num')||{}).textContent||'figure';
+  const title = (card.querySelector('.fig-header h2')||{}).textContent||'diagram';
+  return (num+' '+title).replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'').toLowerCase();
+}
+
+/* SVG download */
+function downloadSVG(svgEl, filename){
+  const clone = svgEl.cloneNode(true);
+  /* embed font hint */
+  const style = document.createElementNS('http://www.w3.org/2000/svg','style');
+  style.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(style, clone.firstChild);
+  const data = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([data],{type:'image/svg+xml;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename+'.svg'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+/* PNG download — 2× for crisp export */
+function downloadPNG(svgEl, filename){
+  const vb   = svgEl.viewBox.baseVal;
+  const W    = vb.width  || svgEl.width.baseVal.value  || 800;
+  const H    = vb.height || svgEl.height.baseVal.value || 600;
+  const scale = 2;
+
+  const clone = svgEl.cloneNode(true);
+  const style = document.createElementNS('http://www.w3.org/2000/svg','style');
+  style.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(style, clone.firstChild);
+  clone.setAttribute('width',  W * scale);
+  clone.setAttribute('height', H * scale);
+  clone.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  const data = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([data],{type:'image/svg+xml;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = W * scale;
+  canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  /* white background */
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const img = new Image();
+  img.onload = function(){
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = filename+'.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.onerror = function(){
+    URL.revokeObjectURL(url);
+    alert('PNG export failed. Use the SVG download instead.');
+  };
+  img.src = url;
+}
+
+/* ── Inject download bars into every figure card ── */
+document.querySelectorAll('.fig-card').forEach(card=>{
+  const frame = card.querySelector('.svg-frame');
+  const svgEl = frame && frame.querySelector('svg');
+  if(!svgEl) return;
+
+  const filename = getSvgFilename(card);
+
+  const bar = document.createElement('div');
+  bar.className = 'download-bar';
+
+  const label = document.createElement('div');
+  label.className = 'dl-label';
+  label.textContent = 'DOWNLOAD';
+
+  const btnSVG = document.createElement('button');
+  btnSVG.className = 'dl-btn dl-btn-svg';
+  btnSVG.innerHTML = dlIcon + ' Download SVG';
+  btnSVG.title = 'Download vector (SVG) — lossless, scalable';
+  btnSVG.addEventListener('click', ()=> downloadSVG(svgEl, filename));
+
+  const btnPNG = document.createElement('button');
+  btnPNG.className = 'dl-btn dl-btn-png';
+  btnPNG.innerHTML = dlIcon + ' Download PNG';
+  btnPNG.title = 'Download raster (PNG @2×) — for Word / PowerPoint';
+  btnPNG.addEventListener('click', ()=> downloadPNG(svgEl, filename));
+
+  bar.appendChild(btnSVG);
+  bar.appendChild(btnPNG);
+
+  /* insert bar between svg-frame and fig-caption */
+  const caption = card.querySelector('.fig-caption');
+  card.querySelector('.fig-body').insertBefore(bar, caption);
+});
+</script>
+</body>
+</html>
