@@ -1,0 +1,367 @@
+================================================================================
+CHAPTER 7 - SOFTWARE TESTING
+================================================================================
+
+This chapter documents all testing performed on the CTI Agentic System.
+Testing was carried out across five levels: unit, integration, system,
+functional, and performance. All tests were executed on an Intel Core i7
+workstation with 16 GB RAM running Windows 11, with no dedicated GPU.
+
+
+7.1 Test Environment
+---------------------
+
+  Hardware Configuration:
+    Processor  : Intel Core i7 (8 cores, 2.8 GHz)
+    RAM        : 16 GB DDR4
+    Storage    : 512 GB SSD
+    GPU        : None (all inference on CPU)
+    OS         : Windows 11 Enterprise
+
+  Software Configuration:
+    Python           : 3.12.0
+    Ollama           : 0.3.4 (local LLM runtime)
+    LLM Model        : llama3.2:3b (Q4_K_M quantisation)
+    FastAPI          : 0.110.0
+    ChromaDB         : 0.4.22
+    sentence-transformers: 2.3.1
+    Pydantic         : 2.5.3
+
+  Test Tools:
+    - PowerShell Invoke-RestMethod scripts (test_endpoints.ps1)
+    - Python unit test calls via interactive REPL
+    - Live Mastodon feed (infosec.exchange) for feed streaming tests
+    - 20-event test corpus for end-to-end evaluation
+
+  Table 7.1: Test Environment Summary
+
+  +----------------------+------------------------------------------+
+  | Component            | Version / Specification                  |
+  +----------------------+------------------------------------------+
+  | Processor            | Intel Core i7, 8 cores, 2.8 GHz         |
+  | RAM                  | 16 GB DDR4                               |
+  | Operating System     | Windows 11 Enterprise                    |
+  | Python               | 3.12.0                                   |
+  | Ollama + LLM         | 0.3.4 + llama3.2:3b (Q4_K_M)           |
+  | ChromaDB             | 0.4.22                                   |
+  | FastAPI + Uvicorn    | 0.110.0 + 0.27.0                        |
+  | Test Scripts         | PowerShell Invoke-RestMethod             |
+  +----------------------+------------------------------------------+
+
+
+7.2 Unit Testing of Main Modules
+----------------------------------
+
+  Unit tests were written for each of the five pipeline agents in
+  isolation. The agent's process() method was called directly (not
+  via async_process()) to test core logic without asyncio overhead.
+
+  7.2.1 Ingestion Agent Unit Tests
+
+    Test T1.1 - CSV Ingestion:
+      Input    : sample_cti_feed.csv (10 rows: IPs, URLs, hashes, CVEs)
+      Expected : 10 ThreatEvent objects with correctly detected types
+      Result   : PASS
+      Details  : IP: 3, URL: 3, HASH: 2, CVE: 2 — all types correct
+
+    Test T1.2 - JSON Ingestion:
+      Input    : sample_security_events.json (5 events)
+      Expected : 5 ThreatEvent objects with populated raw_text
+      Result   : PASS
+
+    Test T1.3 - Deduplication:
+      Input    : Same CSV file submitted twice in succession
+      Expected : Second submission produces 0 new events
+      Result   : PASS — processed_files set blocked re-ingestion
+
+    Test T1.4 - Severity Inference:
+      Input    : Raw text "critical ransomware attack detected"
+      Expected : SeverityLevel.CRITICAL (5)
+      Result   : PASS
+
+  7.2.2 Enrichment Agent Unit Tests
+
+    Test T2.1 - LLM Connectivity:
+      Pre-condition: Ollama running with llama3.2:3b pulled
+      Expected : LLMWrapper.is_available() returns True
+      Result   : PASS
+
+    Test T2.2 - RAG Context Retrieval:
+      Input    : "PowerShell malware execution fileless attack"
+      Expected : T1059.001 returned with similarity >= 0.5
+      Result   : PASS — similarity 0.619
+
+    Test T2.3 - Full Enrichment:
+      Input    : "APT group using PowerShell to drop ransomware via
+                 phishing email"
+      Expected : EnrichedEvent with ttps[], malware_family, attack_vector
+      Result   : PASS
+      Details  : ttps: [T1059.001, T1566.001],
+                 malware_family: "ransomware", attack_vector: "phishing"
+
+    Test T2.4 - JSON Parsing Fallback:
+      Input    : LLM response with markdown code fence wrapping JSON
+      Expected : JSON successfully extracted via stage-2 regex
+      Result   : PASS
+
+  7.2.3 Pattern Discovery Agent Unit Tests
+
+    Test T3.1 - Same-pattern grouping:
+      Input    : 3 events each with TTPs {T1059.001, T1055}
+      Expected : All 3 grouped into one ThreatPattern (Jaccard = 1.0)
+      Result   : PASS
+
+    Test T3.2 - Different-pattern separation:
+      Input    : Event A: {T1059.001, T1055, T1021}
+                 Event B: {T1078, T1136, T1003}
+      Expected : Two separate patterns (Jaccard = 0.0)
+      Result   : PASS
+
+    Test T3.3 - Pattern confidence calculation:
+      Input    : Pattern with 5 member events
+      Expected : confidence = min(0.5 + 5*0.1, 0.95) = 0.95
+      Result   : PASS
+
+  7.2.4 Mitigation Agent Unit Tests
+
+    Test T4.1 - Mitigation trigger on high severity:
+      Input    : EnrichedEvent with severity = CRITICAL (5)
+      Expected : MitigationAction generated (threshold: severity >= 3)
+      Result   : PASS
+
+    Test T4.2 - Mitigation output completeness:
+      Expected : All fields populated — title, description, steps (>= 2),
+                 sample_rule, reasoning, mitre_d3fend (>= 1), priority
+      Result   : PASS
+
+  7.2.5 Validation Agent Unit Tests
+
+    Test T5.1 - Rejects dangerous rule:
+      Input    : MitigationAction step containing "rm -rf /var/log"
+      Expected : validated = False
+      Result   : PASS — dangerous command check triggered
+
+    Test T5.2 - Passes safe rule:
+      Input    : MitigationAction step "Block IP 192.168.1.100 on port 443"
+      Expected : validated = True
+      Result   : PASS
+
+
+7.3 Integration Testing of Modules
+-------------------------------------
+
+  Integration tests verified that output from one agent was correctly
+  consumed as input by the next. The instant pipeline endpoint
+  (/api/ingest/instant) was used to run a synchronous end-to-end
+  pipeline call and inspect the full result object.
+
+  Test I1 - Ingestion to Enrichment handoff:
+    Input    : POST /api/ingest/text with "Suspicious PowerShell
+               execution detected on host WIN-ACBD"
+    Expected : ThreatEvent created -> passed to EnrichmentAgent ->
+               EnrichedEvent returned with ttps and confidence
+    Result   : PASS
+    Verified : EnrichedEvent.ttps = [T1059.001], confidence = 0.74
+
+  Test I2 - Enrichment to Pattern Discovery handoff:
+    Input    : Two sequential events sharing TTPs {T1059.001, T1566.001}
+    Expected : Both events grouped into one ThreatPattern
+    Result   : PASS — pattern created with 2 member events
+
+  Test I3 - Pattern Discovery to Mitigation handoff:
+    Input    : ThreatPattern with severity = HIGH (4)
+    Expected : MitigationAction generated for the pattern
+    Result   : PASS — MitigationAction with priority 4 created
+
+  Test I4 - Mitigation to Validation handoff:
+    Input    : MitigationAction with clean steps
+    Expected : ValidationAgent sets validated = True
+    Result   : PASS
+
+  Test I5 - Full pipeline via /api/ingest/instant:
+    Input    : APT29 spear-phishing scenario text
+    Expected : Complete pipeline result: ThreatEvent -> EnrichedEvent
+               -> ThreatPattern -> MitigationAction (validated)
+    Result   : PASS — full result returned in single API response
+
+
+7.4 System Testing
+--------------------
+
+  System testing ran the complete pipeline on a 20-event test corpus
+  spanning four threat categories:
+
+    - 5 events: phishing with credential harvesting (T1566, T1078)
+    - 5 events: ransomware delivery via PowerShell (T1059.001, T1486)
+    - 5 events: APT lateral movement (T1021, T1550, T1055)
+    - 5 events: CVE exploitation (T1190, T1059, T1068)
+
+  Table 7.2: System Test Results — 20-Event Pipeline Run
+
+  +----------------------------------+-------+------+
+  | Metric                           | Value | Pass |
+  +----------------------------------+-------+------+
+  | Events ingested                  |    20 |  Yes |
+  | Events successfully enriched     |    20 |  Yes |
+  | Patterns discovered              |     4 |  Yes |
+  | Mitigations generated            |     8 |  Yes |
+  | Mitigations validated (PASS)     |     7 |  Yes |
+  | Mitigations rejected (FAIL)      |     1 |  --  |
+  | Average LLM enrichment time      |  52 s |  --  |
+  | Total pipeline wall time         | ~18 m |  --  |
+  +----------------------------------+-------+------+
+
+  System test findings:
+    - 100% of events were ingested and enriched (no pipeline failures)
+    - 17 of 20 events were successfully clustered into 4 patterns
+    - 3 APT events remained unclustered (TTP Jaccard < 0.7) — correct
+      abstention rather than a failure
+    - 1 mitigation was rejected for containing "block all outbound
+      traffic" — the broad-scope safety rule functioned correctly
+    - Dashboard remained responsive throughout 18-minute run
+      (asyncio.to_thread confirmed to prevent event loop blocking)
+
+
+7.5 Functional Testing
+------------------------
+
+  Functional testing verified that each of the 15 functional
+  requirements (FR-01 through FR-15, defined in Chapter 3) was met
+  by the implemented system.
+
+  Table 7.3: Functional Requirements Coverage
+
+  +-------+-------------------------------------------------------+--------+
+  | FR ID | Requirement Summary                                   | Status |
+  +-------+-------------------------------------------------------+--------+
+  | FR-01 | Poll data/input/ every 5 seconds for CSV/JSON files  | PASS   |
+  | FR-02 | Normalise all inputs to ThreatEvent schema           | PASS   |
+  | FR-03 | Auto-detect indicator types (IP, URL, Hash, CVE...)  | PASS   |
+  | FR-04 | Deduplicate using MD5 of source + data               | PASS   |
+  | FR-05 | Enrich using llama3.2:3b, extract IOCs/TTPs/CVEs     | PASS   |
+  | FR-06 | Query top-5 MITRE techniques (similarity >= 0.35)    | PASS   |
+  | FR-07 | Store enriched events back to ChromaDB               | PASS   |
+  | FR-08 | Cluster events using Jaccard >= 0.7 into patterns    | PASS   |
+  | FR-09 | Generate mitigations for severity >= 3 and patterns  | PASS   |
+  | FR-10 | Validate and reject overly broad/dangerous rules     | PASS   |
+  | FR-11 | Serve 8-page dashboard on port 8888, refresh 3s     | PASS   |
+  | FR-12 | Provide Flow Tracker for 5-stage event tracing       | PASS   |
+  | FR-13 | Accept JSON, CSV, text, file upload on Live Input    | PASS   |
+  | FR-14 | Stream live data from Mastodon (2-min interval)      | PASS   |
+  | FR-15 | All LLM processing local, no external transmission   | PASS   |
+  +-------+-------------------------------------------------------+--------+
+
+  All 15 functional requirements were met. Feed streaming (FR-14) was
+  tested against the live infosec.exchange Mastodon public timeline and
+  confirmed to retrieve and normalise posts as ThreatEvent objects.
+  Feed pause on user submission was verified via agent logs showing the
+  pause/resume entries during an /api/ingest/instant call.
+
+  Additional API endpoint tests (PowerShell scripts):
+
+  Table 7.4: API Endpoint Test Results
+
+  +-------+---------------------------------------+---------+--------+
+  | Test  | Endpoint                              | Input   | Result |
+  +-------+---------------------------------------+---------+--------+
+  | T6.1  | POST /api/ingest/json                 | JSON    | PASS   |
+  | T6.2  | POST /api/ingest/text                 | Text    | PASS   |
+  | T6.3  | GET  /api/stats                       | --      | PASS   |
+  | T6.4  | POST /api/mitigations/{id}/status     | approve | PASS   |
+  | T6.5  | POST /api/pipeline/start and /stop    | --      | PASS   |
+  +-------+---------------------------------------+---------+--------+
+
+  Feed streaming specific tests:
+
+  Table 7.5: Feed Streaming Test Results
+
+  +-------+----------------------------------------------+--------+
+  | Test  | Description                                  | Result |
+  +-------+----------------------------------------------+--------+
+  | T7.1  | Live GET to infosec.exchange public timeline | PASS   |
+  | T7.2  | Feed pause during /api/ingest/instant        | PASS   |
+  | T7.3  | Defang IOC reversal (hxxps:// -> https://)  | PASS   |
+  +-------+----------------------------------------------+--------+
+
+
+7.6 Test Cases
+---------------
+
+  Table 7.6 presents the complete test case register for all tests
+  executed against the CTI Agentic System.
+
+  Table 7.6: Complete Test Case Register
+
+  +------+-----+----------------+-------------------------------+-----------------------------+--------+
+  | ID   |Type | Module         | Input / Pre-condition         | Expected Result             | Result |
+  +------+-----+----------------+-------------------------------+-----------------------------+--------+
+  | T1.1 | UT  | Ingestion      | CSV 10 rows (IP/URL/Hash/CVE) | 10 typed ThreatEvents       | PASS   |
+  | T1.2 | UT  | Ingestion      | JSON 5 events                 | 5 ThreatEvents              | PASS   |
+  | T1.3 | UT  | Ingestion      | Same CSV twice                | 0 new events (dedup)        | PASS   |
+  | T1.4 | UT  | Ingestion      | "critical ransomware attack"  | CRITICAL severity (5)       | PASS   |
+  | T2.1 | UT  | Enrichment     | Ollama running                | is_available() = True       | PASS   |
+  | T2.2 | UT  | Enrichment     | "PowerShell fileless attack"  | T1059.001 sim >= 0.5        | PASS   |
+  | T2.3 | UT  | Enrichment     | APT + PowerShell + phishing   | ttps, malware, vector filled| PASS   |
+  | T2.4 | UT  | Enrichment     | LLM JSON in code fences       | Extracted by regex fallback | PASS   |
+  | T3.1 | UT  | Pattern        | 3 events, same TTPs           | 1 pattern, 3 members        | PASS   |
+  | T3.2 | UT  | Pattern        | 2 events, disjoint TTPs       | 2 separate patterns         | PASS   |
+  | T3.3 | UT  | Pattern        | 5-member pattern              | confidence = 0.95           | PASS   |
+  | T4.1 | UT  | Mitigation     | Severity = CRITICAL (5)       | MitigationAction generated  | PASS   |
+  | T4.2 | UT  | Mitigation     | Full LLM output               | All fields populated        | PASS   |
+  | T5.1 | UT  | Validation     | Step "rm -rf /var/log"        | validated = False           | PASS   |
+  | T5.2 | UT  | Validation     | Step "Block IP on port 443"   | validated = True            | PASS   |
+  | I1   | IT  | Ingest->Enrich | POST /api/ingest/text         | EnrichedEvent returned      | PASS   |
+  | I2   | IT  | Enrich->Pattern| 2 events, shared TTPs         | 1 pattern formed            | PASS   |
+  | I3   | IT  | Pattern->Mitig | Pattern severity HIGH         | MitigationAction created    | PASS   |
+  | I4   | IT  | Mitig->Valid   | Clean MitigationAction        | validated = True            | PASS   |
+  | I5   | IT  | Full pipeline  | APT29 scenario text           | Complete pipeline result    | PASS   |
+  | T6.1 | FT  | API            | POST /api/ingest/json         | HTTP 200, event_id          | PASS   |
+  | T6.2 | FT  | API            | POST /api/ingest/text         | ThreatType.IP assigned      | PASS   |
+  | T6.3 | FT  | API            | GET /api/stats                | All stat fields present     | PASS   |
+  | T6.4 | FT  | API            | POST /api/mitigations/status  | Status updated to APPROVED  | PASS   |
+  | T6.5 | FT  | API            | Pipeline start/stop           | Running flag toggled        | PASS   |
+  | T7.1 | FT  | Feed           | Live Mastodon GET             | Post as ThreatEvent         | PASS   |
+  | T7.2 | FT  | Feed           | Instant submit during feed    | Pause/resume verified       | PASS   |
+  | T7.3 | FT  | Feed           | "hxxps://malware[.]example"   | Defanged correctly          | PASS   |
+  | P1   | PT  | Dashboard      | 50 GET /api/stats requests    | Avg 18 ms, max 47 ms        | PASS   |
+  | P2   | PT  | ChromaDB       | 20 semantic queries, 691 docs | Avg 42 ms, max 89 ms        | PASS   |
+  | P3   | PT  | Async          | 10 dashboard GETs during LLM  | All < 50 ms                 | PASS   |
+  | P4   | PT  | Throughput     | 20 events full enrichment     | ~18 min (CPU-only noted)    | NOTED  |
+  +------+-----+----------------+-------------------------------+-----------------------------+--------+
+
+  Key: UT = Unit Test, IT = Integration Test, FT = Functional Test,
+       PT = Performance Test
+
+
+7.7 Summary
+------------
+
+  Testing covered five dimensions across 32 test cases:
+
+    Unit tests (T1.1-T5.2): All 14 per-agent unit tests passed.
+      Core pipeline logic — type detection, RAG retrieval, Jaccard
+      clustering, mitigation generation, and safety validation — all
+      behaved as specified.
+
+    Integration tests (I1-I5): All 5 inter-agent handoff tests passed.
+      The instant pipeline endpoint correctly chained all five agents
+      and returned a complete result object.
+
+    System tests: 20-event corpus test confirmed 100% enrichment rate,
+      4 patterns discovered, 7 of 8 mitigations validated, and
+      dashboard responsiveness maintained throughout.
+
+    Functional tests (T6.1-T7.3): All 15 functional requirements were
+      verified as met. All 8 feed and API endpoint tests passed.
+
+    Performance tests (P1-P4):
+      - Dashboard API: 18 ms average (target 500 ms) — PASS
+      - ChromaDB search: 42 ms average (target 200 ms) — PASS
+      - Concurrent requests during LLM: < 50 ms — PASS
+      - Pipeline throughput: ~18 minutes for 20 events on CPU-only
+        hardware — inherent hardware constraint, no regression
+
+  The only test not achieving a binary PASS/FAIL was P4 (throughput),
+  which is bounded by CPU-only LLM inference time rather than a
+  software defect. GPU offloading via Ollama's CUDA backend is the
+  highest-priority future improvement to address this constraint.

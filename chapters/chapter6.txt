@@ -1,0 +1,432 @@
+================================================================================
+CHAPTER 6 - IMPLEMENTATION
+================================================================================
+
+6.1 Programming Language Selection
+------------------------------------
+
+Python 3.12 was selected as the sole implementation language for three
+reasons:
+
+  1. Ecosystem compatibility: All required libraries - ChromaDB, sentence-
+     transformers, FastAPI, Pydantic, and the Ollama SDK - have mature,
+     actively maintained Python packages.
+
+  2. Asyncio support: The system requires concurrent execution of the LLM
+     inference pipeline and the web server. Python's native asyncio provides
+     this without multi-threading complexity.
+
+  3. Rapid iteration: Python's dynamic typing and interactive REPL allowed
+     each agent to be developed and verified independently before pipeline
+     integration.
+
+
+6.2 Platform Selection
+-----------------------
+
+  LLM Runtime - Ollama:
+    Ollama was selected over LM Studio and llama.cpp direct because it
+    exposes a standardised HTTP API on port 11434, enabling drop-in model
+    swapping. It manages quantisation automatically; llama3.2:3b uses
+    Q4_K_M quantisation (4-bit), delivering ~75% of full-precision quality
+    at 25% of memory cost.
+
+  Vector Database - ChromaDB:
+    Selected over Qdrant, Milvus, and FAISS because it runs embedded
+    in-process with no external server, includes native sentence-transformer
+    integration, and persists to disk with zero configuration.
+
+  Web Framework - FastAPI:
+    Chosen over Flask and Django for its ASGI-native async support, automatic
+    Pydantic model integration, and auto-generated OpenAPI docs covering all
+    15 endpoints.
+
+
+6.3 Code Conventions
+---------------------
+
+6.3.1 Naming Convention
+
+  Classes    : PascalCase     (e.g., IngestionAgent, CTIVectorStore)
+  Methods    : snake_case     (e.g., ingest_from_directory, enrich_batch)
+  Constants  : UPPER_SNAKE    (e.g., OLLAMA_MODEL, SIMILARITY_THRESHOLD)
+  Pydantic   : snake_case fields with Optional typing and default values
+  API routes : /api/noun/verb (/api/mitigations/{id}/status)
+
+  All agent methods carry full type annotations. LLM response fields use
+  Optional[str] to handle cases where the model omits a field gracefully.
+
+  Agent classes follow a consistent four-method pattern:
+    __init__       : receive shared state reference
+    process()      : main synchronous processing method
+    async_process(): async wrapper via asyncio.to_thread
+    _log()         : append AgentLogEntry to internal log list
+
+  Table 6.1: Naming Convention Summary
+
+  +-------------------+----------------+-----------------------------------+
+  | Element           | Convention     | Example                           |
+  +-------------------+----------------+-----------------------------------+
+  | Classes           | PascalCase     | IngestionAgent, CTIVectorStore    |
+  | Methods           | snake_case     | ingest_from_directory, enrich_batch|
+  | Constants         | UPPER_SNAKE    | OLLAMA_MODEL, SIMILARITY_THRESHOLD|
+  | Pydantic fields   | snake_case     | raw_text, enrichment_confidence   |
+  | API routes        | /api/noun/verb | /api/mitigations/{id}/status      |
+  +-------------------+----------------+-----------------------------------+
+
+
+6.3.2 File Organization
+
+  The project follows a modular directory structure where each file has a
+  single, well-defined responsibility. Cross-module dependencies flow
+  strictly downward: app.py depends on agents/, agents/ depend on rag/,
+  and rag/ depends on models.py. No circular imports exist.
+
+  Directory structure:
+
+    CTI-Agentic-System/
+    |-- main.py              System orchestrator and async pipeline loop
+    |-- app.py               FastAPI server, all 15 REST endpoints
+    |-- models.py            All Pydantic data models
+    |-- config.py            All configuration constants
+    |
+    |-- agents/
+    |   |-- ingestion.py     IngestionAgent: normalisation, type detection
+    |   |-- enrichment.py    EnrichmentAgent: LLM + RAG extraction
+    |   |-- classifier.py    ClassifierAgent and PatternDiscoveryAgent
+    |   |-- mitigation.py    MitigationAgent and ValidationAgent
+    |   |-- evaluator.py     EvaluatorAgent: 5-metric benchmark
+    |   +-- chatbot.py       ChatbotAgent: natural language query interface
+    |
+    |-- rag/
+    |   |-- loader.py        MitreAttackLoader: STIX JSON parser
+    |   |-- vector_store.py  CTIVectorStore: ChromaDB wrapper
+    |   +-- retriever.py     CTIRetriever: semantic query interface
+    |
+    |-- streaming/
+    |   +-- feeds.py         FeedStreamer: async Mastodon feed poller
+    |
+    |-- static/
+    |   |-- dashboard.html   Pipeline Overview page (/)
+    |   |-- live-input.html  Manual threat submission
+    |   |-- enrichment.html  Enriched event viewer
+    |   |-- patterns.html    Attack pattern viewer
+    |   |-- mitigations.html Mitigation approval interface
+    |   |-- flow-tracker.html Per-event pipeline trace
+    |   |-- benchmark.html   EvaluatorAgent metrics dashboard
+    |   +-- feeds.html       Feed management and status
+    |
+    +-- data/
+        |-- input/           Monitored directory for CSV/JSON files
+        |-- chroma_db/       Persistent ChromaDB vector index
+        +-- mitre_attack.json Cached MITRE ATT&CK STIX bundle
+
+
+6.3.3 Properties Declarations
+
+  All configuration constants are declared in config.py using
+  UPPER_SNAKE_CASE to clearly distinguish them from variable data:
+
+    OLLAMA_MODEL           = "llama3.2:3b"
+    OLLAMA_BASE_URL        = "http://localhost:11434"
+    SIMILARITY_THRESHOLD   = 0.35
+    PATTERN_THRESHOLD      = 0.7
+    CHROMA_PERSIST_DIR     = "data/chroma_db"
+    INPUT_DIR              = "data/input"
+    DASHBOARD_PORT         = 8888
+    PIPELINE_CYCLE_SECS    = 5
+    MAX_EVENTS_PER_CYCLE   = 5
+    LLM_TEMPERATURE        = 0.1
+    ENABLE_FEEDS           = False
+
+  Pydantic model fields declare Optional types with default values to
+  ensure downstream agents never raise KeyError when the LLM omits a
+  field. Example from EnrichedEvent in models.py:
+
+    class EnrichedEvent(BaseModel):
+        event_id              : str
+        ttps                  : List[str]       = []
+        iocs                  : List[Dict]      = []
+        cves                  : List[str]       = []
+        malware_family        : Optional[str]   = None
+        attack_vector         : Optional[str]   = None
+        attack_stage          : Optional[str]   = None
+        threat_category       : Optional[str]   = None
+        affected_assets       : List[str]       = []
+        enrichment_confidence : float           = 0.0
+
+
+6.3.4 Class Declarations
+
+  All five agent classes follow an identical four-method structure.
+  Below is the canonical declaration pattern, illustrated for
+  IngestionAgent:
+
+    class IngestionAgent:
+
+        def __init__(self, state: CTISystemState) -> None:
+            """Receive shared state reference. No heavy initialisation
+            at construction - resources are loaded lazily."""
+            self.state = state
+            self.logs  = []
+
+        def process(self, raw_input: str) -> ThreatEvent:
+            """Main synchronous processing method. All business logic
+            lives here so the agent is unit-testable without asyncio."""
+            ...
+
+        async def async_process(self, raw_input: str) -> ThreatEvent:
+            """Async wrapper. Delegates to process() via
+            asyncio.to_thread() so the FastAPI event loop is never
+            blocked during execution."""
+            return await asyncio.to_thread(self.process, raw_input)
+
+        def _log(self, message: str, level: str = "INFO") -> None:
+            """Append a structured AgentLogEntry to the internal log
+            list. Entries are exposed through the /api/logs endpoint."""
+            self.logs.append(AgentLogEntry(
+                agent="IngestionAgent",
+                message=message,
+                level=level,
+                timestamp=datetime.utcnow()
+            ))
+
+  This pattern ensures:
+    - process() is callable synchronously in unit tests
+    - async_process() is safely awaitable from FastAPI route handlers
+    - All agent activity is captured in structured, queryable logs
+    - Shared system state is mutated only by the owning agent
+
+
+6.4 Main Code Implementation
+-----------------------------
+
+  This section describes the key implementation decisions and code
+  structure for each of the five pipeline agents and the supporting
+  RAG subsystem.
+
+  6.4.1 Ingestion Agent (agents/ingestion.py)
+
+    The IngestionAgent.process_text() method accepts a raw string and
+    returns a ThreatEvent Pydantic object. Input type detection evaluates
+    indicators in priority order:
+
+      1. IPv4 address  : regex ^(\d{1,3}\.){3}\d{1,3}$
+      2. Hash          : length in {32, 40, 64} and all hex characters
+      3. URL           : prefix http://, https://, or ftp://
+      4. CVE           : prefix 'CVE-' (case-insensitive)
+      5. Email         : contains '@' and domain dot
+      6. Domain        : contains '.' and no whitespace
+      7. Unknown       : none of the above
+
+    Severity inference scans raw_text against a tiered keyword table:
+
+      Table 6.2: Severity Keyword Mapping
+
+      +---------------+------------------------------------------+
+      | Severity Level | Keywords                                |
+      +---------------+------------------------------------------+
+      | CRITICAL (5)  | APT, ransomware, zero-day, backdoor,    |
+      |               | rootkit, advanced persistent             |
+      | HIGH (4)      | exploit, malware, breach, intrusion,    |
+      |               | compromise, lateral movement            |
+      | MEDIUM (3)    | phishing, suspicious, anomalous,        |
+      |               | credential harvesting                   |
+      | LOW (2)       | scan, probe, reconnaissance             |
+      | INFO (1)      | all other inputs                        |
+      +---------------+------------------------------------------+
+
+    Deduplication uses MD5(source + indicator) to generate a unique
+    event_id. A processed_feed_ids set prevents the same external
+    indicator from being re-ingested within a session.
+
+  6.4.2 Enrichment Agent (agents/enrichment.py)
+
+    The EnrichmentAgent orchestrates a four-step RAG + LLM pipeline [25][14][13]:
+
+      Step 1: Query ChromaDB mitre_techniques collection with the
+              event's raw_text, retaining top-5 results with
+              cosine similarity >= 0.35.
+
+      Step 2: Query ChromaDB threat_reports collection to retrieve
+              up to 3 semantically similar past events, enabling
+              the self-learning loop.
+
+      Step 3: Build a four-section structured prompt (system role,
+              MITRE context, past threats, event data + JSON schema)
+              and submit to llama3.2:3b via Ollama at temperature 0.1.
+
+      Step 4: Parse the LLM JSON response using a three-stage
+              fallback (direct parse -> code fence regex -> raw scan)
+              and store events with confidence > 0.3 back to ChromaDB.
+
+    Key challenge resolved: Ollama's SDK is synchronous. To prevent
+    blocking the FastAPI event loop for the 45-90 second LLM call
+    duration, all Ollama calls are wrapped in asyncio.to_thread().
+
+  6.4.3 Pattern Discovery Agent (agents/classifier.py)
+
+    Events are compared pairwise using a weighted Jaccard similarity:
+
+      S(A,B) = 0.4 * J_TTP  +  0.3 * match_malware
+             + 0.2 * match_vector  +  0.1 * J_asset
+
+    Pairs with S >= 0.7 are merged into the same ThreatPattern.
+    A greedy assign-or-seed algorithm ensures every enriched event
+    belongs to at least one pattern (MIN_PATTERN_EVENTS = 1), which
+    guarantees every event receives a mitigation.
+
+  6.4.4 Mitigation Agent (agents/mitigation.py)
+
+    Mitigations are generated using chain-of-thought prompting [27] in
+    three explicit reasoning steps:
+
+      Step 1: Threat mechanism analysis
+              (entry point, lateral movement, adversary objective)
+      Step 2: MITRE D3FEND countermeasure selection
+              (D3-NI, D3-ITF, D3-OTF, D3-UA, D3-MFA, D3-EDR, D3-PA,
+               D3-PM)
+      Step 3: Minimal effective action generation
+              (smallest proportionate set of specific steps)
+
+    Mitigations are triggered for all events with severity >= 3 and
+    for all newly discovered ThreatPatterns. Status is initialised to
+    PENDING_REVIEW pending analyst approval.
+
+  6.4.5 Validation Agent (agents/mitigation.py)
+
+    The ValidationAgent applies five deterministic rule checks with
+    no LLM calls:
+
+      Check 1: Completeness  - title, description, >= 2 steps
+                               each >= 10 characters
+      Check 2: Dangerous cmd - 'rm -rf', 'format c:', 'drop database',
+                               'del /f /s'
+      Check 3: Broad network - 'block all', 'deny all ports'
+      Check 4: Disproportionate - 'disable all', 'delete all',
+                                  'shutdown all'
+      Check 5: Wildcard rule  - 0.0.0.0/0 without a port qualifier
+
+    If all checks pass, validated = True. On any failure,
+    validated = False and the failure reason is logged.
+
+  6.4.6 RAG Subsystem (rag/)
+
+    The RAG subsystem consists of three components:
+
+      MitreAttackLoader (rag/loader.py):
+        Downloads the MITRE ATT&CK Enterprise STIX bundle (~7 MB)
+        from GitHub on first run. Parses attack-pattern objects and
+        extracts technique ID, name, description, and associated
+        tactic IDs. On subsequent starts, the cached
+        data/mitre_attack.json is loaded directly.
+
+      CTIVectorStore (rag/vector_store.py):
+        Wraps ChromaDB with two persistent collections:
+          - mitre_techniques: 691 techniques indexed on first run
+          - threat_reports: enriched events added after each pipeline
+            cycle (self-learning store)
+        Uses all-MiniLM-L6-v2 (384-dim) as the embedding function.
+
+      CTIRetriever (rag/retriever.py):
+        Exposes two query methods:
+          - get_mitre_context(text): returns top-5 techniques with
+            similarity >= 0.35, formatted as a context string
+          - get_similar_threats_context(text): returns top-3 past
+            events from threat_reports collection
+
+    Key challenge resolved: On first run, embedding 691 techniques
+    takes 45-90 seconds. ChromaDB's collection.count() check in
+    is_ready() skips re-indexing on all subsequent starts, reducing
+    startup to under 2 seconds.
+
+
+6.5 Key Algorithms
+-------------------
+
+6.5.1 LLM Prompting Strategy (Enrichment Agent)
+
+  The enrichment prompt uses a four-section template:
+
+    Section 1 - System Role:
+      "You are a senior SOC analyst. Extract threat intelligence from the
+      following event. Return ONLY valid JSON."
+
+    Section 2 - MITRE Context block:
+      "Relevant MITRE ATT&CK techniques (use these IDs if applicable):
+       T1059.001 - PowerShell [similarity: 0.619]
+       T1546.013 - PowerShell Profile [similarity: 0.558] ..."
+
+    Section 3 - Similar Threats block:
+      "Similar past threats observed: [event summary 1] [event summary 2]"
+
+    Section 4 - Event data + Output schema:
+      Raw event text followed by explicit JSON field definitions with types.
+
+  Temperature is set to 0.1 (near-deterministic) for consistent parsing.
+
+
+6.5.2 RAG Retrieval Algorithm
+
+  1. Vectorise query:
+       vector = all-MiniLM-L6-v2.encode(threat_text)   # 384-dim float32
+
+  2. HNSW approximate nearest-neighbour search in ChromaDB:
+       results = collection.query(query_texts=[text], n_results=5,
+                   include=["documents", "metadatas", "distances"])
+
+  3. Similarity filtering (ChromaDB returns L2 distances):
+       cosine_sim = 1 - distance
+       keep only results where cosine_sim >= 0.35
+
+  4. Context string construction:
+       For each retained result:
+         context += f"{id} - {name}: {description[:200]}\n"
+
+
+6.5.3 Jaccard Similarity Clustering [30]
+
+  For each pair of EnrichedEvents (A, B):
+
+    ttp_a, ttp_b = set(A.ttps), set(B.ttps)
+    if ttp_a or ttp_b:
+        ttp_j = len(ttp_a & ttp_b) / len(ttp_a | ttp_b)
+    else:
+        ttp_j = 0.0
+
+    malware_bonus = 0.3 if A.malware_family == B.malware_family else 0.0
+    vector_bonus  = 0.2 if A.attack_vector  == B.attack_vector  else 0.0
+
+    asset_a, asset_b = set(A.affected_assets), set(B.affected_assets)
+    asset_j = (len(asset_a & asset_b) / len(asset_a | asset_b)
+               if (asset_a | asset_b) else 0.0)
+
+    similarity = ttp_j * 0.4 + malware_bonus + vector_bonus + asset_j * 0.1
+
+    if similarity >= 0.7:
+        assign_to_same_pattern(A, B)
+
+
+6.5.4 Threat Type Detection
+
+  Evaluated in priority order:
+
+    IP      : regex ^(\d{1,3}\.){3}\d{1,3}$, each octet 0-255
+    HASH    : length in {32, 40, 64} and all hexadecimal characters
+    URL     : starts with http://, https://, or ftp://
+    CVE     : starts with 'CVE-' (case-insensitive)
+    EMAIL   : contains '@' and a dot in the domain part
+    DOMAIN  : contains '.' and no whitespace
+    UNKNOWN : none of the above
+
+
+6.6 Summary
+------------
+
+Python 3.12 with FastAPI, ChromaDB, and Ollama forms the core technology
+stack. Five implementation challenges - LLM output parsing, async blocking,
+ChromaDB initialisation, feed interference, and Mastodon HTML content -
+were each resolved through targeted, minimal strategies. The four core
+algorithms (LLM prompting, RAG retrieval, Jaccard clustering, type
+detection) are deterministic, explainable, and computationally efficient
+on commodity hardware.

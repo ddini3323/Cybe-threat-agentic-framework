@@ -1,0 +1,269 @@
+================================================================================
+CHAPTER 5 - DETAILED DESIGN
+================================================================================
+
+5.1 Structure Chart
+--------------------
+
+5.1.1 Overall System Architecture
+
+The system is composed of seven interacting modules under the CTISystem
+orchestrator. The FastAPI web server runs concurrently in the same asyncio
+event loop. Figure 5.1 (ER / Data Model Diagram) shows the four core data
+entities and their relationships — ThreatEvent, EnrichedEvent, ThreatPattern,
+and MitigationAction — which form the data contracts between pipeline stages.
+
+  [See Figure 5.1: ER / Data Model Diagram]
+
+Table 5.1 below summarises the four data entities, their key fields,
+and the pipeline stage that produces each one.
+
+  Table 5.1: Data Entity Summary
+
+  +-------------------+------------------------------------------+------------------+
+  | Entity            | Key Fields                               | Produced By      |
+  +-------------------+------------------------------------------+------------------+
+  | ThreatEvent       | event_id, event_type, severity, raw_text | Agent 1 Ingest   |
+  | EnrichedEvent     | ttps[], iocs[], cves[], confidence       | Agent 2 Enrich   |
+  | ThreatPattern     | pattern_id, event_ids[], primary_ttp     | Agent 3 Pattern  |
+  | MitigationAction  | d3fend_codes[], steps[], validated       | Agents 4 & 5     |
+  +-------------------+------------------------------------------+------------------+
+
+The module hierarchy below shows how classes are organised across files:
+
+  [CTISystem Orchestrator]
+        |
+        +-- [Agent 1: IngestionAgent]
+        |         |-- CSV Normaliser
+        |         |-- JSON Normaliser
+        |         |-- URL Fetcher
+        |         +-- Type & Severity Detector
+        |
+        +-- [Agent 2: EnrichmentAgent]
+        |         |-- CTIRetriever (RAG)
+        |         |-- LLMWrapper (Ollama)
+        |         +-- ChromaDB Store-back
+        |
+        +-- [Agent 2b: ClassifierAgent]
+        |         +-- LLMWrapper (Ollama)
+        |
+        +-- [Agent 3: PatternDiscoveryAgent]
+        |         +-- Jaccard Similarity Engine
+        |
+        +-- [Agent 4: MitigationAgent]
+        |         +-- LLMWrapper (Ollama)
+        |
+        +-- [Agent 5: ValidationAgent]
+        |         +-- Safety Rule Checker
+        |
+        +-- [EvaluatorAgent]
+        |         +-- Metric Calculator
+        |
+        +-- [RAG Subsystem]
+        |         |-- MitreAttackLoader
+        |         |-- CTIVectorStore (ChromaDB)
+        |         +-- CTIRetriever
+        |
+        +-- [FeedStreamer]
+        |         +-- Mastodon Poller (3 feeds)
+        |
+        +-- [FastAPI Server]
+                  |-- REST API (15 endpoints)
+                  |-- Static Dashboard (8 pages)
+                  +-- Chat API (/api/chat)
+
+
+5.2 Module Description
+-----------------------
+
+5.2.1 Ingestion Agent
+~~~~~~~~~~~~~~~~~~~~~~
+
+Responsible for all data intake and normalisation. The agent polls the
+data/input/ directory every cycle and supports four input modes:
+
+  a) CSV Normalisation:
+     Reads files using pandas. Flexible column mapping accepts headers
+     such as 'indicator', 'ioc', 'value', 'ip', 'url'. If no 'description'
+     column exists the raw row content is used as the threat description.
+     Each row maps to one ThreatEvent.
+
+  b) JSON Normalisation:
+     Accepts JSON objects and arrays. Supports flexible field names:
+     'description', 'text', 'content', 'raw', 'message'. Arrays are
+     iterated to produce one ThreatEvent per element.
+
+  c) URL Fetch:
+     Issues HTTP GET requests to feed URLs listed in EXTERNAL_FEEDS.
+     Response body is treated as free text and normalised into a
+     ThreatEvent.
+
+  d) Deduplication:
+     A processed_files set and processed_feed_ids set track previously
+     seen content. MD5 hashing of source+indicator prevents duplicates.
+
+  ThreatEvent Schema:
+    event_id   : MD5(source + data)
+    timestamp  : ISO 8601 ingestion time
+    source     : origin (filename, URL, or 'manual')
+    event_type : ThreatType enum (IP/URL/Domain/Hash/Email/CVE/Unknown)
+    raw_text   : human-readable description
+    indicator  : extracted indicator value
+    severity   : SeverityLevel (1-5)
+    raw_data   : dict of original fields
+
+
+5.2.2 Enrichment Agent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Adds semantic intelligence to each ThreatEvent through a three-step
+RAG + LLM pipeline [25][14].
+
+  Step 1 - MITRE RAG Context:
+    Calls CTIRetriever.get_mitre_context() with the event's raw_text,
+    returning the top-5 MITRE ATT&CK techniques with cosine similarity
+    >= 0.35. Techniques below threshold are excluded to avoid noise.
+
+  Step 2 - Past Threats Context:
+    Calls get_similar_threats_context() to retrieve up to 3 past enriched
+    events from the threat_reports ChromaDB collection, enabling the LLM
+    to reason from historical analogues.
+
+  Step 3 - LLM Extraction:
+    A structured prompt (system role + MITRE context + past threats +
+    event details + JSON schema) is sent to llama3.2:3b via Ollama.
+    The LLM extracts:
+      iocs[]           : list of {type, value} pairs
+      cves[]           : CVE identifiers
+      ttps[]           : MITRE technique IDs (T####.###)
+      mitre_tactics[]  : MITRE tactic IDs (TA####)
+      attack_stage     : kill-chain stage name
+      threat_category  : categorical label
+      malware_family   : identified malware or threat actor
+      attack_vector    : initial access method
+      affected_assets[]: asset types affected
+      enrichment_confidence: float 0.0-1.0
+
+  Step 4 - Store-back:
+    If enrichment_confidence > 0.3, the EnrichedEvent is persisted into
+    ChromaDB threat_reports collection for future retrieval (self-learning
+    loop).
+
+
+5.2.3 Pattern Discovery Agent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Groups enriched events into ThreatPattern objects using a multi-factor
+weighted similarity score:
+
+  Similarity = (TTP_jaccard * 0.4) + (malware_match * 0.3)
+             + (vector_match * 0.2) + (asset_jaccard * 0.1)
+
+  Where:
+    TTP_jaccard    = |A.ttps ∩ B.ttps| / |A.ttps ∪ B.ttps|
+    malware_match  = 0.3 if same malware_family, else 0
+    vector_match   = 0.2 if same attack_vector, else 0
+    asset_jaccard  = Jaccard of affected_assets sets
+
+  A pair of events joins the same pattern when similarity >= 0.7.
+  A greedy merge assigns each event to the closest pattern above threshold
+  or seeds a new one if no match exists.
+
+  ThreatPattern Schema:
+    pattern_id      : UUID
+    pattern_name    : descriptive name derived from TTPs/malware
+    event_ids[]     : member event IDs
+    common_ttps[]   : TTP IDs present in >= 50% of member events
+    common_iocs[]   : IOCs shared across member events
+    affected_systems[]: all unique asset types
+    confidence      : min(0.5 + event_count * 0.1, 0.95)
+    severity        : maximum severity of member events
+
+
+5.2.4 Mitigation Agent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Generates structured, actionable recommendations using chain-of-thought
+prompting [27] in three explicit steps:
+
+  Step 1 - Threat Mechanism Analysis:
+    The LLM reasons about how the threat operates - entry point, lateral
+    movement paths, and objectives.
+
+  Step 2 - D3FEND Countermeasure Selection:
+    The LLM maps the threat to MITRE D3FEND [29] defense categories:
+    D3-NI (Network Isolation), D3-ITF (Inbound Traffic Filtering),
+    D3-OTF (Outbound Traffic Filtering), D3-UA (User Account Management),
+    D3-MFA (Multi-Factor Authentication), D3-EDR (Endpoint Detection),
+    D3-PA (Process Analysis), D3-PM (Process Monitoring).
+
+  Step 3 - Minimal Effective Mitigation:
+    The LLM produces the smallest set of proportionate, specific actions
+    that address the identified threat mechanism.
+
+  MitigationAction Schema:
+    title        : short action name
+    description  : explanation of the mitigation
+    steps[]      : 3-5 specific actionable steps
+    sample_rule  : example firewall/IDS/SIEM rule
+    reasoning    : chain-of-thought explanation
+    mitre_d3fend[]: list of D3FEND technique IDs
+    priority     : integer 1-5 (5 = most urgent)
+    status       : PENDING_REVIEW | APPROVED | REJECTED | APPLIED
+
+
+5.2.5 Validation Agent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Applies deterministic safety rules to every MitigationAction before it is
+presented to the analyst. No LLM calls are made in this agent.
+
+  Completeness Checks:
+    - Title must be non-empty
+    - Description must be non-empty
+    - steps[] must contain >= 2 items, each >= 10 characters
+
+  Safety Checks (reject if any match):
+    - Dangerous system commands: rm -rf, format c:, drop database, del /f
+    - Overly broad network rules: "block all", "deny all ports"
+    - Disproportionate actions: "disable all", "delete all", "shutdown all"
+    - Firewall wildcard rules: 0.0.0.0/0 without specific port context
+
+  If all checks pass: MitigationAction.validated = True
+  If any check fails: MitigationAction.validated = False, reason logged
+
+
+5.3 Summary
+------------
+
+This chapter detailed the five-agent structure of the system, presenting
+each agent's internal design, data schema, and processing logic. Key design
+patterns include RAG-augmented LLM prompting (Enrichment), weighted
+multi-factor similarity (Pattern Discovery), chain-of-thought reasoning
+(Mitigation), and deterministic rule-based safety checking (Validation).
+
+Figure 5.2 shows the Sequence Diagram, illustrating the chronological
+interaction between the Analyst, FastAPI server, and each agent during
+an /api/ingest/instant call. The sequence shows: (1) the analyst sends a
+POST request, (2) FastAPI calls the Ingestion Agent which returns a
+ThreatEvent, (3) the Enrichment Agent queries ChromaDB and the LLM to
+produce an EnrichedEvent, (4) the Pattern Agent clusters the event, (5)
+the Mitigation Agent generates a MitigationAction, and (6) the Validation
+Agent checks safety rules before returning the final result.
+
+  [See Figure 5.2: Sequence Diagram — Threat Processing Flow]
+
+Figure 5.3 shows the Activity Diagram (Flowchart), presenting the complete
+pipeline decision logic. The flowchart includes the four key decision points:
+duplicate check (discard if duplicate), enrichment confidence check (skip
+store-back if confidence < 0.3), severity threshold check (log-only if
+severity < 3), and validation check (flag and reject if safety rules fail).
+Only events that pass all decision points are published to the SOC Dashboard.
+
+  [See Figure 5.3: Activity Diagram — Pipeline Decision Logic]
+
+The data models form a coherent pipeline chain:
+  ThreatEvent -> EnrichedEvent -> ThreatPattern -> MitigationAction
+
+Each stage's output is the next stage's input, enabling end-to-end
+traceability for every event.

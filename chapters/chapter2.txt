@@ -1,0 +1,331 @@
+================================================================================
+CHAPTER 2 - THEORY AND CONCEPTS
+================================================================================
+
+2.1 Cyber Threat Intelligence - Introduction
+---------------------------------------------
+
+Cyber Threat Intelligence (CTI) is the process of collecting, processing, and
+analysing information about current and potential attacks that threaten an
+organisation. It transforms raw data - IP addresses, URLs, file hashes, attack
+descriptions - into structured, actionable knowledge about adversary behaviour.
+
+CTI operates at three levels:
+  - Strategic: high-level trends for management decision-making
+  - Operational: information about specific campaigns and actor TTPs
+  - Tactical: specific IOCs (IPs, hashes, domains) for direct blocking
+
+This project operates at the operational and tactical levels - automatically
+extracting and contextualising IOCs and TTPs from raw threat data using AI.
+
+
+2.2 Large Language Models (LLMs)
+----------------------------------
+
+2.2.1 Introduction to LLMs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Large Language Model is a deep learning model trained on massive text corpora
+to understand and generate human language. LLMs are based on the Transformer
+architecture (Vaswani et al., 2017), which uses self-attention mechanisms to
+model relationships between words across long contexts.
+
+Modern instruction-tuned LLMs can follow natural language instructions, reason
+over provided context, and produce structured outputs - making them directly
+applicable to threat analysis tasks such as IOC extraction, TTP mapping, and
+mitigation generation.
+
+
+2.2.2 Transformer Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Transformer consists of:
+  - Tokeniser: converts input text into numerical tokens
+  - Embedding layer: maps tokens to dense vector representations
+  - Self-attention layers: compute relationships between all tokens simultaneously
+  - Feed-forward layers: apply non-linear transformations
+  - Output head: produces next-token probability distributions
+
+For a sequence of tokens, the attention score is computed as:
+
+  Attention(Q, K, V) = softmax( QK^T / sqrt(d_k) ) * V
+
+where Q (query), K (key), V (value) are learned linear projections of the input.
+
+
+2.2.3 Ollama and llama3.2:3b
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This project uses Ollama as the local LLM runtime. Ollama packages quantised LLM
+models and exposes them via a local HTTP API on port 11434.
+
+The selected model, llama3.2:3b, is a 3-billion parameter instruction-tuned model
+that:
+  - Runs on CPU with 8GB RAM (no GPU required)
+  - Follows JSON output instructions reliably
+  - Responds within 30-90 seconds per call on typical hardware
+  - Keeps all data local - nothing is sent to external servers
+
+
+2.2.4 Prompt Engineering
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LLM outputs are controlled through structured prompts containing:
+  1. System role - defines the LLM persona ("You are a cybersecurity analyst...")
+  2. RAG context block - retrieved MITRE ATT&CK techniques (injected before each
+     call)
+  3. Event details - the threat data to analyse
+  4. Output format specification - explicit JSON schema with examples
+
+This structured approach ensures consistent, machine-parseable outputs.
+
+
+2.3 Retrieval-Augmented Generation (RAG)
+-----------------------------------------
+
+2.3.1 Introduction to RAG
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Retrieval-Augmented Generation [25] enhances LLM outputs by first retrieving
+relevant documents from a knowledge base and injecting them
+into the prompt before generation. This addresses the hallucination problem -
+in the security context, an LLM without RAG may invent MITRE technique IDs or
+fabricate CVE numbers. RAG prevents this by grounding every LLM call in
+verified, retrieved facts.
+
+
+2.3.2 RAG Pipeline in This Project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Threat Text
+      |
+      v
+  Embedding Model (all-MiniLM-L6-v2)
+      |  384-dimensional vector
+      v
+  ChromaDB Semantic Search
+      |  Top-5 MITRE techniques (cosine similarity >= 0.35)
+      v
+  Context String (formatted technique descriptions)
+      |
+      +-- + Threat Text
+      v
+  LLM Prompt (enriched with RAG context)
+      |
+      v
+  Structured JSON Output (IOCs, TTPs, CVEs...)
+
+
+2.3.3 Similarity Threshold
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Only results with cosine similarity >= 0.35 are included in the context.
+Results below this threshold are excluded to avoid injecting misleading context.
+
+From the system's live ChromaDB data:
+
+  Query: "PowerShell malware execution"
+    -> T1059.001 - PowerShell              | similarity: 0.619
+    -> T1546.013 - PowerShell Profile      | similarity: 0.558
+
+  Query: "phishing email credential theft"
+    -> T1586.002 - Email Accounts          | similarity: 0.578
+    -> T1566    - Phishing                 | similarity: 0.477
+
+
+2.3.4 Self-Learning Loop
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After each enrichment, the enriched event (with extracted TTPs, malware family,
+source) is stored back into the threat_reports ChromaDB collection. Future
+enrichments retrieve similar past events as additional context - the system
+becomes more accurate over time as it accumulates more intelligence.
+
+Current ChromaDB state (verified live):
+  - mitre_techniques collection: 691 MITRE ATT&CK techniques indexed
+  - threat_reports collection:    6 enriched events stored (grows each run)
+
+
+2.4 Vector Databases and Semantic Embeddings
+---------------------------------------------
+
+2.4.1 Sentence Transformers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sentence Transformers [26] are BERT-based models
+fine-tuned to produce semantically meaningful sentence-level embeddings.
+
+The model used - all-MiniLM-L6-v2 - produces 384-dimensional vectors. It is
+optimised for:
+  - Fast inference on CPU (22MB model size)
+  - High-quality semantic similarity
+  - No GPU required
+
+
+2.4.2 Cosine Similarity
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Similarity between two vectors A and B:
+
+  similarity(A, B) = (A . B) / (||A|| * ||B||)
+
+  - 1.0  = identical (most similar)
+  - 0.0  = orthogonal (unrelated)
+  - -1.0 = opposite
+
+In practice, security text comparisons yield similarity scores in the
+0.3-0.7 range for relevant matches.
+
+
+2.4.3 ChromaDB
+~~~~~~~~~~~~~~
+
+ChromaDB is a lightweight, open-source, locally deployable vector database.
+It stores document text, vector embeddings, and metadata.
+
+ChromaDB uses the HNSW (Hierarchical Navigable Small World) algorithm for
+approximate nearest-neighbour search, enabling sub-millisecond query times.
+
+In this project, ChromaDB maintains two collections:
+  - mitre_techniques : 691 MITRE ATT&CK Enterprise v18.1 techniques
+  - threat_reports   : enriched past events (grows with each pipeline run)
+
+
+2.5 MITRE ATT&CK Framework
+----------------------------
+
+2.5.1 Overview
+~~~~~~~~~~~~~~
+
+MITRE ATT&CK (Adversarial Tactics, Techniques, and Common Knowledge) is a
+globally accessible knowledge base of adversary behaviour based on real-world
+observations [28]. It is the de facto standard for describing cyber attack
+behaviour.
+
+
+2.5.2 Structure
+~~~~~~~~~~~~~~~
+
+  Component     | Description                        | Example
+  --------------|------------------------------------|--------------------------
+  Tactic        | The adversary's goal               | Execution, Persistence
+  Technique     | How the goal is achieved           | T1059 - Command Interpreter
+  Sub-technique | Specific implementation            | T1059.001 - PowerShell
+  Procedure     | Real-world usage by specific actor | APT28 using PowerShell
+
+The Enterprise matrix covers 14 tactics and 691 techniques/sub-techniques
+(v18.1).
+
+
+2.5.3 STIX Format
+~~~~~~~~~~~~~~~~~
+
+MITRE ATT&CK is distributed in STIX 2.1 (Structured Threat Information
+eXpression) format - a JSON-based standard for representing CTI objects.
+This project downloads enterprise-attack.json (~7MB), parses the STIX bundle,
+and extracts attack-pattern objects for indexing into ChromaDB.
+
+
+2.6 Multi-Agent Pipeline Architecture
+---------------------------------------
+
+2.6.1 Agent Definition
+~~~~~~~~~~~~~~~~~~~~~~
+
+In this project, an agent is a software component with:
+  - A single, clearly defined responsibility
+  - Independent internal state and logging
+  - Defined input type and output type
+  - Autonomous execution within its scope
+
+Multi-agent architectures have demonstrated strong results in cybersecurity
+automation [1][15], forming the theoretical basis for this pipeline design.
+
+
+2.6.2 The Five Agents
+~~~~~~~~~~~~~~~~~~~~~
+
+  Agent               | Input              | Output             | Method
+  --------------------|--------------------|--------------------|------------------
+  Ingestion           | Raw CSV/JSON/text  | ThreatEvent list   | Rule-based
+  Enrichment          | ThreatEvent        | EnrichedEvent      | LLM + RAG
+  Pattern Discovery   | EnrichedEvent list | ThreatPattern list | Jaccard clustering
+  Mitigation          | Pattern/Event      | MitigationAction   | LLM generation
+  Validation          | MitigationAction   | Validated action   | Rule-based
+
+
+2.6.3 Pipeline Orchestration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The CTISystem class in main.py orchestrates the pipeline in a 5-second polling
+loop using Python asyncio. The web server (FastAPI/Uvicorn) runs concurrently
+in the same event loop, ensuring the dashboard remains responsive during LLM
+inference.
+
+
+2.7 Jaccard Similarity for Threat Clustering
+---------------------------------------------
+
+2.7.1 Definition
+~~~~~~~~~~~~~~~~
+
+Jaccard similarity [30] measures the overlap between two sets:
+
+  J(A, B) = |A intersection B| / |A union B|
+
+Result ranges from 0.0 (no overlap) to 1.0 (identical sets).
+
+
+2.7.2 Application to TTP Clustering
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each enriched event has a set of MITRE technique IDs (TTPs). Two events are
+considered part of the same threat pattern if their TTP sets have Jaccard
+similarity >= 0.7.
+
+Example:
+  Event A TTPs: {T1059.001, T1055, T1021}
+  Event B TTPs: {T1059.001, T1055, T1078}
+
+  Intersection: {T1059.001, T1055}  -> size 2
+  Union:        {T1059.001, T1055, T1021, T1078}  -> size 4
+  J = 2/4 = 0.5  -> below threshold, separate patterns
+
+
+2.7.3 Why Jaccard over ML Clustering
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Jaccard was chosen over k-means or DBSCAN because:
+  - TTPs are discrete labels, not continuous features
+  - Jaccard is optimal for set overlap measurement
+  - It is explainable - analysts can see exactly which techniques match
+  - It is computationally cheap - no training, no hyperparameter tuning
+
+
+2.8 FastAPI and Asynchronous Web Architecture
+----------------------------------------------
+
+FastAPI is a modern Python web framework built on ASGI (Asynchronous Server
+Gateway Interface), enabling concurrent request handling without blocking.
+
+Key advantages for this project:
+  - Async endpoints: LLM processing does not block API responses
+  - Pydantic integration: automatic request/response validation
+  - Auto-generated OpenAPI docs: all 15 API endpoints documented automatically
+
+
+2.9 Summary
+------------
+
+This chapter covered the core theoretical foundations of the project:
+
+  - LLMs (llama3.2:3b via Ollama) provide language understanding for threat
+    enrichment and mitigation generation
+  - RAG (ChromaDB + sentence-transformers) grounds LLM outputs in verified
+    MITRE ATT&CK knowledge, eliminating hallucination
+  - MITRE ATT&CK (691 techniques, v18.1) provides the threat knowledge base
+  - Jaccard similarity enables explainable, efficient TTP-based threat clustering
+  - Multi-agent architecture decomposes the pipeline into maintainable,
+    independently testable components
+  - FastAPI + asyncio ensures the system remains responsive while LLM inference
+    runs concurrently

@@ -1,0 +1,369 @@
+================================================================================
+CHAPTER 4 - HIGH LEVEL DESIGN
+================================================================================
+
+4.1 Design Considerations
+--------------------------
+
+4.1.1 General Considerations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The design of the system was governed by the following principles:
+
+  Privacy by Design:
+    All computation - LLM inference, embedding generation, vector search,
+    and data storage - executes on local hardware. No threat data, prompts,
+    or responses are transmitted to external services. This is a hard
+    architectural constraint that influenced every technology selection.
+
+  Modularity:
+    Each pipeline stage is implemented as an independent agent class with
+    its own state, logging, and clearly defined input/output contracts.
+    This enables individual agents to be upgraded, replaced, or tested
+    independently without affecting other pipeline stages.
+
+  Graceful Degradation:
+    If RAG initialisation fails (e.g., network unavailable for first-time
+    MITRE download), the system continues operating without RAG context.
+    If the LLM is unavailable, ingestion and pattern discovery continue.
+    No single component failure should crash the entire system.
+
+  Human Oversight:
+    The system is designed as a decision-support tool, not a fully autonomous
+    actor. All generated mitigations pass through a validation layer and
+    require analyst approval before being marked actionable.
+
+  Async-First:
+    Long-running operations (LLM inference, feed polling) must never block
+    the web server. Python asyncio is used throughout to ensure the dashboard
+    remains responsive during LLM calls that may take 30-90 seconds.
+
+
+4.1.2 Development Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Development Approach: Agile Incremental
+    - Each agent was designed, implemented, and unit-tested independently
+    - Integration testing was performed after each agent was added to the
+      pipeline
+    - The dashboard was developed in parallel with the backend pipeline
+
+  Data Modelling First:
+    All Pydantic data models (ThreatEvent, EnrichedEvent, ThreatPattern,
+    MitigationAction, AgentLogEntry) were defined before any agent
+    implementation began. This enforced consistent data contracts across
+    all pipeline stages from the outset.
+
+  Test-Driven RAG Development:
+    The RAG subsystem was verified using semantic search queries (e.g.,
+    "PowerShell malware execution" -> T1059.001 at similarity 0.619) before
+    integration into the enrichment agent.
+
+
+4.2 Architecture Strategies
+-----------------------------
+
+4.2.1 Programming Language and Frameworks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Python 3.12 was selected as the implementation language for:
+    - Rich ecosystem of security, ML, and web libraries
+    - Native asyncio support for concurrent pipeline + web server
+    - Pydantic v2 for fast, typed data validation
+    - Broad community support and documentation
+
+  FastAPI was selected over Flask/Django because:
+    - Built on ASGI (async-native) - critical for non-blocking LLM calls
+    - Automatic Pydantic integration - request/response validation at zero cost
+    - Auto-generated OpenAPI documentation for all 15 endpoints
+    - Production-ready with Uvicorn as the ASGI server
+
+  ChromaDB was selected over Pinecone/Weaviate/Qdrant because:
+    - Fully local deployment - no cloud account or API key required
+    - Native sentence-transformers integration
+    - Persistent storage with no external database server needed
+    - Lightweight enough for single-workstation deployment
+
+
+4.2.2 Future Plans
+~~~~~~~~~~~~~~~~~~~
+
+  - Wire RAG context into MitigationAgent for MITRE ATT&CK-grounded mitigations
+  - Add SQLite persistence layer to retain events across restarts
+  - Integrate MITRE course-of-action objects for official mitigation supplements
+  - Add Reddit (r/netsec, r/malware) as additional social intelligence feeds
+  - Implement APT group attribution using MITRE intrusion-set objects
+  - Add Mastodon API token support for hashtag feed access (#threatintel, #ioc)
+
+
+4.3 System Architecture
+------------------------
+
+The system follows a sequential multi-agent pipeline with three input channels,
+five processing agents, a human approval layer, and a web dashboard.
+
+Figure 4.1 illustrates the Use Case Diagram, showing the interactions between
+the Security Analyst actor, the System Administrator actor, and the CTI Agentic
+System boundary. The analyst interacts with six use cases: submitting threats,
+viewing enriched events, viewing attack patterns, approving mitigations, running
+benchmarks, and configuring feeds. The System Administrator manages feed
+configuration and pipeline controls. The Live Feed actor (Mastodon) interacts
+with the Submit Threat use case by providing real-time social media intelligence.
+
+  [See Figure 4.1: Use Case Diagram]
+
+The pipeline architecture below shows the complete data flow from input
+through each agent to the analyst dashboard:
+
+  +------------------------------------------------------------------+
+  |                        INPUT LAYER                               |
+  |                                                                  |
+  |  [Live CTI Feeds]   [Social Media]      [Manual Input]          |
+  |  URLhaus            Mastodon Local       JSON / CSV / Text       |
+  |  ThreatFox          Mastodon #threatintel File Upload            |
+  |  Feodo Tracker      Mastodon #ioc        Free Text Form          |
+  +--------+-----------+---------+----------+---------+--------------+
+           |           |                    |
+           +-----------+--------------------+
+                                |
+                                v
+  +------------------------------------------------------------------+
+  |  AGENT 1: INGESTION                                    [CYAN]   |
+  |  Normalise -> ThreatEvent Schema                                 |
+  |  Type Detection | Severity Inference | Deduplication            |
+  +----------------------------------+-------------------------------+
+                                     |
+                                     v
+  +------------------------------------------------------------------+
+  |  AGENT 2: ENRICHMENT                          [YELLOW] [LLM+RAG]|
+  |                                                                  |
+  |  ChromaDB Query -> MITRE ATT&CK Context                         |
+  |  + Past Threat Reports Context                                   |
+  |  -> LLM Prompt -> JSON Output                                    |
+  |  -> Store back to ChromaDB (self-learning)                       |
+  |                                    ^--> ChromaDB                 |
+  |                                         (691 MITRE techniques    |
+  |                                          + threat reports)       |
+  +----------------------------------+-------------------------------+
+                                     |
+                                     v
+  +------------------------------------------------------------------+
+  |  AGENT 3: PATTERN DISCOVERY                           [ORANGE]  |
+  |  Jaccard Similarity on TTP Sets (>= 0.7)                        |
+  |  Group by: TTP / Malware Family / Attack Vector                 |
+  +----------------------------------+-------------------------------+
+                                     |
+                                     v
+  +------------------------------------------------------------------+
+  |  AGENT 4: MITIGATION                           [GREEN]  [LLM]  |
+  |  Generate: title, steps[], sample_rule, priority                |
+  |  Triggered at severity >= 3 or new pattern                      |
+  +----------------------------------+-------------------------------+
+                                     |
+                                     v
+  +------------------------------------------------------------------+
+  |  AGENT 5: VALIDATION                                  [PURPLE]  |
+  |  Safety Check | Reject broad/dangerous rules                    |
+  |  Status: APPROVED / REJECTED / PENDING_REVIEW                   |
+  +----------------------------------+-------------------------------+
+                                     |
+                                     v
+                           [Human Analyst]
+                           Approve / Reject
+                                     |
+                                     v
+  +------------------------------------------------------------------+
+  |  FASTAPI DASHBOARD (port 8888) - Dark SOC Theme                 |
+  |  Pipeline | Ingestion | Enrichment | Patterns | Mitigations     |
+  |  Flow Tracker | Live Input | Live Feeds                         |
+  +------------------------------------------------------------------+
+
+As shown in the architecture above, all three input channels (live CTI feeds,
+social media intelligence, and manual analyst input) converge at Agent 1.
+The pipeline processes each ThreatEvent sequentially through five agents before
+presenting the validated result to the analyst on the dashboard.
+
+
+4.4 Data Flow Diagrams
+-----------------------
+
+4.4.1 Data Flow Diagram - Level 0 (Context Diagram)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Figure 4.2 shows the DFD Level 0 (Context Diagram). This diagram identifies
+the system boundary and all external entities that interact with it. The
+CTI Agentic System sits at the centre, receiving raw threat data from three
+external sources: the Security Analyst (through the web dashboard), Live Feeds
+(Mastodon and URLhaus), and the MITRE ATT&CK Knowledge Base (queried via RAG
+during enrichment). The system outputs enriched events, discovered patterns,
+and validated mitigation recommendations back to the Security Analyst and
+the SOC Dashboard.
+
+  [See Figure 4.2: DFD Level 0 — Context Diagram]
+
+  External Entities:
+    - Analyst (human user)
+    - Live CTI Feeds (Mastodon)
+    - File System (CSV/JSON input directory)
+
+  System boundary: CTI Analytics and Mitigation System
+
+  +------------------+     threat data      +------------------+
+  |  Live Feeds      |-------------------->|                  |
+  |  (Mastodon)      |                      |   CTI ANALYTICS  |
+  +------------------+                      |   AND MITIGATION |
+                                            |   SYSTEM         |
+  +------------------+     files           |                  |
+  |  File System     |-------------------->|                  |
+  |  (data/input/)   |                      |                  |
+  +------------------+                      |                  |
+                                            |                  |
+  +------------------+  manual input       |                  |
+  |  Analyst         |-------------------->|                  |
+  |  (Browser)       |                      |                  |
+  |                  |<-- dashboard / ------+------------------+
+  +------------------+    mitigations
+
+The DFD Level 0 confirms that no data flows to external cloud services.
+All processing remains within the system boundary, satisfying the
+privacy-by-design constraint (DC-01 from Chapter 3).
+
+
+4.4.2 Data Flow Diagram - Level 1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Figure 4.3 shows the DFD Level 1, expanding the system boundary into five
+internal processes (P1–P5) and five data stores (D1–D5). Each process maps
+directly to one pipeline agent. Process P1 (Ingestion) receives inputs from
+all three external channels and writes normalised ThreatEvent objects to the
+Event Queue (D1). P2 (Enrichment) reads from D1, queries ChromaDB (D3) for
+MITRE context, calls the local LLM, and writes enriched results to the Events
+Store (D2) and back to ChromaDB. P3 (Pattern Discovery) reads from D2 and
+writes ThreatPattern objects to the Pattern Store (D4). P4 (Mitigation) reads
+from D4 and writes MitigationAction objects to the Mitigations Store (D5).
+P5 (Validation) reads from D5 and outputs the final validated result to the
+analyst dashboard.
+
+  [See Figure 4.3: DFD Level 1 — Internal Pipeline Flows]
+
+  Processes:
+    P1. Ingest and Normalise
+    P2. Enrich with LLM + RAG
+    P3. Discover Patterns
+    P4. Generate Mitigations
+    P5. Validate and Present
+
+  Data Stores:
+    D1. Event Queue (in-memory pending_events list)
+    D2. Events Store (in-memory events list)
+    D3. ChromaDB (mitre_techniques + threat_reports)
+    D4. Patterns Store (in-memory patterns dict)
+    D5. Mitigations Store (in-memory mitigations list)
+
+  Flow:
+    Live Feeds ------> P1 --> D1 (ThreatEvent queue)
+    File System -----> P1 --> D1
+    Analyst Input ---> P1 --> D1
+
+    D1 --> P2 --> D2 (EnrichedEvent)
+    D3 <--> P2 (RAG query + store back)
+
+    D2 --> P3 --> D4 (ThreatPattern)
+
+    D4 --> P4 --> D5 (MitigationAction)
+    D2 --> P4 (high severity events)
+
+    D5 --> P5 --> Analyst (APPROVED/REJECTED/PENDING)
+
+    Analyst --> P5 (approve/reject decision)
+
+
+4.4.3 Data Flow Diagram - Level 2 (Enrichment Agent Detail)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  This level 2 DFD expands Process P2 (Enrichment Agent):
+
+  Input: ThreatEvent (from Event Queue)
+
+  Step 2.1 - Build Extraction Query
+    ThreatEvent.raw_text --> query string
+
+  Step 2.2 - RAG: Query MITRE ATT&CK
+    query string --> ChromaDB (mitre_techniques)
+    ChromaDB --> top-5 techniques (cosine similarity >= 0.35)
+    techniques --> MITRE context string
+
+  Step 2.3 - RAG: Query Past Threats
+    query string --> ChromaDB (threat_reports)
+    ChromaDB --> top-3 similar past events (similarity >= 0.35)
+    past events --> similar threats context string
+
+  Step 2.4 - Build LLM Prompt
+    MITRE context string  \
+    similar threats string +--> combined LLM prompt
+    ThreatEvent details   /
+
+  Step 2.5 - LLM Call (Ollama llama3.2:3b)
+    LLM prompt --> Ollama API (local, port 11434)
+    Ollama --> JSON response
+
+  Step 2.6 - Parse and Validate
+    JSON response --> Pydantic EnrichedEvent model
+    Validation --> enrichment_confidence score
+
+  Step 2.7 - Store Back to ChromaDB
+    EnrichedEvent (if confidence > 0.3) --> ChromaDB (threat_reports)
+
+  Output: EnrichedEvent --> Events Store + Pattern Discovery Agent
+
+  Level 2 DFD - Mitigation Agent Detail:
+
+  Input: ThreatPattern OR high-severity EnrichedEvent
+
+  Step 4.1 - Determine Trigger
+    EnrichedEvent.severity >= 3 ? --> generate for event
+    New ThreatPattern discovered ? --> generate for pattern
+
+  Step 4.2 - Build Mitigation Prompt
+    Pattern/Event details --> structured prompt
+    Fields included: name, severity, TTPs, IOCs, attack_vector,
+                     affected_systems, malware_family
+
+  Step 4.3 - LLM Call (Ollama llama3.2:3b)
+    Mitigation prompt --> Ollama API
+    Ollama --> JSON response
+
+  Step 4.4 - Parse JSON Response
+    JSON --> MitigationAction model
+    Fields: title, description, steps[], sample_rule, priority
+
+  Step 4.5 - Set Status
+    MitigationAction.status = PENDING_REVIEW
+
+  Output: MitigationAction --> Mitigations Store + Validation Agent
+
+
+4.5 Summary
+------------
+
+This chapter presented the high-level design of the system across four
+dimensions:
+
+  Design Considerations: Privacy-by-design, modularity, graceful degradation,
+  human oversight, and async-first operation are the guiding principles.
+
+  Architecture Strategies: Python 3.12 + FastAPI + ChromaDB were selected for
+  local-first, async, open-source deployment.
+
+  System Architecture: A five-agent sequential pipeline with three input
+  channels, a RAG knowledge base, and a web dashboard. Social media (Mastodon),
+  live CTI feeds, and manual input all enter at the same ingestion point.
+
+  Data Flow Diagrams: Level 0 shows external entities; Level 1 shows the five
+  processes and five data stores; Level 2 details the enrichment and mitigation
+  agent sub-processes including the RAG retrieval steps.
+
+  The design ensures that all components are independently maintainable, the
+  pipeline is source-agnostic (any input type enters the same normalisation
+  stage), and the analyst retains control through the human-in-the-loop
+  approval mechanism.

@@ -1,0 +1,408 @@
+================================================================================
+CHAPTER 1 - INTRODUCTION
+================================================================================
+
+1.1 Overview of Context-Aware Cyber Threat Analytics and Mitigation
+    Recommendation using LLM
+--------------------------------------------------------------------
+
+The digital transformation of modern organisations has created an ever-expanding
+attack surface that adversaries continuously exploit. Security Operations Centers
+(SOCs) are the frontline defence against these threats, yet analysts are routinely
+overwhelmed by thousands of alerts per day, the majority of which require manual
+investigation and contextual reasoning to triage effectively.
+
+Cyber Threat Intelligence (CTI) is the discipline of collecting, processing, and
+analysing data about adversaries, their tools, techniques, and procedures (TTPs),
+with the goal of enabling organisations to make informed, proactive security
+decisions. Effective CTI requires not just data collection but deep
+contextualisation - understanding who is attacking, how they operate, what systems
+they target, and what response is most appropriate.
+
+This project, "Context-Aware Cyber Threat Analytics and Mitigation Recommendation
+using LLM", addresses the challenge of automating the end-to-end CTI pipeline
+using a combination of Large Language Models (LLMs), Retrieval-Augmented
+Generation (RAG), and a multi-agent pipeline architecture - all running locally
+to preserve data privacy.
+
+Figure 1.1 provides a high-level overview of the system architecture, illustrating
+how raw threat data flows from three independent input channels through five
+sequential AI agents to produce validated mitigation recommendations displayed
+on the SOC Dashboard.
+
+  [See Figure 1.1: System Overview — Five-Agent CTI Pipeline]
+
+  INPUT SOURCES
+  +------------------+  +------------------+  +------------------+
+  | Live CTI Feeds   |  |  Social Media    |  |  Manual Input    |
+  | (URLhaus,        |  |  (Mastodon       |  |  (JSON / CSV /   |
+  |  ThreatFox,      |  |   infosec.       |  |   Free Text /    |
+  |  Feodo Tracker)  |  |   exchange)      |  |   File Upload)   |
+  +--------+---------+  +--------+---------+  +--------+---------+
+           |                     |                      |
+           +---------------------+----------------------+
+                                 |
+                                 v
+           +-----------------------------------------------+
+           |  AGENT 1: INGESTION                           |
+           |  Normalise -> ThreatEvent                     |
+           |  Type Detection | Severity | Deduplication    |
+           +------------------------+----------------------+
+                                    |
+                    +---------------+---------------+
+                    |                               |
+                    v                               v
+  +-----------------+----------+     +--------------+-----------+
+  |  AGENT 2: ENRICHMENT       |<--->|  MITRE ATT&CK RAG        |
+  |  LLM (llama3.2:3b) +       |     |  ChromaDB: 691 Techniques|
+  |  MITRE Context             |     |  + Past Threat Reports   |
+  |  -> EnrichedEvent          |     +--------------------------+
+  +----------------+-----------+
+                   |
+                   v
+  +-----------------------------------------------+
+  |  AGENT 3: PATTERN DISCOVERY                   |
+  |  Weighted Jaccard Similarity (>= 0.7)         |
+  |  -> ThreatPattern (grouped events)            |
+  +------------------------+----------------------+
+                           |
+                           v
+  +-----------------------------------------------+
+  |  AGENT 4: MITIGATION GENERATION               |
+  |  Chain-of-Thought LLM + D3FEND Mapping        |
+  |  -> MitigationAction (steps + sample rule)    |
+  +------------------------+----------------------+
+                           |
+                           v
+  +-----------------------------------------------+
+  |  AGENT 5: VALIDATION                          |
+  |  Deterministic Safety Rules (5 checks)        |
+  |  -> APPROVED / REJECTED / PENDING_REVIEW      |
+  +------------------------+----------------------+
+                           |
+                           v
+  +-----------------------------------------------+
+  |  SOC DASHBOARD  (port 8888)                   |
+  |  8 pages: Pipeline | Enrichment | Patterns    |
+  |           Mitigations | Flow Tracker | Feeds  |
+  +-----------------------------------------------+
+
+As illustrated in Figure 1.1, the system accepts threat data from three
+independent input channels: live CTI feeds (URLhaus, ThreatFox, Feodo Tracker),
+social media intelligence (Mastodon infosec.exchange), and manual analyst
+submissions (JSON, CSV, free text, or file upload). All inputs are normalised
+by Agent 1 (Ingestion) into a uniform ThreatEvent schema containing source,
+event type, severity, raw text, and extracted indicators.
+
+Agent 2 (Enrichment) augments each event using a locally running Large Language
+Model (llama3.2:3b via Ollama) grounded by Retrieval-Augmented Generation (RAG)
+over a ChromaDB vector store containing all 691 MITRE ATT&CK Enterprise v18.1
+techniques. The RAG layer supplies relevant technique context before the LLM
+generates structured enrichment output (TTPs, IOCs, CVEs, malware families).
+Enriched events are written back to ChromaDB, forming a self-learning loop that
+improves future retrievals.
+
+Agent 3 (Pattern Discovery) clusters semantically related events using a weighted
+Jaccard similarity formula on TTP sets, malware family, attack vector, and target
+asset type, with a similarity threshold of 0.7 to form ThreatPattern groups.
+Agent 4 (Mitigation) generates chain-of-thought, D3FEND-mapped response
+recommendations for each detected pattern. Agent 5 (Validation) applies five
+deterministic safety rules before the final result is presented to the analyst
+on the SOC Dashboard. Critically, all processing runs entirely on local hardware
+— no data leaves the host machine, satisfying strict data-privacy requirements.
+
+
+1.1.1 Cyber Threat Intelligence Platform
+-----------------------------------------
+
+A CTI platform serves as the central nervous system of a security operations
+workflow. It aggregates threat data from heterogeneous sources - network logs,
+threat feeds, vulnerability databases, and open-source intelligence (OSINT) -
+and transforms raw indicators into actionable intelligence. Key functions include:
+
+  - Normalisation: converting disparate data formats into a unified schema
+  - Enrichment: adding context to raw indicators (e.g., what malware family uses
+    this IP? Which MITRE technique does this behaviour match?)
+  - Correlation: identifying relationships between events to discover attack
+    campaigns
+  - Dissemination: delivering intelligence and response recommendations to the
+    right stakeholders
+
+Traditional platforms such as MISP, OpenCTI, and ThreatConnect perform these
+functions but rely heavily on manual analyst input for enrichment and correlation.
+This project automates those steps using a local LLM augmented with a MITRE
+ATT&CK knowledge base.
+
+
+1.1.2 Global Scenario
+----------------------
+
+Globally, cybercrime is projected to cost the world $10.5 trillion annually by
+2025. Advanced Persistent Threat (APT) groups - state-sponsored and criminal -
+are employing increasingly sophisticated techniques: living-off-the-land
+attacks, supply chain compromises, and AI-generated phishing campaigns.
+
+Simultaneously, the global cybersecurity workforce gap has reached 3.5 million
+unfilled positions, meaning organisations must do more with fewer analysts. Automation of routine CTI tasks is no longer optional - it is
+operationally necessary.
+
+
+1.1.3 Societal Relevance
+-------------------------
+
+Cyber attacks do not only impact organisations - they affect individuals and
+critical national infrastructure. Ransomware attacks on hospitals delay patient
+care. Breaches of financial systems cause direct monetary harm to citizens.
+Attacks on power grids and water treatment facilities threaten physical safety.
+
+By automating threat detection and mitigation recommendation, this system enables
+even under-resourced organisations (small hospitals, municipal governments,
+educational institutions) to benefit from AI-powered threat intelligence that was
+previously available only to enterprises with large security teams. The fully
+local architecture means organisations with strict data residency requirements -
+healthcare, government, finance - can deploy it without compliance concerns.
+
+
+1.1.4 Problem Area
+-------------------
+
+Despite advances in security tooling, several critical gaps remain:
+
+  1. Manual enrichment bottleneck - Analysts spend hours mapping raw indicators
+     to MITRE ATT&CK techniques, CVEs, and malware families.
+  2. Context loss - Isolated indicators carry little intelligence without
+     campaign-level context.
+  3. Cloud dependency - Most AI-powered security tools rely on cloud APIs,
+     creating data exfiltration risks.
+  4. Delayed response - The gap between threat detection and mitigation
+     recommendation can be hours or days with manual workflows.
+  5. Alert fatigue - Without intelligent triage and pattern correlation, analysts
+     cannot distinguish high-priority incidents from noise.
+
+
+1.2 Specific Details of the Project
+-------------------------------------
+
+This project implements a five-stage agentic pipeline that processes threat data
+from ingestion through to validated mitigation recommendation with no human
+intervention required until the final approval step.
+
+The pipeline consists of:
+
+  Agent 1 - Ingestion Agent:
+    Normalises multi-format input (CSV, JSON, free text, live social media feeds)
+    into a unified ThreatEvent schema with automatic indicator type detection
+    (IP, URL, Domain, Hash, CVE, Email) and severity inference.
+
+  Agent 2 - Enrichment Agent:
+    Uses a locally running LLM (Ollama llama3.2:3b) augmented with RAG context
+    from a ChromaDB vector store indexed with all 691 MITRE ATT&CK Enterprise
+    v18.1 techniques to extract IOCs, TTPs, CVEs, malware families, and attack
+    vectors from raw threat text.
+
+  Agent 3 - Pattern Discovery Agent:
+    Clusters related enriched events into ThreatPattern objects using Jaccard
+    similarity on TTP sets, grouping events that share common adversary behaviour.
+
+  Agent 4 - Mitigation Agent:
+    Generates structured, actionable mitigation recommendations including
+    step-by-step response procedures and sample security rules (firewall, IDS,
+    SIEM) for high-severity threats and discovered patterns.
+
+  Agent 5 - Validation Agent:
+    Safety-checks all generated mitigations, rejecting overly broad or dangerous
+    rules before presenting them to the analyst.
+
+The system is served via a FastAPI web server with an 8-page SOC-style dashboard,
+accessible at http://localhost:8888. All processing runs on local hardware.
+
+
+1.3 Literature Review
+----------------------
+
+Cyber Threat Intelligence Frameworks:
+  The MITRE ATT&CK framework [28] established a globally accessible, structured
+  knowledge base of adversary TTPs derived from real-world observations, covering
+  14 tactic categories and 691 enterprise techniques. Suarez-Roman et al. [16]
+  analysed 13,308 CTI reports over 20 years, confirming that multi-source threat
+  intelligence remains highly fragmented with low cross-vendor intelligence
+  overlap, validating the need for automated multi-source CTI fusion. Habibzadeh
+  et al. [24] conducted a comprehensive survey of LLM applications for Security
+  Operations Centres, confirming that no production-ready end-to-end LLM-driven
+  SOC pipeline currently exists — the primary motivation for this work.
+
+LLM-Based Threat Detection and Multi-Agent Systems:
+  Hmimou et al. [1] propose a multi-agent LLM system for cybersecurity threat
+  detection and correlation (IEEE Access, 2025), demonstrating the viability of
+  agent-based architectures for security tasks but producing no actionable
+  mitigation output and lacking MITRE ATT&CK enrichment integration. Hasanov
+  et al. [2] systematically reviewed 73 papers on LLM applications in
+  cybersecurity, confirming that individual sub-tasks — log analysis, malware
+  classification, threat summarisation — are well-studied in isolation but no
+  unified end-to-end pipeline bridging ingestion, enrichment, and automated
+  response has been deployed in practice. Mahmood et al. [6] apply LLMs for IoT
+  anomaly detection and malicious device identification (IEEE Access, 2025), while
+  Melhem et al. [4] present LENS, an explainable LLM-based APT detection system
+  for 6G edge environments — both systems halt at the detection stage without
+  extending to structured mitigation generation. Patel et al. [7] fine-tune BERT
+  for cyber threat classification from open-source news articles in the CANAL
+  system (IEEE ICAIC, 2024), producing binary threat-or-benign labels without
+  TTP extraction or MITRE ATT&CK mapping.
+
+Intrusion Detection and AI-Driven Analysis:
+  Elouardi et al. [5] survey hybrid CNN and LLM architectures for network
+  intrusion detection (IEEE Access, 2024), finding that performance degrades
+  significantly on unstructured free-text threat intelligence — the primary
+  input format for operational CTI workflows. Nazre et al. [8] achieve 96.72%
+  detection accuracy using temporal convolutional networks for network intrusion
+  detection (IEEE ICIICS, 2024) but provide no threat context, TTP mapping, or
+  mitigation guidance beyond raising an alert. Corea et al. [9] evaluate
+  explainable AI approaches for comparative intrusion detection model analysis
+  (IEEE MeditCom, 2024), demonstrating improved analyst trust but remaining
+  limited to structured network-log inputs with no natural-language enrichment.
+
+TTP Extraction and MITRE ATT&CK Mapping:
+  Meng et al. [10] propose RHINO, using guided LLM reasoning to map network logs
+  to MITRE ATT&CK techniques. Wudali et al. [11] present RAM (Rule-ATT&CK
+  Mapper) for mapping SIEM alert rules to TTPs using LLMs. Arikkat et al. [12]
+  achieve Jaccard scores above 0.95 for TTP classification using RAG on Android
+  malware in DroidTTP. Nguyen et al. [19] evaluate LLMs for attack technique
+  identification in CTI reports (WWW, 2025), demonstrating strong recall on
+  well-defined technique categories. Salek et al. [3] apply LLM combined with
+  MITRE ATT&CK for threat modelling in transportation Cyber-Physical Systems
+  (IEEE Access, 2025), producing outputs locked to that specific domain.
+
+Retrieval-Augmented Generation in Security:
+  Lewis et al. [25] introduced RAG, demonstrating that grounding LLM generation
+  in retrieved documents significantly reduces hallucination. In the security
+  domain, hallucinated MITRE technique IDs direct analyst effort toward
+  non-existent threats — RAG eliminates this by constraining outputs to verified
+  knowledge. Morbiato et al. [14] propose H-TechniqueRAG, reducing the MITRE
+  technique search space by 77.5% through two-stage hierarchical retrieval, but
+  addressing annotation tasks only without extending to IOC extraction or
+  mitigation generation. Iyer et al. [13] demonstrate instruction-tuned LLMs
+  combined with RAG and graph representations for MITRE ATT&CK evaluation.
+  Jelodar et al. [23] propose XGen-Q, an explainable domain-adaptive LLM with
+  RAG for software security, showing that continuous knowledge enrichment through
+  a self-learning store significantly improves model accuracy over time.
+
+Mitigation Generation and Benchmarking:
+  Sharma et al. [15] propose MobiLLM, a closed-loop multi-agent system for
+  automated threat mitigation in 6G Open RANs, constrained to the MITRE FiGHT
+  knowledge base and not generalisable to multi-domain CTI scenarios.
+  Tejero-Fernandez and Sanchez-Macian [17] generate basic CAPEC mitigation hints
+  for IoT security logs but lack the chain-of-thought reasoning and MITRE
+  D3FEND [29] alignment required for analyst-actionable recommendations. Mitra
+  et al. [22] propose FALCON for autonomous CTI mining and IDS rule generation
+  using LLMs. Alam et al. [20] benchmark 12 frontier LLMs on mitigation planning
+  tasks (AthenaBench), finding that even state-of-the-art models underperform
+  without domain-specific RAG augmentation — directly motivating the approach
+  presented in this work. Cheng et al. [21] benchmark LLM knowledge across
+  heterogeneous CTI in CTIArena, confirming domain RAG is essential for reliable
+  LLM performance. Blefari et al. [18] present CyberRAG, an agentic RAG system
+  for cyber attack classification and reporting, validating the combined agentic
+  and RAG approach for operational CTI use cases.
+
+Vector Databases, Semantic Embeddings, and Chain-of-Thought Reasoning:
+  Reimers and Gurevych [26] introduced Sentence-BERT, enabling efficient
+  sentence-level semantic embeddings suitable for security document retrieval.
+  The all-MiniLM-L6-v2 model used in this project produces 384-dimensional
+  vectors optimised for CPU inference at 22 MB model size. Wei et al. [27]
+  demonstrated that chain-of-thought (CoT) prompting significantly improves LLM
+  reasoning on multi-step tasks, forming the basis of the three-step mitigation
+  generation strategy employed in this system. The Jaccard coefficient [30],
+  originally introduced for ecological distribution measurement, is widely adopted
+  for set-similarity-based threat clustering due to its interpretability and
+  efficiency on discrete TTP label sets [12].
+
+
+1.4 Problem Statement
+----------------------
+
+Security analysts in modern SOCs face an unsustainable workload. Raw threat
+indicators arriving from diverse sources must be manually investigated,
+contextualised against known adversary techniques, correlated with related events,
+and translated into concrete response actions. This process is:
+
+  - Slow: taking hours to days per incident
+  - Inconsistent: dependent on individual analyst knowledge
+  - Not scalable: worsening as threat volume grows
+  - Cloud-restricted: existing AI tools cannot be used in privacy-sensitive
+    environments
+
+There is a need for an automated, privacy-preserving, locally deployable system
+that can ingest heterogeneous threat data, enrich it with MITRE ATT&CK-grounded
+context using a local LLM, discover recurring attack patterns, and generate
+validated mitigation recommendations - reducing analyst workload while maintaining
+human oversight.
+
+
+1.5 Objectives
+---------------
+
+  1. To develop a context-aware cyber threat ingestion pipeline capable of
+     processing and enriching multi-source threat intelligence data.
+  2. To design an LLM-powered threat analysis and classification system for
+     identifying threat severity, attack patterns, and affected assets.
+  3. To implement an explainable mitigation recommendation engine that generates
+     intelligent and context-aware security response actions.
+  4. To evaluate and benchmark the system based on threat analysis accuracy,
+     contextual understanding, and mitigation effectiveness.
+
+
+1.6 Scope
+----------
+
+The system is scoped as a standalone local application deployable on a single
+workstation or server. It ingests data from:
+  - File-based CSV/JSON inputs via a monitored directory
+  - Manual submissions through the web dashboard
+  - Live social media intelligence from Mastodon (infosec.exchange) public
+    timeline
+
+All AI inference executes locally. The system does not include network packet
+capture, endpoint agent integration, or SIEM connector functionality. Data
+retention is in-memory per session.
+
+
+1.7 Methodology
+----------------
+
+The project follows an agile incremental development methodology. Development
+phases:
+
+  1. Data layer - Define Pydantic data models (ThreatEvent, EnrichedEvent,
+     ThreatPattern, MitigationAction)
+  2. Ingestion - Implement multi-format normalisation and type detection
+  3. RAG infrastructure - Build ChromaDB vector store, MITRE ATT&CK loader,
+     and retriever
+  4. LLM integration - Implement Ollama wrapper with async JSON generation
+  5. Enrichment - Combine LLM + RAG in the enrichment agent
+  6. Pattern discovery - Implement Jaccard-based clustering
+  7. Mitigation and validation - LLM mitigation generation + safety validation
+  8. Dashboard - FastAPI REST API + 8-page HTML frontend
+  9. Feed streaming - Async Mastodon feed poller
+  10. Integration testing - End-to-end pipeline testing with live and sample data
+
+
+1.8 Organisation of Report
+---------------------------
+
+  Chapter 1 - Introduction: Background, problem statement, objectives, scope,
+              and methodology
+  Chapter 2 - Theory and Concepts: Core technical concepts including LLMs, RAG,
+              MITRE ATT&CK, multi-agent systems, vector databases, and Jaccard
+              similarity
+  Chapter 3 - Software Requirement Specification: Functional requirements,
+              non-functional requirements, hardware/software requirements, user
+              requirements, and design constraints
+  Chapter 4 - High-Level Design: System architecture, data flow diagrams
+              (Level 0, 1, 2), agent design, RAG knowledge base design, and
+              dashboard design
+  Chapter 5 - Implementation: Technology stack, key implementation details,
+              agent code walkthrough, and integration
+  Chapter 6 - Results and Discussion: System performance, RAG effectiveness,
+              pipeline output analysis, and limitations
+  Chapter 7 - Conclusion and Future Work: Summary of achievements and proposed
+              future enhancements
+  References
