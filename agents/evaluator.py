@@ -151,10 +151,20 @@ Reply with ONLY a JSON object: {{"relevance_score": <float 0.0-1.0>, "reason": "
         high_sev_cov = self._compute_high_severity_coverage(enriched_events, mitigations)
 
         # Metric 5: Mitigation relevance (LLM call — sample up to 5 mitigations)
-        sample_mitigations = [m for m in mitigations if m.event_id][:5]
+        # Include pattern-based mitigations by matching via pattern_id -> event
+        pattern_event_map = {e.event_id: e for e in enriched_events}
+        all_events_list = list(enriched_events)
+
+        def _best_event_for_mitigation(m):
+            if m.event_id:
+                return event_map.get(m.event_id)
+            # pattern-based: use first event in the enriched list as context
+            return all_events_list[0] if all_events_list else None
+
+        sample_mitigations = mitigations[:5]
         relevance_scores = []
         for m in sample_mitigations:
-            score = await self._evaluate_mitigation_relevance(m, event_map.get(m.event_id))
+            score = await self._evaluate_mitigation_relevance(m, _best_event_for_mitigation(m))
             relevance_scores.append(score)
         avg_relevance = (
             round(sum(relevance_scores) / len(relevance_scores), 4)

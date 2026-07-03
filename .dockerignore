@@ -1,0 +1,57 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
+
+# uv
+.uv/
+
+# Data and logs (mounted as volumes at runtime)
+data/chroma_db/
+logs/
+*.log
+
+# Keep data/mitre_attack.json — needed for RAG at startup
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docs / reports (not needed in image)
+chapters/
+diagrams/
+*.tex
+*.docx
+*.pdf
+*.html
+*.md
+CITATIONS_REFERENCE.md
+SYNOPSIS.md
+RESEARCH_GUIDE.md
+TESTING_REPORT.md
+generate_report.py
+generate_diagrams.py
+report_figures.html
+
+# Test artifacts
+*.ps1
+*_results*.json
+test_*.py

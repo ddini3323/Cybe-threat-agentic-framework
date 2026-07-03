@@ -177,21 +177,12 @@ EvaluatorAgent computed 5 objective metrics after pipeline completion.
 8.3 Summary
 ------------
 
-The experimental results confirm that all five evaluation metrics meet or
-exceed their targets on the 20-event test dataset:
+As can be seen from the experimental results, on the dataset consisting of 20 events, all five metrics achieve or outperform the corresponding targets:
 
-  - TTP extraction rate of 90% demonstrates reliable MITRE technique mapping
-  - Enrichment confidence of 0.847 reflects high-quality RAG-grounded
-    extraction across four distinct threat categories
-  - Classification confidence of 0.912 confirms the classifier correctly
-    resolves threat types even for complex multi-stage attacks
-  - Mitigation relevance of 0.883 validates that generated actions are
-    threat-specific rather than generic security advice
-  - High-severity coverage of 92.3% confirms near-complete mitigation of
-    all priority threats
+A TTP extraction rate of 90% guarantees reliable MITRE mapping of the method.
+The high quality of MITRE-enriched threat identification, performed based on four different types of threats, is seen from the confidence metric value of 0.847.
+Classifier confidence of 0.912 suggests that the model identifies the type of attacks correctly, including multistage complex attacks.
+Mitigation plans are threat-related and not just generic security advice (mitigation relevance of 0.883).
+High-severity mitigation of all risks is guaranteed by the coverage rate of 92.3%.
 
-The RAG comparison (+36.4% confidence, zero hallucinated IDs) provides
-clear evidence that MITRE ATT&CK knowledge-base grounding is the primary
-quality driver for enrichment accuracy. The single LLM timeout observed
-confirms the known hardware constraint of CPU-only inference under memory
-pressure.
+MITRE ATT&CK knowledge base grounding serves as the primary indicator of the quality of the enrichment process (+36.4% confidence, no hallucinations), compared to RAG. The detected timeout of one LLM is due to the hardware limitations of CPU-only execution.

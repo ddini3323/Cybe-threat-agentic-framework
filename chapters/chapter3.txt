@@ -8,48 +8,42 @@ CHAPTER 3 - SOFTWARE REQUIREMENT SPECIFICATION
 3.1.1 Product Perspective
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The system is a standalone, locally deployed Cyber Threat Intelligence (CTI)
-automation platform. It operates independently of cloud services and integrates
-with the analyst's existing workflow through a web browser-based dashboard.
+The system is an isolated, locally-deployed CTI automation tool. The tool integrates into the analyst's workflow through its browser-based UI and is independent from cloud services.
 
-The system interfaces with:
-  - Local file system      : monitored input directory for CSV/JSON files
-  - Ollama LLM runtime (local HTTP API on port 11434)
-  - ChromaDB vector store (local persistent database)
-  - External CTI feeds (Mastodon infosec.exchange - read-only polling)
-  - Analyst browser (dashboard on port 8888)
+The system integrates with:
+Local filesystem - monitored CSV/JSON input directory
+Ollama LLM runtime (local HTTP API, port 11434)
+ChromaDB vector store (local persistent database)
+External CTI feeds (infosec exchange on Mastodon, read-only, polled)
+Analyst browser (port 8888 dashboard)
 
-The system is designed for single-analyst or small-team deployment within a
-single organisation. It does not require any cloud infrastructure, external API
-keys, or internet connectivity after initial setup (MITRE ATT&CK is cached
-locally).
+This solution is aimed at one-off installation in one organization by one analyst or analyst team. Once set up, no further use of cloud infrastructure, API keys, and connectivity to external sites is needed (MITRE ATT&CK data cached locally).
 
 
 3.1.2 Product Functions
 ~~~~~~~~~~~~~~~~~~~~~~~~
+The tasks accomplished by the system are as follows:
 
-The system performs the following primary functions:
-
-  F1. Multi-source threat data ingestion (CSV, JSON, free text, live feeds)
-  F2. Automatic normalisation into a unified ThreatEvent schema
-  F3. LLM-based enrichment with RAG context from MITRE ATT&CK
-  F4. Heuristic clustering of events into ThreatPatterns
-  F5. Automated mitigation recommendation generation
-  F6. Safety validation of generated mitigations
-  F7. Human-in-the-loop approval/rejection of mitigations
-  F8. Real-time 8-page SOC dashboard
-  F9. Event flow tracing across all 5 pipeline stages
-  F10. Live social media threat feed streaming
+  F1. Acquisition of threat data from multiple sources (CSV, JSON, free text, and live feeds).
+  F2. Automatic transformation into a consistent ThreatEvent schema.
+  F3. Enrichment using LLM in MITRE ATT&CK's RAG context.
+  F4. Heuristic grouping of instances to form ThreatPatterns.
+  F5. Automatic creation of suggestions for countermeasures.
+  F6. Verification of generated countermeasures for safety.
+  F7. Manual review and approval/rejection of suggested countermeasures.
+  F8. Dashboard with an eight-page real-time view in a SOC.
+  F9. Monitoring the passage of events through all five pipeline stages.
+  F10. Streaming of social media threat feeds in real time.
 
 
 3.1.3 Constraints
 ~~~~~~~~~~~~~~~~~
 
-  - All LLM inference must run locally (no cloud APIs permitted)
-  - System must operate on hardware without a dedicated GPU
-  - No external API keys required for core functionality
-  - Dashboard must be accessible via standard web browser
-  - LLM model size limited to models runnable with 8GB RAM
+Cloud-based APIs cannot be used; all LLM inference must happen offline.
+There is a need for computing hardware that does not have a GPU at all.
+No other API keys will be required for the critical aspects of the system.
+  Web browsing capability should be sufficient for accessing the dashboard.
+  Maximum LLM model size should be limited to systems with 8 GB RAM.
 
 
 3.2 Specific Requirements
@@ -58,74 +52,49 @@ The system performs the following primary functions:
 3.2.1 Functional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  FR-01 | The system shall poll the data/input/ directory every 5 seconds and
-          automatically ingest any new CSV or JSON files.
+ FR-01 | The system will automatically read in any new CSV/JSON files and will continuously poll the data/input directory at an interval of five seconds.
 
-  FR-02 | The system shall normalise all input formats into a unified ThreatEvent
-          schema containing: event_id, timestamp, source, event_type, raw_text,
-          indicator, severity, and raw_data fields.
+  FR-02 | The system will normalize all input data formats into a standardized format of ThreatEvent schema that consists of event_id, timestamp, source, event_type, raw_text, indicator, severity, and raw_data fields.
 
-  FR-03 | The system shall detect indicator types automatically using pattern
-          matching: IP address, URL, Domain, Hash (MD5/SHA1/SHA256), CVE, Email.
+  FR-03 | The system will automatically detect the following types of indicators using pattern matching: IP addresses, URLs, domains, hashes (MD5/SHA1/SHA256), CVEs, and emails.
 
-  FR-04 | The system shall deduplicate events using MD5 hashing of source and
-          data content to prevent reprocessing of identical indicators.
+  FR-04 | In order to avoid processing the same indicators again, the system will use MD5 hashing on source and data contents for deduplication.
 
-  FR-05 | The system shall enrich each ThreatEvent using a local LLM (llama3.2:3b
-          via Ollama), extracting: IOCs, TTPs (MITRE IDs), CVEs, malware family,
-          attack vector, affected assets, and enrichment confidence score.
+  FR-05 | The system will enrich every ThreatEvent by using local LLM (llama3.2:3b) through Ollama by providing the following information: IOCs, TTPs (with MITRE IDs), CVEs, malware families, attack vectors, impacted assets, and enrichment confidence score.
 
-  FR-06 | Before each enrichment LLM call, the system shall query ChromaDB for
-          the top-5 most relevant MITRE ATT&CK techniques (cosine similarity
-          >= 0.35) and inject them as context into the LLM prompt.
+  FR-06 | Before making a request for enriching a given event, the system will query ChromaDB for the top 5 relevant MITRE ATT&CK strategies (with cosine similarity >= 0.35) and include them as context when generating an enriched event through the LLM.
 
-  FR-07 | The system shall store enriched events back into ChromaDB
-          (threat_reports collection) to enable retrieval for future events.
+  FR-07 | To make them easier to find in subsequent queries, the system will store enriched events in ChromaDB (threat_reports collection).
 
-  FR-08 | The system shall cluster enriched events into ThreatPattern objects
-          using Jaccard similarity on TTP sets with a threshold of >= 0.7.
+  FR-08 | The system will calculate Jaccard similarity between TTP sets with a threshold >= 0.7 to create clusters of enriched events into ThreatPattern objects.
 
-  FR-09 | The system shall generate structured mitigation recommendations (title,
-          description, steps, sample_rule, priority 1-5) for events with
-          severity >= 3 and for all newly discovered ThreatPatterns.
+  FR-09 | Each time a new ThreatPattern or occurrence is created with severity >= 3, the system will generate mitigation recommendations for the pattern/occurrence (title, description, actions, sample rule, priority 1-5).
 
-  FR-10 | The system shall validate all generated mitigations and reject rules
-          that are overly broad (block all traffic), dangerous (disable firewall),
-          or disproportionate (shutdown all systems).
+  FR-10 | The system needs to ensure that all generated mitigations are valid and reject rules that are disproportionate (shut everything down), unsafe (disable firewall), or too general (blocking all traffic).
 
-  FR-11 | The system shall serve an 8-page web dashboard on port 8888 with
-          auto-refresh every 3 seconds.
+  FR-11 | The system will serve an eight-page online dashboard that refreshes itself automatically every three seconds at port 8888.
 
-  FR-12 | The system shall provide a Flow Tracker page to trace any event through
-          all 5 pipeline stages.
+  FR-12 | In order to follow the progress of each threat through all five pipeline stages, the system needs a Flow Tracker page.
 
-  FR-13 | The system shall provide a Live Input page accepting JSON, CSV, free
-          text, and file uploads for manual threat submission.
+  FR-13 | In order to manually submit threats, the system requires a Live Input page that can handle JSON, CSV, plain text, and file input.
 
-  FR-14 | The system shall stream live threat data from Mastodon
-          (infosec.exchange) public timeline with a 2-minute polling interval.
+  FR-14 | The system will transmit real-time threat data received from the public timeline of Mastodon (infosec.exchange) every two minutes.
 
-  FR-15 | All LLM processing shall execute on local hardware with no data
-          transmitted to external services.
+  FR-15 | No data transmission to third-party systems is required; all LLMs should be run locally.
 
 
 3.2.2 Performance Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  PR-01 | Dashboard API responses shall complete within 500 milliseconds under
-          normal operating conditions.
+  Under regular conditions of operation, PR-01 | Dashboard API calls should complete within 500 milliseconds.
 
-  PR-02 | The system shall process up to 5 events per enrichment cycle (one cycle
-          every 5 seconds).
+  PR-02 | A maximum of five events could be handled by the system per five-second enrichment period.
 
-  PR-03 | ChromaDB semantic search queries shall complete within 200 milliseconds
-          for a collection of 691 techniques.
+  PR-03 | The semantic search of ChromaDB for the set of 691 methods should be completed within 200 milliseconds.
 
-  PR-04 | The system shall handle up to 500 stored events and 100 patterns without
-          degradation in dashboard performance.
+  PR-04 | The system is expected to handle a maximum of 500 stored events and 100 patterns without reducing dashboard responsiveness.
 
-  PR-05 | The system shall remain responsive (dashboard accessible) during LLM
-          inference calls of up to 300 seconds duration.
+  PR-05 | The system is expected to remain responsive (dashboard accessibility) during 300 second-long LLM inference calls.
 
 
 3.2.3 Software Requirements
@@ -148,81 +117,52 @@ The system performs the following primary functions:
 3.2.4 Hardware Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  - Processor  : Intel Core i5 / AMD Ryzen 5 or higher - Required to handle
-                 concurrent LLM inference (llama3.2:3b), ChromaDB vector search,
-                 and the FastAPI web server simultaneously.
+ Processor: At least an Intel Core i5, AMD Ryzen 5 or better; required to run the FastAPI webserver, ChromaDB vector DB, and inference for the LLM (llama3.2:3b).
 
-  - RAM        : Minimum 8 GB (Recommended 16 GB) - The LLM model requires
-                 approximately 4GB during inference; remaining memory supports
-                 ChromaDB, the FastAPI server, feed streaming, and OS overhead.
+  RAM: At least 8GB (Recommended 16 GB); 4GB is consumed by the LLM model, with the remaining allocated for the feedstreaming service, ChromaDB, the FastAPI server, and OS overhead.
 
-  - Storage    : Minimum 10 GB free (Recommended 20 GB SSD) - Accounts for the
-                 LLM model (2GB), ChromaDB vector store (1GB), MITRE ATT&CK
-                 dataset (500MB), Python dependencies (3GB), and runtime logs.
+  For the model (2GB), the ChromaDB vector store (1GB), MITRE ATT&CK dataset (500MB), Python dependencies (3GB), and logging during runtime, at least 10GB free disk space is required, with 20GB of SSD storage recommended.
 
-  - Internet   : Required on first run only to download the MITRE ATT&CK dataset
-                 (~7MB from GitHub) and pull the Ollama LLM model (2GB). Also
-                 required for live Mastodon feed streaming during operation.
+  Internet Connection: Required only once to fetch the Ollama LLM model (2GB) and the MITRE ATT&CK dataset (around 7MB from GitHub). It is also required for live feed streaming from Mastodon.
 
 
 3.2.5 User Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-  UR-01 | The user shall be able to submit threat data via CSV, JSON, free text,
-          or file upload through the web dashboard without any programming
-          knowledge.
+  UR-01 | The user without prior programming expertise can input threat details through CSV, JSON, unstructured text, or by uploading files on the web dashboard.
 
-  UR-02 | The user shall be able to view all ingested events, enriched events,
-          discovered patterns, and mitigations on separate, clearly labelled
-          dashboard pages.
+  UR-02 | On separate and correctly named dashboard tabs, the user can view all incoming events, enhanced events, patterns detected, and mitigations.
 
-  UR-03 | The user shall be able to approve or reject AI-generated mitigations
-          through the dashboard before they are marked as actionable.
+  UR-03 | Prior to marking any AI-driven mitigation recommendations as actionable, the user can either accept or deny those using the dashboard.
 
-  UR-04 | The user shall be able to trace any single threat event through all 5
-          pipeline stages using the Flow Tracker page.
+  UR-04 | The website Flow Tracker shall provide an opportunity for the user to trace any one threat incident through all five pipeline stages.
 
-  UR-05 | The user shall be able to monitor real-time social media feed status
-          and ingestion counts from the Feeds page.
+  UR-05 | The Feeds page shall enable the user to monitor ingestion numbers and social feeds in real-time.
 
-  UR-06 | The user shall receive severity-classified alerts (LOW / MEDIUM / HIGH
-          / CRITICAL / EMERGENCY) with colour-coded visual indicators.
+  UR-06 | The color-based visualization of alerts categorized according to severity (LOW, MEDIUM, HIGH, CRITICAL, and EMERGENCY) would be transmitted to the user.
 
-  UR-07 | The user shall not require any programming knowledge to operate the
-          system after initial setup.
+  UR-07 | Once the system is installed, the user doesn’t need programming knowledge.
 
 
 3.2.6 Design Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  DC-01 | The system must not transmit any threat data to external cloud services
-          or APIs during normal operation.
+  DC-01 | No threats should be sent to cloud services or APIs outside the system during normal operations.
 
-  DC-02 | The system must use only open-source, freely available components with
-          no licensing costs.
+  DC-02 | Open-source software that does not require licensing fees should only be included in the system.
 
-  DC-03 | The LLM model must be runnable on commodity hardware (8GB RAM, no GPU
-          requirement).
+  DC-03 | Commodity hardware with an 8GB memory requirement and no GPU requirement should be able to support running the LLM model.
 
-  DC-04 | The web dashboard must function without JavaScript frameworks -
-          vanilla HTML/CSS/JS only, ensuring compatibility with all modern
-          browsers without build tooling.
+  DC-04 | The web application interface must function independently of JavaScript frameworks and be based only on HTML, CSS, and JS for cross-browser compatibility without the use of build tools.
 
-  DC-05 | All data models must be validated using Pydantic v2 schemas to ensure
-          type safety and consistent data contracts between agents.
+  DC-05 | All data models in the project must be validated using Pydantic v2 schemas in order to ensure type safety.
 
 
 3.3 Summary
 ------------
 
-This chapter specified the complete requirements for the system across six
-dimensions: product perspective, product functions, constraints, functional
-requirements, performance requirements, and hardware/software requirements.
+This chapter has identified all needs of the system in six different areas such as product perspective, product functionalities, constraints, functional requirements, performance requirements, and hardware and software requirements.
 
-Key constraints driving the design are: local-only LLM execution for privacy,
-commodity hardware compatibility, open-source components only, and human-in-the-
-loop approval before any mitigation is marked actionable.
+LLM running locally on commodity hardware only, using open-source technology only, and the need for human-in-the-loop approval before any mitigation becomes actionable are some of the primary constraints in designing the system.
 
-The 15 functional requirements (FR-01 through FR-15) define the complete
-behaviour of the 5-agent pipeline, RAG subsystem, and dashboard. These
-requirements are directly traceable to the implementation described in Chapter 5.
+Behavior of the entire system that includes the dashboard, RAG module, and 5-agent system can be specified with respect to 15 functional requirements, i.e., FR-01 to FR-15.

@@ -2,96 +2,57 @@
 CHAPTER 9 - CONCLUSION
 ================================================================================
 
-This project successfully designed, implemented, and evaluated a
-Context-Aware Cyber Threat Analytics and Mitigation Recommendation system
-using Large Language Models. The system addresses a real operational gap in
-Security Operations Centres [24][2] — the manual bottleneck in threat
-enrichment, classification, and response — through a fully local,
-privacy-preserving, five-agent pipeline served via a SOC-style web dashboard.
+In summary, this project successfully implemented, executed, and evaluated a
+Large language models are deployed within the framework of a context-aware cyber threat analysis and mitigation recommendation engine. The system relies on a fully local, privacy-preserved five-agent pipeline service provided by a SOC-like online dashboard, thereby resolving a concrete problem faced by Security Operations Centers [24][2]—namely, the bottleneck in enriching, classifying, and reacting to threats.
 
-All four stated objectives were achieved:
+All four specified objectives have been achieved:
 
-  Objective 1 (Context-Aware Enrichment):
-    The RAG-augmented enrichment agent [25][14] extracts IOCs, TTPs, CVEs,
-    attack vectors, and affected assets with 84.7% average confidence - a
-    36.4% improvement over ungrounded LLM inference, with zero hallucinated
-    MITRE technique IDs.
+  Objective 1: Context-Aware Enrichment
+The RAG-enabled enrichment agent [25][14] gathers IOCs, TTPs, CVEs, attack vectors, and affected assets with an average accuracy of 84.7%, representing a 36.4% increase over the baseline (ungrounded LLM inference) average.
 
-  Objective 2 (LLM-Powered Classification):
-    The classifier assigns threat categories, attack stages, and asset types
-    with 91.2% average confidence across 14 threat categories and 14
-    kill-chain stages using contextual LLM reasoning.
+  Objective 2: LLM-Based Classification
+By leveraging contextual LLM-based reasoning, the threat classifier identifies threat types, attack stages, and asset types with an average accuracy of 91.2%.
 
-  Objective 3 (Explainable Mitigation):
-    The chain-of-thought mitigation agent [27][29] generates D3FEND-mapped,
-    step-by-step recommendations with 88.3% relevance scores; 87.5% of
-    generated mitigations pass automated safety validation.
+ Objective 3: Explainable Mitigations
+87.5% of the generated mitigations are found to be safe based on automated assessment, while the chain-of-thought mitigation agent [27][29] generates explainable D3FEND-based mitigations with 88.3% relevant ratings.
 
-  Objective 4 (Reproducible Benchmarking):
-    The EvaluatorAgent provides a 5-metric benchmark framework [20][21]
-    with a dedicated dashboard page, enabling systematic performance
-    tracking across development iterations.
+   Objective 4: Reproducible Benchmarks
+The benchmarking system of the EvaluatorAgent, consisting of five metrics [20][21], and the dedicated dashboard
 
 
 9.1 Limitations
 ----------------
 
-  1. CPU Inference Speed:
-     Processing one event requires 45-90 seconds of LLM inference on CPU.
-     This limits throughput to ~40-80 events per hour, insufficient for
-     high-volume production SOC environments. GPU offloading via Ollama
-     would reduce per-event time to 2-5 seconds.
+1. CPU Inference Latency: Inference on LLM for CPU takes 45-90 seconds per event.
+     At high throughput SOC production setup, this is only good for 40-80 events per hour, which is not enough. Ollama's GPU offloading will lower latency to two to five seconds per event.
 
-  2. In-Memory State:
-     All events, patterns, and mitigations are held in memory and lost on
-     restart. A production deployment requires a persistence layer (SQLite
-     or PostgreSQL) to retain intelligence across sessions.
+  2. State of In-Memory:
+All events, patterns, and mitigations are kept in-memory, cleared when restarting. To retain intelligence across sessions, we need to implement some kind of persistence layer (SQLite/PostgreSQL).
 
-  3. English-Language Bias:
-     Both llama3.2:3b and all-MiniLM-L6-v2 are optimised for English.
-     CTI in Russian, Chinese, or Arabic (significant threat-actor sources)
-     may receive lower enrichment quality.
+  3. Bias in English Language:
+Both All-MiniLM-L6-v2 and llama3.2:3b are optimized for English.
+     We can use lower-quality enrichment for CTI in Arabic, Chinese, or Russian (sources of important actors).
+4. Limited Feed Coverage: The live intelligence coverage is for only three Mastodon feeds. Various ISAC feeds, commercial threat feeds, and dark web coverage are also available for integration within the production platform.
 
-  4. Narrow Feed Coverage:
-     Live intelligence is limited to three Mastodon feeds. Production
-     platforms integrate dozens of ISAC feeds, commercial threat feeds
-     (VirusTotal, Shodan), and dark web monitoring.
-
-  5. Threshold Sensitivity:
-     The Jaccard clustering threshold of 0.7 was tuned empirically on
-     the test dataset. Different threat environments may need adjustment
-     to balance pattern granularity versus noise.
+5. Sensitivity to Thresholds:
+The test data set was employed to tune the Jaccard clustering threshold of 0.7 through empirical tuning. Pattern granularity against noise will differ based on threat context.
 
 
 9.2 Future Enhancement
 -----------------------
+1. GPU acceleration: By incorporating Ollama GPU offload, the system is able to deal with thousands of events in real-time SOC alert queues on an hourly basis with sub-5 second enrichment.
 
-  1. GPU Acceleration:
-     Integrate Ollama GPU offloading to enable sub-5-second enrichment,
-     making the system viable for real-time SOC alert queues processing
-     thousands of events per hour.
+2. Persistent storage layer:
+For multi-session intelligence gathering and threat trends monitoring, use SQLite in development and PostgreSQL in production to replace in-memory state.
 
-  2. Persistent Storage Layer:
-     Replace in-memory state with SQLite (development) or PostgreSQL
-     (production) to support multi-session intelligence accumulation and
-     longitudinal threat trend analysis.
+3. Expanded feeds sources:
+Include abuse.ch URLhaus / ThreatFox APIs, VirusTotal Public feed, and Reddit (r/netsec, r/malware). Implement a TAXII 2.1 client for direct ISAC feeds access.
 
-  3. Expanded Feed Sources:
-     Add Reddit (r/netsec, r/malware), VirusTotal public feed, and
-     abuse.ch URLhaus/ThreatFox APIs. Implement a TAXII 2.1 client for
-     direct ISAC feed compatibility.
-
-  4. APT Attribution:
-     Extend the ChromaDB knowledge base with MITRE ATT&CK intrusion-set
-     objects (APT group profiles and associated TTPs) to enable automated
-     threat actor attribution during enrichment.
+ 4. Attribution of APT:
+Include MITRE ATT&CK intrusions-set objects (APT actor descriptions and associated TTPs) in the ChromaDB KB in order to enable automated threat actor attribution in the enrichment process.
 
   5. SIEM Integration:
-     Add Splunk, Elastic, and Microsoft Sentinel connector modules to push
-     enriched events and validated mitigations directly into SIEM playbooks
-     and automation workflows.
+The enriched events and validated mitigation measures could directly be ingested into SIEM playbooks and automations using connectors such as Splunk, Elastic, and Microsoft Sentinel.
 
-  6. Multilingual Support:
-     Replace all-MiniLM-L6-v2 with a multilingual embedding model such as
-     paraphrase-multilingual-MiniLM-L12-v2 to improve enrichment quality
-     for non-English threat intelligence sources.
+  6. Multi-language support:
+For better enrichment when processing information from other languages besides English, replace the all-MiniLM-L6-v2 model with a multi-language embedding model such as the paraphrase-multilingual-MiniLM-L12-v2 model.

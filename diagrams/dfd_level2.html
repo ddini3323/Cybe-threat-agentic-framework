@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CTI System — DFD Level 2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#EEF2F7;font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:28px 20px 60px;display:flex;flex-direction:column;align-items:center;gap:40px}
+.page-title{font-size:19px;font-weight:700;color:#0D47A1;text-align:center}
+.page-sub{font-size:12px;color:#777;text-align:center;margin-top:4px}
+.card{background:#fff;border-radius:14px;box-shadow:0 4px 22px rgba(0,0,0,.10);padding:28px 24px;width:100%;max-width:860px}
+.card-title{font-size:15px;font-weight:700;color:#fff;padding:12px 20px;border-radius:9px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.badge{background:rgba(255,255,255,.25);padding:3px 12px;border-radius:14px;font-size:11px;font-weight:700}
+.svg-wrap{display:flex;justify-content:center;background:#FAFBFF;border-radius:10px;border:1px solid #E0E7EF;padding:16px;overflow-x:auto}
+.caption{margin-top:12px;padding:10px 16px;background:#F0F4FF;border-radius:7px;font-size:11.5px;color:#333;border-left:3px solid #1565C0;line-height:1.6}
+.dl-bar{display:flex;gap:10px;justify-content:center;margin-top:18px}
+.dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .18s}
+.dl-btn:hover{transform:translateY(-2px)}
+.dl-svg{background:#1565C0;color:#fff}.dl-svg:hover{background:#0D47A1;box-shadow:0 5px 14px rgba(21,101,192,.35)}
+.dl-png{background:#2E7D32;color:#fff}.dl-png:hover{background:#1B5E20;box-shadow:0 5px 14px rgba(46,125,50,.35)}
+.dl-btn svg{width:15px;height:15px}
+svg text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+</style>
+</head>
+<body>
+
+<div>
+  <div class="page-title">DFD Level 2 — Expanded Agent Sub-Processes</div>
+  <div class="page-sub">Chapter 4 · Section 4.4.3 &nbsp;|&nbsp; Context-Aware Cyber Threat Analytics &amp; Mitigation Recommendation</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DIAGRAM A — ENRICHMENT AGENT (P2)
+══════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title" style="background:linear-gradient(90deg,#311B92,#4527A0)">
+    <span class="badge">Figure 4.4a</span>
+    DFD Level 2 — Enrichment Agent (Expansion of P2)
+  </div>
+  <div class="svg-wrap">
+<svg id="dfd2a" viewBox="0 0 800 910" width="800" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="a" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#37474F"/></marker>
+  <marker id="ao" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#E65100"/></marker>
+  <marker id="ag" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#1B5E20"/></marker>
+  <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- ── INPUT ── -->
+<rect x="60" y="10" width="300" height="48" rx="8" fill="#1565C0" filter="url(#s)"/>
+<text x="210" y="30" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">ThreatEvent</text>
+<text x="210" y="48" text-anchor="middle" font-size="10" fill="#BBDEFB">from Event Queue  ·  raw_text · indicator · severity</text>
+
+<line x1="210" y1="58" x2="210" y2="88" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="170" y="66" width="80" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="77" text-anchor="middle" font-size="8.5" fill="#333">raw threat data</text>
+
+<!-- ── P2.1 ── -->
+<rect x="60" y="94" width="300" height="58" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="94" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="106" width="300" height="12" fill="#311B92"/>
+<text x="86" y="108" font-size="10" font-weight="800" fill="#CE93D8">P2.1</text>
+<text x="210" y="108" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Build Extraction Query</text>
+<text x="210" y="128" text-anchor="middle" font-size="10" fill="#D1C4E9">Combine: raw_text + indicator + event_type</text>
+<text x="210" y="143" text-anchor="middle" font-size="9.5" fill="#B39DDB">→ unified query string for semantic search</text>
+
+<line x1="210" y1="152" x2="210" y2="182" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="158" y="160" width="104" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="171" text-anchor="middle" font-size="8.5" fill="#333">query string</text>
+
+<!-- ── P2.2 ── -->
+<rect x="60" y="188" width="300" height="58" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="188" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="200" width="300" height="12" fill="#311B92"/>
+<text x="86" y="202" font-size="10" font-weight="800" fill="#CE93D8">P2.2</text>
+<text x="210" y="202" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">RAG: Query MITRE ATT&amp;CK</text>
+<text x="210" y="222" text-anchor="middle" font-size="10" fill="#D1C4E9">Embed query → 384-dim vector (MiniLM)</text>
+<text x="210" y="237" text-anchor="middle" font-size="9.5" fill="#B39DDB">HNSW ANN search in ChromaDB</text>
+
+<!-- D3a: mitre_techniques data store -->
+<line x1="424" y1="198" x2="780" y2="198" stroke="#E65100" stroke-width="1.6"/>
+<line x1="424" y1="258" x2="780" y2="258" stroke="#E65100" stroke-width="1.6"/>
+<line x1="424" y1="198" x2="424" y2="258" stroke="#E65100" stroke-width="1.6"/>
+<rect x="425" y="199" width="354" height="58" fill="#FFF8F0"/>
+<text x="434" y="216" font-size="10" font-weight="700" fill="#E65100">D3a  |  mitre_techniques</text>
+<text x="434" y="231" font-size="9.5" fill="#BF360C">ChromaDB collection</text>
+<text x="434" y="245" font-size="9.5" fill="#BF360C">691 ATT&amp;CK Enterprise v18.1 techniques</text>
+
+<!-- Arrow P2.2 → D3a -->
+<line x1="360" y1="208" x2="422" y2="208" stroke="#E65100" stroke-width="1.6" marker-end="url(#ao)"/>
+<rect x="360" y="195" width="62" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="391" y="205" text-anchor="middle" font-size="7.5" fill="#E65100" font-weight="600">query vector</text>
+
+<!-- Arrow D3a → P2.2 -->
+<line x1="424" y1="240" x2="362" y2="240" stroke="#37474F" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="361" y="227" width="62" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="392" y="237" text-anchor="middle" font-size="7.5" fill="#37474F">top-5 (sim≥0.35)</text>
+
+<line x1="210" y1="246" x2="210" y2="286" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="134" y="257" width="152" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="268" text-anchor="middle" font-size="8.5" fill="#333">MITRE context string</text>
+
+<!-- ── P2.3 ── -->
+<rect x="60" y="292" width="300" height="58" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="292" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="304" width="300" height="12" fill="#311B92"/>
+<text x="86" y="306" font-size="10" font-weight="800" fill="#CE93D8">P2.3</text>
+<text x="210" y="306" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">RAG: Query Past Threats</text>
+<text x="210" y="326" text-anchor="middle" font-size="10" fill="#D1C4E9">Search threat_reports collection</text>
+<text x="210" y="341" text-anchor="middle" font-size="9.5" fill="#B39DDB">Retrieve historically similar events</text>
+
+<!-- D3b: threat_reports data store -->
+<line x1="424" y1="302" x2="780" y2="302" stroke="#E65100" stroke-width="1.6"/>
+<line x1="424" y1="362" x2="780" y2="362" stroke="#E65100" stroke-width="1.6"/>
+<line x1="424" y1="302" x2="424" y2="362" stroke="#E65100" stroke-width="1.6"/>
+<rect x="425" y="303" width="354" height="58" fill="#FFF8F0"/>
+<text x="434" y="320" font-size="10" font-weight="700" fill="#E65100">D3b  |  threat_reports</text>
+<text x="434" y="335" font-size="9.5" fill="#BF360C">ChromaDB collection</text>
+<text x="434" y="350" font-size="9.5" fill="#BF360C">Past enriched events (self-learning)</text>
+
+<!-- Arrow P2.3 → D3b -->
+<line x1="360" y1="312" x2="422" y2="312" stroke="#E65100" stroke-width="1.6" marker-end="url(#ao)"/>
+<rect x="360" y="299" width="62" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="391" y="309" text-anchor="middle" font-size="7.5" fill="#E65100" font-weight="600">query vector</text>
+
+<!-- Arrow D3b → P2.3 -->
+<line x1="424" y1="344" x2="362" y2="344" stroke="#37474F" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="361" y="331" width="62" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="392" y="341" text-anchor="middle" font-size="7.5" fill="#37474F">top-3 (sim≥0.35)</text>
+
+<line x1="210" y1="350" x2="210" y2="390" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="104" y="361" width="212" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="372" text-anchor="middle" font-size="8.5" fill="#333">MITRE ctx + past threats ctx + event detail</text>
+
+<!-- ── P2.4 ── -->
+<rect x="60" y="396" width="300" height="68" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="396" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="408" width="300" height="12" fill="#311B92"/>
+<text x="86" y="410" font-size="10" font-weight="800" fill="#CE93D8">P2.4</text>
+<text x="210" y="410" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Build LLM Prompt</text>
+<text x="210" y="432" text-anchor="middle" font-size="10" fill="#D1C4E9">Section 1: System role  (cybersecurity analyst)</text>
+<text x="210" y="447" text-anchor="middle" font-size="9.5" fill="#B39DDB">Section 2: MITRE context  (from P2.2)</text>
+<text x="210" y="462" text-anchor="middle" font-size="9.5" fill="#B39DDB">Section 3: Past threats  (from P2.3)  +  JSON schema</text>
+
+<line x1="210" y1="464" x2="210" y2="504" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="148" y="476" width="124" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="487" text-anchor="middle" font-size="8.5" fill="#333">combined LLM prompt</text>
+
+<!-- ── P2.5 ── -->
+<rect x="60" y="510" width="300" height="58" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="510" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="522" width="300" height="12" fill="#311B92"/>
+<text x="86" y="524" font-size="10" font-weight="800" fill="#CE93D8">P2.5</text>
+<text x="210" y="524" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">LLM Call  (Ollama llama3.2:3b)</text>
+<text x="210" y="544" text-anchor="middle" font-size="10" fill="#D1C4E9">asyncio.to_thread()  ·  temperature = 0.1</text>
+<text x="210" y="559" text-anchor="middle" font-size="9.5" fill="#B39DDB">timeout: 300 s  ·  local port 11434</text>
+
+<!-- External entity: Ollama API -->
+<rect x="424" y="504" width="356" height="68" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#s)"/>
+<rect x="424" y="504" width="356" height="24" rx="8" fill="#0D47A1"/>
+<rect x="424" y="516" width="356" height="12" fill="#0D47A1"/>
+<text x="602" y="518" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Ollama API  (local)</text>
+<text x="602" y="538" text-anchor="middle" font-size="10" fill="#1565C0">llama3.2:3b  ·  Q4_K_M quantised  ·  3B params</text>
+<text x="602" y="553" text-anchor="middle" font-size="9.5" fill="#1976D2">HTTP POST localhost:11434/api/generate</text>
+<text x="602" y="566" text-anchor="middle" font-size="9" fill="#1976D2" font-style="italic">response time: 45–90 s on CPU</text>
+
+<!-- Arrow P2.5 → Ollama -->
+<line x1="360" y1="523" x2="422" y2="523" stroke="#1A237E" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="358" y="510" width="65" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="391" y="520" text-anchor="middle" font-size="7.5" fill="#0D47A1" font-weight="600">structured prompt</text>
+
+<!-- Arrow Ollama → P2.5 -->
+<line x1="424" y1="550" x2="362" y2="550" stroke="#37474F" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="357" y="537" width="68" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="391" y="547" text-anchor="middle" font-size="7.5" fill="#37474F">raw JSON string</text>
+
+<line x1="210" y1="568" x2="210" y2="610" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="148" y="580" width="124" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="591" text-anchor="middle" font-size="8.5" fill="#333">JSON response text</text>
+
+<!-- ── P2.6 ── -->
+<rect x="60" y="616" width="300" height="68" rx="9" fill="#4527A0" filter="url(#s)"/>
+<rect x="60" y="616" width="300" height="24" rx="9" fill="#311B92"/>
+<rect x="60" y="628" width="300" height="12" fill="#311B92"/>
+<text x="86" y="630" font-size="10" font-weight="800" fill="#CE93D8">P2.6</text>
+<text x="210" y="630" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Parse &amp; Validate JSON</text>
+<text x="210" y="652" text-anchor="middle" font-size="10" fill="#D1C4E9">3-stage extraction: direct parse → markdown → raw scan</text>
+<text x="210" y="667" text-anchor="middle" font-size="9.5" fill="#B39DDB">Pydantic EnrichedEvent validation</text>
+<text x="210" y="679" text-anchor="middle" font-size="9" fill="#B39DDB" font-style="italic">→ enrichment_confidence : float 0.0 – 1.0</text>
+
+<!-- Branch: P2.6 → P2.7 (left branch) and main output -->
+<line x1="60" y1="650" x2="20" y2="650" stroke="#37474F" stroke-width="1.6"/>
+<line x1="20" y1="650" x2="20" y2="762" stroke="#37474F" stroke-width="1.6"/>
+<line x1="20" y1="762" x2="58" y2="762" stroke="#37474F" stroke-width="1.6" marker-end="url(#a)"/>
+<rect x="0" y="698" width="20" height="60" rx="3" fill="#FFF3E0"/>
+<text x="10" y="726" text-anchor="middle" font-size="7.5" fill="#E65100" font-weight="700" transform="rotate(-90,10,724)">if confidence &gt; 0.3</text>
+
+<line x1="210" y1="684" x2="210" y2="750" stroke="#37474F" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="130" y="710" width="160" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="721" text-anchor="middle" font-size="8.5" fill="#333">EnrichedEvent (fields populated)</text>
+
+<!-- ── P2.7 ── -->
+<rect x="60" y="756" width="300" height="58" rx="9" fill="#E65100" filter="url(#s)"/>
+<rect x="60" y="756" width="300" height="24" rx="9" fill="#BF360C"/>
+<rect x="60" y="768" width="300" height="12" fill="#BF360C"/>
+<text x="86" y="770" font-size="10" font-weight="800" fill="#FFCCBC">P2.7</text>
+<text x="210" y="770" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Store Back to ChromaDB</text>
+<text x="210" y="790" text-anchor="middle" font-size="10" fill="#FFE0B2">Embed enriched summary → 384-dim vector</text>
+<text x="210" y="806" text-anchor="middle" font-size="9.5" fill="#FFCCBC">Add to threat_reports collection (self-learning)</text>
+
+<!-- Arrow P2.7 → D3b store-back -->
+<path d="M360,785 C450,785 480,332 426,332" stroke="#E65100" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ao)"/>
+<rect x="420" y="550" width="54" height="14" rx="3" fill="#FFF8F0" stroke="#FF8F00" stroke-width="1"/>
+<text x="447" y="560" text-anchor="middle" font-size="7.5" fill="#E65100" font-weight="700">store-back</text>
+
+<!-- ── OUTPUT ── -->
+<line x1="210" y1="814" x2="210" y2="852" stroke="#1B5E20" stroke-width="2" marker-end="url(#ag)"/>
+<rect x="148" y="824" width="124" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="210" y="835" text-anchor="middle" font-size="8.5" fill="#1B5E20" font-weight="700">EnrichedEvent</text>
+
+<rect x="30" y="858" width="360" height="48" rx="8" fill="#1B5E20" filter="url(#s)"/>
+<text x="210" y="878" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">EnrichedEvent</text>
+<text x="210" y="896" text-anchor="middle" font-size="10" fill="#C8E6C9">→ Events Store  +  Agent 3 (Pattern Discovery)</text>
+
+</svg>
+  </div>
+  <div class="caption">
+    <strong>Figure 4.4a — DFD Level 2: Enrichment Agent (P2 Expansion).</strong>
+    This diagram expands Process P2 into seven sub-processes. Steps P2.2 and P2.3 perform semantic RAG retrieval
+    from two ChromaDB collections (MITRE ATT&CK techniques and past threat reports). Step P2.4 assembles a
+    structured four-section LLM prompt. Step P2.5 calls the local Ollama API (llama3.2:3b). Step P2.6 applies a
+    three-stage JSON extraction pipeline followed by Pydantic validation. Step P2.7 stores the enriched event back
+    into ChromaDB, completing the self-learning loop.
+  </div>
+  <div class="dl-bar">
+    <button class="dl-btn dl-svg" onclick="dlSVG('dfd2a','figure_4_4a_dfd_level2_enrichment')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download SVG
+    </button>
+    <button class="dl-btn dl-png" onclick="dlPNG('dfd2a',800,910,'figure_4_4a_dfd_level2_enrichment')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download PNG (2×)
+    </button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     DIAGRAM B — MITIGATION AGENT (P4)
+══════════════════════════════════════════ -->
+<div class="card">
+  <div class="card-title" style="background:linear-gradient(90deg,#8D0E00,#BF360C)">
+    <span class="badge">Figure 4.4b</span>
+    DFD Level 2 — Mitigation Agent (Expansion of P4)
+  </div>
+  <div class="svg-wrap">
+<svg id="dfd2b" viewBox="0 0 800 780" width="800" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="b"  markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#37474F"/></marker>
+  <marker id="bo" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#E65100"/></marker>
+  <marker id="br" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#C62828"/></marker>
+  <marker id="bg" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,9 3,0 6" fill="#1B5E20"/></marker>
+  <filter id="s2"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".13"/></filter>
+</defs>
+
+<!-- ── TWO INPUTS ── -->
+<!-- Input A: ThreatPattern -->
+<rect x="20" y="10" width="220" height="54" rx="8" fill="#00695C" filter="url(#s2)"/>
+<rect x="20" y="10" width="220" height="22" rx="8" fill="#004D40"/>
+<rect x="20" y="20" width="220" height="12" fill="#004D40"/>
+<text x="130" y="23" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">ThreatPattern</text>
+<text x="130" y="40" text-anchor="middle" font-size="9.5" fill="#B2DFDB">from Pattern Discovery Agent</text>
+<text x="130" y="54" text-anchor="middle" font-size="9" fill="#80CBC4">common_ttps · severity · event_ids</text>
+
+<!-- Input B: High-severity EnrichedEvent -->
+<rect x="260" y="10" width="260" height="54" rx="8" fill="#4527A0" filter="url(#s2)"/>
+<rect x="260" y="10" width="260" height="22" rx="8" fill="#311B92"/>
+<rect x="260" y="20" width="260" height="12" fill="#311B92"/>
+<text x="390" y="23" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">EnrichedEvent  (severity ≥ 3)</text>
+<text x="390" y="40" text-anchor="middle" font-size="9.5" fill="#D1C4E9">HIGH / CRITICAL / EMERGENCY events</text>
+<text x="390" y="54" text-anchor="middle" font-size="9" fill="#B39DDB">ttps · iocs · malware_family · attack_vector</text>
+
+<!-- Converging arrows to P4.1 -->
+<line x1="130" y1="64" x2="220" y2="108" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+<line x1="390" y1="64" x2="300" y2="108" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+
+<!-- ── P4.1 ── -->
+<rect x="100" y="114" width="310" height="68" rx="9" fill="#BF360C" filter="url(#s2)"/>
+<rect x="100" y="114" width="310" height="24" rx="9" fill="#8D0E00"/>
+<rect x="100" y="126" width="310" height="12" fill="#8D0E00"/>
+<text x="124" y="128" font-size="10" font-weight="800" fill="#FFAB91">P4.1</text>
+<text x="255" y="128" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Determine Trigger</text>
+<text x="255" y="150" text-anchor="middle" font-size="10" fill="#FFCCBC">Check: new ThreatPattern discovered?</text>
+<text x="255" y="165" text-anchor="middle" font-size="9.5" fill="#FFAB91">OR: EnrichedEvent.severity ≥ MIN_SEVERITY (3)</text>
+<text x="255" y="178" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">if neither condition met → skip, log only</text>
+
+<line x1="255" y1="182" x2="255" y2="218" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+<rect x="172" y="192" width="166" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="255" y="203" text-anchor="middle" font-size="8.5" fill="#333">trigger confirmed  ·  context dict</text>
+
+<!-- ── P4.2 ── -->
+<rect x="100" y="224" width="310" height="80" rx="9" fill="#BF360C" filter="url(#s2)"/>
+<rect x="100" y="224" width="310" height="24" rx="9" fill="#8D0E00"/>
+<rect x="100" y="236" width="310" height="12" fill="#8D0E00"/>
+<text x="124" y="238" font-size="10" font-weight="800" fill="#FFAB91">P4.2</text>
+<text x="255" y="238" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Build Mitigation Prompt</text>
+<text x="255" y="260" text-anchor="middle" font-size="10" fill="#FFCCBC">3-step Chain-of-Thought template:</text>
+<text x="255" y="275" text-anchor="middle" font-size="9.5" fill="#FFAB91">① Threat mechanism analysis</text>
+<text x="255" y="290" text-anchor="middle" font-size="9.5" fill="#FFAB91">② D3FEND countermeasure mapping</text>
+<text x="255" y="300" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">Fields: ttps · iocs · severity · attack_vector · affected_systems</text>
+
+<line x1="255" y1="304" x2="255" y2="344" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+<rect x="172" y="316" width="166" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="255" y="327" text-anchor="middle" font-size="8.5" fill="#333">structured CoT mitigation prompt</text>
+
+<!-- ── P4.3 ── -->
+<rect x="100" y="350" width="310" height="68" rx="9" fill="#BF360C" filter="url(#s2)"/>
+<rect x="100" y="350" width="310" height="24" rx="9" fill="#8D0E00"/>
+<rect x="100" y="362" width="310" height="12" fill="#8D0E00"/>
+<text x="124" y="364" font-size="10" font-weight="800" fill="#FFAB91">P4.3</text>
+<text x="255" y="364" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">LLM Call  (Ollama llama3.2:3b)</text>
+<text x="255" y="386" text-anchor="middle" font-size="10" fill="#FFCCBC">asyncio.to_thread()  ·  temperature = 0.3</text>
+<text x="255" y="401" text-anchor="middle" font-size="9.5" fill="#FFAB91">Higher temp for creative mitigation generation</text>
+<text x="255" y="413" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">timeout: 300 s  ·  JSON mode enabled</text>
+
+<!-- External entity: Ollama API -->
+<rect x="474" y="344" width="306" height="78" rx="8" fill="#E3F2FD" stroke="#1565C0" stroke-width="1.6" filter="url(#s2)"/>
+<rect x="474" y="344" width="306" height="24" rx="8" fill="#0D47A1"/>
+<rect x="474" y="356" width="306" height="12" fill="#0D47A1"/>
+<text x="627" y="358" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Ollama API  (local)</text>
+<text x="627" y="379" text-anchor="middle" font-size="10" fill="#1565C0">llama3.2:3b · port 11434</text>
+<text x="627" y="394" text-anchor="middle" font-size="9.5" fill="#1976D2">POST /api/generate</text>
+<text x="627" y="408" text-anchor="middle" font-size="9" fill="#1976D2" font-style="italic">same model as enrichment</text>
+<text x="627" y="420" text-anchor="middle" font-size="8.5" fill="#42A5F5">no data leaves host machine</text>
+
+<!-- Arrow P4.3 → Ollama -->
+<line x1="410" y1="365" x2="472" y2="365" stroke="#1A237E" stroke-width="1.6" marker-end="url(#b)"/>
+<rect x="408" y="352" width="66" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="441" y="362" text-anchor="middle" font-size="7.5" fill="#0D47A1" font-weight="600">CoT prompt</text>
+
+<!-- Arrow Ollama → P4.3 -->
+<line x1="474" y1="396" x2="412" y2="396" stroke="#37474F" stroke-width="1.6" marker-end="url(#b)"/>
+<rect x="408" y="383" width="68" height="13" rx="3" fill="white" opacity=".9"/>
+<text x="442" y="393" text-anchor="middle" font-size="7.5" fill="#37474F">JSON response</text>
+
+<line x1="255" y1="418" x2="255" y2="458" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+<rect x="172" y="430" width="166" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="255" y="441" text-anchor="middle" font-size="8.5" fill="#333">raw JSON text</text>
+
+<!-- ── P4.4 ── -->
+<rect x="100" y="464" width="310" height="80" rx="9" fill="#BF360C" filter="url(#s2)"/>
+<rect x="100" y="464" width="310" height="24" rx="9" fill="#8D0E00"/>
+<rect x="100" y="476" width="310" height="12" fill="#8D0E00"/>
+<text x="124" y="478" font-size="10" font-weight="800" fill="#FFAB91">P4.4</text>
+<text x="255" y="478" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Parse JSON Response</text>
+<text x="255" y="500" text-anchor="middle" font-size="10" fill="#FFCCBC">Extract fields into MitigationAction model:</text>
+<text x="255" y="515" text-anchor="middle" font-size="9.5" fill="#FFAB91">title · description · steps[] · sample_rule</text>
+<text x="255" y="530" text-anchor="middle" font-size="9.5" fill="#FFAB91">reasoning · mitre_d3fend[] · priority (1–5)</text>
+<text x="255" y="542" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">Pydantic validation enforced</text>
+
+<line x1="255" y1="544" x2="255" y2="584" stroke="#37474F" stroke-width="1.8" marker-end="url(#b)"/>
+<rect x="172" y="556" width="166" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="255" y="567" text-anchor="middle" font-size="8.5" fill="#333">MitigationAction (all fields)</text>
+
+<!-- ── P4.5 ── -->
+<rect x="100" y="590" width="310" height="68" rx="9" fill="#BF360C" filter="url(#s2)"/>
+<rect x="100" y="590" width="310" height="24" rx="9" fill="#8D0E00"/>
+<rect x="100" y="602" width="310" height="12" fill="#8D0E00"/>
+<text x="124" y="604" font-size="10" font-weight="800" fill="#FFAB91">P4.5</text>
+<text x="255" y="604" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">Set Status</text>
+<text x="255" y="626" text-anchor="middle" font-size="10" fill="#FFCCBC">MitigationAction.status = PENDING_REVIEW</text>
+<text x="255" y="641" text-anchor="middle" font-size="9.5" fill="#FFAB91">No action taken until analyst approves</text>
+<text x="255" y="653" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">human-in-the-loop gate enforced here</text>
+
+<!-- ── OUTPUT ── -->
+<line x1="255" y1="658" x2="255" y2="698" stroke="#1B5E20" stroke-width="2" marker-end="url(#bg)"/>
+<rect x="172" y="670" width="166" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="255" y="681" text-anchor="middle" font-size="8.5" fill="#1B5E20" font-weight="700">MitigationAction (PENDING_REVIEW)</text>
+
+<rect x="60" y="704" width="390" height="54" rx="8" fill="#1B5E20" filter="url(#s2)"/>
+<text x="255" y="726" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">MitigationAction</text>
+<text x="255" y="744" text-anchor="middle" font-size="10" fill="#C8E6C9">→ Mitigations Store  +  Agent 5 (Validation)</text>
+
+</svg>
+  </div>
+  <div class="caption">
+    <strong>Figure 4.4b — DFD Level 2: Mitigation Agent (P4 Expansion).</strong>
+    This diagram expands Process P4 into five sub-processes. The agent accepts two types of input: newly discovered
+    ThreatPattern objects (from Agent 3) and high-severity EnrichedEvents (severity ≥ 3). Step P4.1 determines
+    which trigger applies. Step P4.2 constructs a three-part chain-of-thought prompt. Step P4.3 calls the same
+    local Ollama instance used by the enrichment agent. Step P4.4 parses the response into a validated
+    MitigationAction schema. Step P4.5 sets the status to PENDING_REVIEW, enforcing the human-in-the-loop approval gate.
+  </div>
+  <div class="dl-bar">
+    <button class="dl-btn dl-svg" onclick="dlSVG('dfd2b','figure_4_4b_dfd_level2_mitigation')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download SVG
+    </button>
+    <button class="dl-btn dl-png" onclick="dlPNG('dfd2b',800,780,'figure_4_4b_dfd_level2_mitigation')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download PNG (2×)
+    </button>
+  </div>
+</div>
+
+<script>
+function dlSVG(id, fname){
+  const el = document.getElementById(id);
+  const clone = el.cloneNode(true);
+  const s = document.createElementNS('http://www.w3.org/2000/svg','style');
+  s.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(s, clone.firstChild);
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fname + '.svg';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+function dlPNG(id, W, H, fname){
+  const el = document.getElementById(id);
+  const scale = 2;
+  const clone = el.cloneNode(true);
+  const s = document.createElementNS('http://www.w3.org/2000/svg','style');
+  s.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(s, clone.firstChild);
+  clone.setAttribute('width', W*scale);
+  clone.setAttribute('height', H*scale);
+  clone.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = W*scale; canvas.height = H*scale;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = fname+'.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.src = url;
+}
+</script>
+</body>
+</html>

@@ -86,12 +86,9 @@ This structured approach ensures consistent, machine-parseable outputs.
 2.3.1 Introduction to RAG
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Retrieval-Augmented Generation [25] enhances LLM outputs by first retrieving
-relevant documents from a knowledge base and injecting them
-into the prompt before generation. This addresses the hallucination problem -
-in the security context, an LLM without RAG may invent MITRE technique IDs or
-fabricate CVE numbers. RAG prevents this by grounding every LLM call in
-verified, retrieved facts.
+Through the process of extracting relevant documents from the source of knowledge before generation of the LLM, Retrieval-augmented Generation creation[25] enhances the performance of the LLM. This tackles the problem of hallucination.
+
+Without Retrieval-augmented Generation, an LLM might generate CVEs or MITRE techniques ID. RAG prevents this by basing all LLM queries on extracted facts.
 
 
 2.3.2 RAG Pipeline in This Project
@@ -135,15 +132,13 @@ From the system's live ChromaDB data:
 
 2.3.4 Self-Learning Loop
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+The enriched event (containing TTPs, malware families, and sources) is then saved back to the threat_reports ChromaDB collection after each enrichment is completed. The next
 
-After each enrichment, the enriched event (with extracted TTPs, malware family,
-source) is stored back into the threat_reports ChromaDB collection. Future
-enrichments retrieve similar past events as additional context - the system
-becomes more accurate over time as it accumulates more intelligence.
+As the algorithm becomes smarter and smarter, enrichments will start to return similar historical examples as additional context.
 
-Current ChromaDB state (verified live):
-  - mitre_techniques collection: 691 MITRE ATT&CK techniques indexed
-  - threat_reports collection:    6 enriched events stored (grows each run)
+Status of ChromaDB at present (verified live):
+691 techniques from the MITRE ATT&CK framework are available in the mitre_techniques collection.
+There are six enriched events in the threat_reports collection, which grows with every pass.
 
 
 2.4 Vector Databases and Semantic Embeddings
@@ -152,15 +147,12 @@ Current ChromaDB state (verified live):
 2.4.1 Sentence Transformers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sentence Transformers [26] are BERT-based models
-fine-tuned to produce semantically meaningful sentence-level embeddings.
+Sentence Transformers [26] are transformers based on BERT that have been improved to generate sentence embeddings that carry meaning.
 
-The model used - all-MiniLM-L6-v2 - produces 384-dimensional vectors. It is
-optimised for:
-  - Fast inference on CPU (22MB model size)
-  - High-quality semantic similarity
-  - No GPU required
-
+The all-MiniLM-L6-v2 model generates 384-dimensional embeddings. This model is most appropriate for:
+Fast CPU inference (model size is 22MB)
+  Semantic similarity
+No need for GPU.
 
 2.4.2 Cosine Similarity
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,15 +172,14 @@ In practice, security text comparisons yield similarity scores in the
 2.4.3 ChromaDB
 ~~~~~~~~~~~~~~
 
-ChromaDB is a lightweight, open-source, locally deployable vector database.
-It stores document text, vector embeddings, and metadata.
+ChromaDB is an open-source lightweight vector database that is deployable on the local system.
+Metadata, vector embedding, and text documents are stored in ChromaDB.
 
-ChromaDB uses the HNSW (Hierarchical Navigable Small World) algorithm for
-approximate nearest-neighbour search, enabling sub-millisecond query times.
+Query response in sub-milliseconds becomes feasible through ChromaDB's implementation of Hierarchical Navigable Small World (HNSW) technique for approximating nearest neighbors.
 
-In this project, ChromaDB maintains two collections:
-  - mitre_techniques : 691 MITRE ATT&CK Enterprise v18.1 techniques
-  - threat_reports   : enriched past events (grows with each pipeline run)
+There are two collections in ChromaDB used in this project:
+  - mitre_techniques: 691 MITRE ATT&CK Enterprise v18.1 tactics
+  - threat_reports: historical threat reports enhanced with additional details
 
 
 2.5 MITRE ATT&CK Framework
@@ -197,10 +188,7 @@ In this project, ChromaDB maintains two collections:
 2.5.1 Overview
 ~~~~~~~~~~~~~~
 
-MITRE ATT&CK (Adversarial Tactics, Techniques, and Common Knowledge) is a
-globally accessible knowledge base of adversary behaviour based on real-world
-observations [28]. It is the de facto standard for describing cyber attack
-behaviour.
+A universal repository of adversary actions, grounded in reality, is known as MITRE ATT&CK (Adversarial Tactics, Techniques, and Common Knowledge) [28]. This is considered to be the standard for describing the actions of cyber attacks.
 
 
 2.5.2 Structure
@@ -220,10 +208,8 @@ The Enterprise matrix covers 14 tactics and 691 techniques/sub-techniques
 2.5.3 STIX Format
 ~~~~~~~~~~~~~~~~~
 
-MITRE ATT&CK is distributed in STIX 2.1 (Structured Threat Information
-eXpression) format - a JSON-based standard for representing CTI objects.
-This project downloads enterprise-attack.json (~7MB), parses the STIX bundle,
-and extracts attack-pattern objects for indexing into ChromaDB.
+The Structured Threat Information eXpression or STIX 2.1 is a JSON standard for expressing objects that constitute CTI. The MITRE ATT&CK distribution uses STIX.
+This project involves the parsing of the STIX bundle and the downloading of enterprise-attack.json (~7MB) and extraction of attack-pattern objects.
 
 
 2.6 Multi-Agent Pipeline Architecture
@@ -257,10 +243,7 @@ automation [1][15], forming the theoretical basis for this pipeline design.
 2.6.3 Pipeline Orchestration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The CTISystem class in main.py orchestrates the pipeline in a 5-second polling
-loop using Python asyncio. The web server (FastAPI/Uvicorn) runs concurrently
-in the same event loop, ensuring the dashboard remains responsive during LLM
-inference.
+CTISystem in main.py uses Python’s asyncio framework to orchestrate the pipeline using a poller that runs at intervals of 5 seconds. The dashboard remains responsive while performing LLM inference as the web server (FastAPI & Uvicorn) runs concurrently.
 
 
 2.7 Jaccard Similarity for Threat Clustering
@@ -279,9 +262,7 @@ Result ranges from 0.0 (no overlap) to 1.0 (identical sets).
 2.7.2 Application to TTP Clustering
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each enriched event has a set of MITRE technique IDs (TTPs). Two events are
-considered part of the same threat pattern if their TTP sets have Jaccard
-similarity >= 0.7.
+An MITRE technique ID (TTP) is assigned for each enriched event. Two events are considered part of the same threat pattern when the Jaccard similarity between their TTPs exceeds 0.7.
 
 Example:
   Event A TTPs: {T1059.001, T1055, T1021}
@@ -305,27 +286,21 @@ Jaccard was chosen over k-means or DBSCAN because:
 2.8 FastAPI and Asynchronous Web Architecture
 ----------------------------------------------
 
-FastAPI is a modern Python web framework built on ASGI (Asynchronous Server
-Gateway Interface), enabling concurrent request handling without blocking.
+The ASGI (Asynchronous Server Gateway Interface) is the base for FastAPI which is a modern Python framework capable of handling multiple requests at once in an asynchronous manner.
 
-Key advantages for this project:
-  - Async endpoints: LLM processing does not block API responses
-  - Pydantic integration: automatic request/response validation
-  - Auto-generated OpenAPI docs: all 15 API endpoints documented automatically
+Key features of the project:
+  - Asynchronous endpoints: LLM processing does not affect the responsiveness of API calls
+  Pydantic library used to validate API request/response schemas automatically
+  OpenAPI Documentation generated for all 15 API endpoints.
 
 
 2.9 Summary
 ------------
+In this chapter, the core theoretical foundations of the project have been presented:
 
-This chapter covered the core theoretical foundations of the project:
-
-  - LLMs (llama3.2:3b via Ollama) provide language understanding for threat
-    enrichment and mitigation generation
-  - RAG (ChromaDB + sentence-transformers) grounds LLM outputs in verified
-    MITRE ATT&CK knowledge, eliminating hallucination
-  - MITRE ATT&CK (691 techniques, v18.1) provides the threat knowledge base
-  - Jaccard similarity enables explainable, efficient TTP-based threat clustering
-  - Multi-agent architecture decomposes the pipeline into maintainable,
-    independently testable components
-  - FastAPI + asyncio ensures the system remains responsive while LLM inference
-    runs concurrently
+  LLMs (llama3.2:3b via Ollama) provide language understanding capabilities for the generation of threat mitigating and enriching measures.
+RAG (ChromaDB + sentence-transformers) avoids hallucinations through anchoring the outputs of LLMs to verified MITRE ATT&CK data.
+  MITRE ATT&CK is the source of knowledge on threats, with its database including 691 methods (v18.1).
+  TTP-based threat clustering becomes explainable and efficient because of Jaccard similarity metrics.
+  The procedure has been decomposed into independently tested steps using multi-agent technology.
+  During the execution of inference processes of LLMs in parallel, FastAPI + asyncio keeps the program active.

@@ -1,0 +1,31 @@
+[project]
+name = "cti-agentic-system"
+version = "1.0.0"
+description = "Context-Aware Cyber Threat Analytics and Mitigation Recommendation using LLMs"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.3",
+    "python-multipart>=0.0.6",
+    "pandas>=2.0.0",
+    "ollama>=0.1.6",
+    "httpx>=0.25.2",
+    "aiofiles>=23.2.1",
+    "python-dateutil>=2.8.2",
+    "colorlog>=6.8.0",
+    "chromadb>=0.4.22",
+    "sentence-transformers>=2.3.1",
+]
+
+[dependency-groups]
+dev = []
+
+[tool.hatch.build.targets.wheel]
+# Flat-layout project — ship all .py files from root + subpackages
+packages = ["agents", "rag", "streaming"]
+artifacts = ["*.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

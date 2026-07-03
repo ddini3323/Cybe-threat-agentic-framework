@@ -4,42 +4,26 @@ CHAPTER 6 - IMPLEMENTATION
 
 6.1 Programming Language Selection
 ------------------------------------
+The following three reasons were instrumental in making Python 3.12 the sole programming language for our implementation:
 
-Python 3.12 was selected as the sole implementation language for three
-reasons:
+  1. Library ecosystem: All required dependencies have been created and are actively supported, well-established Python libraries such as ChromaDB, phrase transformers, FastAPI, Pydantic, and Ollama SDK.
 
-  1. Ecosystem compatibility: All required libraries - ChromaDB, sentence-
-     transformers, FastAPI, Pydantic, and the Ollama SDK - have mature,
-     actively maintained Python packages.
+  2. AsyncIO functionality: Our web server and LLM pipeline need to execute concurrently to work. This can be achieved without using multi-threading thanks to the native asyncIO library of Python.
 
-  2. Asyncio support: The system requires concurrent execution of the LLM
-     inference pipeline and the web server. Python's native asyncio provides
-     this without multi-threading complexity.
-
-  3. Rapid iteration: Python's dynamic typing and interactive REPL allowed
-     each agent to be developed and verified independently before pipeline
-     integration.
+  3. Rapid prototyping: Each agent could be developed and debugged independently before being incorporated into the pipeline due to dynamic typing and an interactive environment available in Python.
 
 
 6.2 Platform Selection
 -----------------------
+LLM Runtime -Ollama: Ollama has been selected over llama and LM Studio.cpp due to its drop-in swap capabilities through a standardized HTTP interface available at port number 11434. It takes care of quantization, where Q4_K_M is used in llama3.2:3b, which is 4-bit quantization, providing about 75% of the precision at only 25% memory usage.
 
-  LLM Runtime - Ollama:
-    Ollama was selected over LM Studio and llama.cpp direct because it
-    exposes a standardised HTTP API on port 11434, enabling drop-in model
-    swapping. It manages quantisation automatically; llama3.2:3b uses
-    Q4_K_M quantisation (4-bit), delivering ~75% of full-precision quality
-    at 25% of memory cost.
+  ChromaDB Vector Database:
+Selected over Qdrant, Milvus, and Faiss due to its native support for sentence-transformers, in-built support without requiring any external server setup, and persistence with configuration.
 
-  Vector Database - ChromaDB:
-    Selected over Qdrant, Milvus, and FAISS because it runs embedded
-    in-process with no external server, includes native sentence-transformer
-    integration, and persists to disk with zero configuration.
+FastAPI web framework:
 
-  Web Framework - FastAPI:
-    Chosen over Flask and Django for its ASGI-native async support, automatic
-    Pydantic model integration, and auto-generated OpenAPI docs covering all
-    15 endpoints.
+Due to its inherent asynchronous capabilities based on ASGI, built-in support for
+Pydantic models and auto-generation of OpenAPI docs for all of the 15 endpoints.
 
 
 6.3 Code Conventions
@@ -422,11 +406,4 @@ reasons:
 
 6.6 Summary
 ------------
-
-Python 3.12 with FastAPI, ChromaDB, and Ollama forms the core technology
-stack. Five implementation challenges - LLM output parsing, async blocking,
-ChromaDB initialisation, feed interference, and Mastodon HTML content -
-were each resolved through targeted, minimal strategies. The four core
-algorithms (LLM prompting, RAG retrieval, Jaccard clustering, type
-detection) are deterministic, explainable, and computationally efficient
-on commodity hardware.
+Technology stack basics comprise Python 3.12, FastAPI, ChromaDB, and Ollama. Minimum solutions targeted at solving five problems in implementation include feed interference, LLM output processing, async blocking, ChromaDB setup, and HTML data from Mastodon feeds. Using commodity hardware, the four core algorithms are deterministic, comprehensible, and efficient. These algorithms include prompting by LLMs, Retrieval-Augmented Generation (RAG), Jaccard grouping, and type identification.

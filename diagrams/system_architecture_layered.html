@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CTI System — Layered Architecture Diagram</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F0F4F8;font-family:'Segoe UI',Tahoma,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;padding:30px 20px 60px}
+h1{font-size:18px;color:#0D47A1;margin-bottom:6px;text-align:center}
+p.sub{font-size:12px;color:#666;margin-bottom:24px;text-align:center}
+.card{background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:28px 24px;max-width:1000px;width:100%}
+.dl-bar{display:flex;gap:10px;justify-content:center;margin-top:22px}
+.dl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .18s}
+.dl-btn:hover{transform:translateY(-2px)}
+.dl-svg{background:#1565C0;color:#fff}.dl-svg:hover{background:#0D47A1;box-shadow:0 5px 14px rgba(21,101,192,.35)}
+.dl-png{background:#2E7D32;color:#fff}.dl-png:hover{background:#1B5E20;box-shadow:0 5px 14px rgba(46,125,50,.35)}
+.dl-btn svg{width:15px;height:15px}
+svg text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+</style>
+</head>
+<body>
+
+<h1>CTI Agentic System — Layered Architecture Diagram</h1>
+<p class="sub">Figure 4.3 &nbsp;|&nbsp; Chapter 4 — High Level Design &nbsp;|&nbsp; Context-Aware Cyber Threat Analytics &amp; Mitigation Recommendation</p>
+
+<div class="card">
+<svg id="arch" viewBox="0 0 920 860" width="100%" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="#455A64"/>
+  </marker>
+  <marker id="arr-o" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="#E65100"/>
+  </marker>
+  <marker id="arr-w" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <polygon points="0 0,9 3.5,0 7" fill="#ffffff"/>
+  </marker>
+  <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".12"/></filter>
+  <filter id="sh2"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-opacity=".18"/></filter>
+</defs>
+
+<!-- ═══════════════════════════
+     LAYER BAND BACKGROUNDS
+════════════════════════════ -->
+
+<!-- L1 Input band -->
+<rect x="8" y="8" width="630" height="130" rx="12" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1.2"/>
+<!-- L2 Ingestion band -->
+<rect x="8" y="168" width="630" height="90" rx="12" fill="#E8EAF6" stroke="#9FA8DA" stroke-width="1.2"/>
+<!-- L3 Intelligence band -->
+<rect x="8" y="288" width="630" height="110" rx="12" fill="#EDE7F6" stroke="#CE93D8" stroke-width="1.2"/>
+<!-- L4 Analytics band -->
+<rect x="8" y="428" width="630" height="90" rx="12" fill="#E0F2F1" stroke="#80CBC4" stroke-width="1.2"/>
+<!-- L5 Response band -->
+<rect x="8" y="548" width="630" height="110" rx="12" fill="#FBE9E7" stroke="#FFAB91" stroke-width="1.2"/>
+<!-- L6 Presentation band -->
+<rect x="8" y="688" width="630" height="100" rx="12" fill="#E8F5E9" stroke="#A5D6A7" stroke-width="1.2"/>
+
+<!-- ═══════════════════════════
+     LAYER LABELS (left edge)
+════════════════════════════ -->
+<text x="16" y="34" font-size="8.5" font-weight="800" fill="#1565C0" letter-spacing="1.6" text-anchor="start">INPUT LAYER</text>
+<text x="16" y="188" font-size="8.5" font-weight="800" fill="#3949AB" letter-spacing="1.6">INGESTION LAYER</text>
+<text x="16" y="308" font-size="8.5" font-weight="800" fill="#6A1B9A" letter-spacing="1.6">INTELLIGENCE LAYER</text>
+<text x="16" y="448" font-size="8.5" font-weight="800" fill="#00695C" letter-spacing="1.6">ANALYTICS LAYER</text>
+<text x="16" y="568" font-size="8.5" font-weight="800" fill="#BF360C" letter-spacing="1.6">RESPONSE LAYER</text>
+<text x="16" y="708" font-size="8.5" font-weight="800" fill="#1B5E20" letter-spacing="1.6">PRESENTATION LAYER</text>
+
+<!-- ════════════════════════════════════
+     LAYER 1 — INPUT SOURCES
+════════════════════════════════════ -->
+
+<!-- Box: Live CTI Feeds -->
+<rect x="22" y="44" width="182" height="82" rx="9" fill="#0288D1" filter="url(#sh)"/>
+<rect x="22" y="44" width="182" height="30" rx="9" fill="#01579B"/>
+<rect x="22" y="62" width="182" height="12" fill="#01579B"/>
+<text x="113" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Live CTI Feeds</text>
+<text x="113" y="85" text-anchor="middle" font-size="10" fill="#E1F5FE">URLhaus · ThreatFox</text>
+<text x="113" y="100" text-anchor="middle" font-size="10" fill="#E1F5FE">Feodo Tracker</text>
+<text x="113" y="116" text-anchor="middle" font-size="9" fill="#B3E5FC" font-style="italic">HTTP polling / streaming</text>
+
+<!-- Box: Social Media OSINT -->
+<rect x="224" y="44" width="184" height="82" rx="9" fill="#388E3C" filter="url(#sh)"/>
+<rect x="224" y="44" width="184" height="30" rx="9" fill="#1B5E20"/>
+<rect x="224" y="62" width="184" height="12" fill="#1B5E20"/>
+<text x="316" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Social Media OSINT</text>
+<text x="316" y="85" text-anchor="middle" font-size="10" fill="#C8E6C9">Mastodon infosec.exchange</text>
+<text x="316" y="100" text-anchor="middle" font-size="10" fill="#C8E6C9">#threatintel · #ioc</text>
+<text x="316" y="116" text-anchor="middle" font-size="9" fill="#A5D6A7" font-style="italic">real-time OSINT feed</text>
+
+<!-- Box: Manual Input -->
+<rect x="428" y="44" width="192" height="82" rx="9" fill="#F57F17" filter="url(#sh)"/>
+<rect x="428" y="44" width="192" height="30" rx="9" fill="#E65100"/>
+<rect x="428" y="62" width="192" height="12" fill="#E65100"/>
+<text x="524" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Manual Input</text>
+<text x="524" y="85" text-anchor="middle" font-size="10" fill="#FFF8E1">JSON · CSV · Free Text</text>
+<text x="524" y="100" text-anchor="middle" font-size="10" fill="#FFF8E1">File Upload · Instant API</text>
+<text x="524" y="116" text-anchor="middle" font-size="9" fill="#FFE0B2" font-style="italic">analyst submission</text>
+
+<!-- Merge arrows → Layer 2 -->
+<line x1="113" y1="126" x2="290" y2="162" stroke="#455A64" stroke-width="1.8" marker-end="url(#arr)"/>
+<line x1="316" y1="126" x2="316" y2="162" stroke="#455A64" stroke-width="1.8" marker-end="url(#arr)"/>
+<line x1="524" y1="126" x2="342" y2="162" stroke="#455A64" stroke-width="1.8" marker-end="url(#arr)"/>
+
+<!-- ════════════════════════════════════
+     LAYER 2 — INGESTION AGENT
+════════════════════════════════════ -->
+<rect x="22" y="178" width="608" height="70" rx="9" fill="#3949AB" filter="url(#sh2)"/>
+<rect x="22" y="178" width="608" height="28" rx="9" fill="#1A237E"/>
+<rect x="22" y="194" width="608" height="12" fill="#1A237E"/>
+<text x="326" y="196" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" letter-spacing="1">AGENT 1 · INGESTION &amp; NORMALISATION</text>
+<!-- pills -->
+<rect x="36"  y="212" width="128" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="100" y="226" text-anchor="middle" font-size="9.5" fill="#fff">Type Detection</text>
+<rect x="176" y="212" width="140" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="246" y="226" text-anchor="middle" font-size="9.5" fill="#fff">Severity Scoring (1–5)</text>
+<rect x="328" y="212" width="128" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="392" y="226" text-anchor="middle" font-size="9.5" fill="#fff">MD5 Deduplication</text>
+<rect x="468" y="212" width="148" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="542" y="226" text-anchor="middle" font-size="9.5" fill="#fff">→ ThreatEvent Schema</text>
+
+<!-- Arrow → Layer 3 -->
+<line x1="326" y1="248" x2="326" y2="282" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="260" y="255" width="132" height="16" rx="4" fill="white" opacity=".9"/>
+<text x="326" y="267" text-anchor="middle" font-size="9" fill="#333" font-weight="600">ThreatEvent</text>
+
+<!-- ════════════════════════════════════
+     LAYER 3 — INTELLIGENCE
+════════════════════════════════════ -->
+
+<!-- Agent 2: Enrichment -->
+<rect x="22" y="298" width="294" height="90" rx="9" fill="#6A1B9A" filter="url(#sh)"/>
+<rect x="22" y="298" width="294" height="28" rx="9" fill="#4A148C"/>
+<rect x="22" y="314" width="294" height="12" fill="#4A148C"/>
+<text x="169" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">AGENT 2 · LLM ENRICHMENT</text>
+<text x="169" y="338" text-anchor="middle" font-size="10" fill="#E1BEE7">llama3.2:3b + MITRE ATT&amp;CK RAG</text>
+<text x="169" y="353" text-anchor="middle" font-size="9.5" fill="#CE93D8">Extracts: IOCs · TTPs · CVEs</text>
+<text x="169" y="367" text-anchor="middle" font-size="9.5" fill="#CE93D8">Malware Family · Attack Vector</text>
+<text x="169" y="381" text-anchor="middle" font-size="8.5" fill="#BA68C8" font-style="italic">confidence score: 0.0 – 1.0</text>
+
+<!-- Agent 2b: Classifier -->
+<rect x="336" y="298" width="294" height="90" rx="9" fill="#7B1FA2" filter="url(#sh)"/>
+<rect x="336" y="298" width="294" height="28" rx="9" fill="#6A1B9A"/>
+<rect x="336" y="314" width="294" height="12" fill="#6A1B9A"/>
+<text x="483" y="316" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">AGENT 2b · CLASSIFIER</text>
+<text x="483" y="338" text-anchor="middle" font-size="10" fill="#E1BEE7">LLM Contextual Reasoning</text>
+<text x="483" y="353" text-anchor="middle" font-size="9.5" fill="#CE93D8">14 Threat Categories</text>
+<text x="483" y="367" text-anchor="middle" font-size="9.5" fill="#CE93D8">14 Kill-Chain Stages · 9 Asset Types</text>
+<text x="483" y="381" text-anchor="middle" font-size="8.5" fill="#BA68C8" font-style="italic">→ ThreatClassification</text>
+
+<!-- Arrow → Layer 4 -->
+<line x1="326" y1="388" x2="326" y2="422" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="242" y="396" width="168" height="16" rx="4" fill="white" opacity=".9"/>
+<text x="326" y="408" text-anchor="middle" font-size="9" fill="#333" font-weight="600">EnrichedEvent + Classification</text>
+
+<!-- ════════════════════════════════════
+     LAYER 4 — PATTERN DISCOVERY
+════════════════════════════════════ -->
+<rect x="22" y="438" width="608" height="70" rx="9" fill="#00695C" filter="url(#sh2)"/>
+<rect x="22" y="438" width="608" height="28" rx="9" fill="#004D40"/>
+<rect x="22" y="454" width="608" height="12" fill="#004D40"/>
+<text x="326" y="456" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" letter-spacing="1">AGENT 3 · PATTERN DISCOVERY</text>
+<rect x="36"  y="472" width="185" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="128" y="486" text-anchor="middle" font-size="9.5" fill="#fff">Weighted Jaccard Similarity</text>
+<rect x="234" y="472" width="168" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="318" y="486" text-anchor="middle" font-size="9.5" fill="#fff">Threshold ≥ 0.7</text>
+<rect x="416" y="472" width="200" height="20" rx="10" fill="rgba(255,255,255,.15)"/>
+<text x="516" y="486" text-anchor="middle" font-size="9.5" fill="#fff">→ ThreatPattern Objects</text>
+
+<!-- Arrow → Layer 5 -->
+<line x1="326" y1="508" x2="326" y2="542" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="260" y="516" width="132" height="16" rx="4" fill="white" opacity=".9"/>
+<text x="326" y="528" text-anchor="middle" font-size="9" fill="#333" font-weight="600">ThreatPattern</text>
+
+<!-- ════════════════════════════════════
+     LAYER 5 — RESPONSE
+════════════════════════════════════ -->
+
+<!-- Agent 4: Mitigation -->
+<rect x="22" y="558" width="294" height="92" rx="9" fill="#BF360C" filter="url(#sh)"/>
+<rect x="22" y="558" width="294" height="28" rx="9" fill="#8D0E00"/>
+<rect x="22" y="574" width="294" height="12" fill="#8D0E00"/>
+<text x="169" y="576" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">AGENT 4 · MITIGATION GEN.</text>
+<text x="169" y="598" text-anchor="middle" font-size="10" fill="#FFCCBC">Chain-of-Thought Prompting</text>
+<text x="169" y="613" text-anchor="middle" font-size="9.5" fill="#FFAB91">MITRE D3FEND Code Mapping</text>
+<text x="169" y="628" text-anchor="middle" font-size="9.5" fill="#FFAB91">Steps · Sample Rule · Priority</text>
+<text x="169" y="642" text-anchor="middle" font-size="8.5" fill="#FF8A65" font-style="italic">→ MitigationAction (PENDING)</text>
+
+<!-- Agent 5: Validation -->
+<rect x="336" y="558" width="294" height="92" rx="9" fill="#1B5E20" filter="url(#sh)"/>
+<rect x="336" y="558" width="294" height="28" rx="9" fill="#0A3D00"/>
+<rect x="336" y="574" width="294" height="12" fill="#0A3D00"/>
+<text x="483" y="576" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">AGENT 5 · VALIDATION</text>
+<text x="483" y="598" text-anchor="middle" font-size="10" fill="#C8E6C9">5 Deterministic Safety Rules</text>
+<text x="483" y="613" text-anchor="middle" font-size="9.5" fill="#A5D6A7">Completeness · Scope · Safety</text>
+<text x="483" y="628" text-anchor="middle" font-size="9.5" fill="#A5D6A7">APPROVED · REJECTED</text>
+<text x="483" y="642" text-anchor="middle" font-size="8.5" fill="#81C784" font-style="italic">Human Approval Gate ↓</text>
+
+<!-- Arrow → Layer 6 -->
+<line x1="326" y1="650" x2="326" y2="682" stroke="#455A64" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="232" y="658" width="188" height="16" rx="4" fill="white" opacity=".9"/>
+<text x="326" y="670" text-anchor="middle" font-size="9" fill="#333" font-weight="600">Validated MitigationAction</text>
+
+<!-- ════════════════════════════════════
+     LAYER 6 — PRESENTATION
+════════════════════════════════════ -->
+<rect x="22" y="698" width="608" height="82" rx="9" fill="#0D47A1" filter="url(#sh2)"/>
+<rect x="22" y="698" width="608" height="28" rx="9" fill="#001970"/>
+<rect x="22" y="714" width="608" height="12" fill="#001970"/>
+<text x="326" y="716" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" letter-spacing="1">FASTAPI SOC DASHBOARD  ·  port 8888</text>
+<!-- 8 page pills -->
+<rect x="30"  y="734" width="86" height="18" rx="9" fill="rgba(255,255,255,.18)"/>
+<text x="73"  y="747" text-anchor="middle" font-size="8.5" fill="#fff">Pipeline</text>
+<rect x="124" y="734" width="90" height="18" rx="9" fill="rgba(255,255,255,.18)"/>
+<text x="169" y="747" text-anchor="middle" font-size="8.5" fill="#fff">Enrichment</text>
+<rect x="222" y="734" width="80" height="18" rx="9" fill="rgba(255,255,255,.18)"/>
+<text x="262" y="747" text-anchor="middle" font-size="8.5" fill="#fff">Patterns</text>
+<rect x="310" y="734" width="96" height="18" rx="9" fill="rgba(255,255,255,.18)"/>
+<text x="358" y="747" text-anchor="middle" font-size="8.5" fill="#fff">Mitigations</text>
+<rect x="414" y="734" width="98" height="18" rx="9" fill="rgba(255,255,255,.18)"/>
+<text x="463" y="747" text-anchor="middle" font-size="8.5" fill="#fff">Flow Tracker</text>
+<rect x="30"  y="757" width="86" height="18" rx="9" fill="rgba(255,255,255,.12)"/>
+<text x="73"  y="770" text-anchor="middle" font-size="8.5" fill="#BBD">Live Input</text>
+<rect x="124" y="757" width="70" height="18" rx="9" fill="rgba(255,255,255,.12)"/>
+<text x="159" y="770" text-anchor="middle" font-size="8.5" fill="#BBD">Feeds</text>
+<rect x="202" y="757" width="90" height="18" rx="9" fill="rgba(255,255,255,.12)"/>
+<text x="247" y="770" text-anchor="middle" font-size="8.5" fill="#BBD">Benchmark</text>
+<rect x="300" y="757" width="148" height="18" rx="9" fill="rgba(255,255,255,.12)"/>
+<text x="374" y="770" text-anchor="middle" font-size="8.5" fill="#BBD">REST API (15 endpoints)</text>
+<text x="560" y="754" text-anchor="middle" font-size="9" fill="#90CAF9">Uvicorn</text>
+<text x="560" y="768" text-anchor="middle" font-size="9" fill="#90CAF9">ASGI</text>
+
+<!-- ════════════════════════════════════
+     RIGHT SIDE — KNOWLEDGE BASE
+════════════════════════════════════ -->
+<rect x="658" y="288" width="254" height="382" rx="12" fill="#FFF8E1" stroke="#F57F17" stroke-width="2" filter="url(#sh2)"/>
+<rect x="658" y="288" width="254" height="34" rx="12" fill="#E65100"/>
+<rect x="658" y="308" width="254" height="14" fill="#E65100"/>
+<text x="785" y="312" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff" letter-spacing=".6">KNOWLEDGE BASE</text>
+
+<!-- ChromaDB section -->
+<rect x="670" y="332" width="230" height="74" rx="8" fill="#FFF3E0" stroke="#FF8F00" stroke-width="1.3"/>
+<text x="785" y="352" text-anchor="middle" font-size="11" font-weight="700" fill="#E65100">ChromaDB</text>
+<text x="785" y="368" text-anchor="middle" font-size="9.5" fill="#BF360C">Vector Database (HNSW)</text>
+<text x="785" y="383" text-anchor="middle" font-size="9" fill="#E64A19">384-dim embeddings</text>
+<text x="785" y="397" text-anchor="middle" font-size="9" fill="#E64A19">all-MiniLM-L6-v2 (22 MB)</text>
+
+<!-- Collection 1 -->
+<rect x="670" y="416" width="230" height="70" rx="8" fill="#FFF3E0" stroke="#FF8F00" stroke-width="1.3"/>
+<text x="785" y="434" text-anchor="middle" font-size="11" font-weight="700" fill="#E65100">mitre_techniques</text>
+<text x="785" y="450" text-anchor="middle" font-size="9.5" fill="#BF360C">691 ATT&amp;CK Enterprise v18.1</text>
+<text x="785" y="465" text-anchor="middle" font-size="9" fill="#E64A19">Techniques + Descriptions</text>
+<text x="785" y="479" text-anchor="middle" font-size="9" fill="#E64A19">Tactic mappings</text>
+
+<!-- Collection 2 -->
+<rect x="670" y="496" width="230" height="70" rx="8" fill="#FFF3E0" stroke="#FF8F00" stroke-width="1.3"/>
+<text x="785" y="514" text-anchor="middle" font-size="11" font-weight="700" fill="#E65100">threat_reports</text>
+<text x="785" y="530" text-anchor="middle" font-size="9.5" fill="#BF360C">Past Enriched Events</text>
+<text x="785" y="545" text-anchor="middle" font-size="9" fill="#E64A19">Self-Learning Loop</text>
+<text x="785" y="559" text-anchor="middle" font-size="9" fill="#E64A19">Grows with each run</text>
+
+<!-- Similarity threshold note -->
+<rect x="670" y="576" width="230" height="40" rx="8" fill="#FFE0B2" stroke="#FF8F00" stroke-width="1"/>
+<text x="785" y="592" text-anchor="middle" font-size="9.5" font-weight="700" fill="#E65100">Similarity Threshold: ≥ 0.35</text>
+<text x="785" y="607" text-anchor="middle" font-size="9" fill="#BF360C">Top-5 techniques returned per query</text>
+
+<!-- Bidirectional arrow: Agent 2 ↔ KB -->
+<line x1="630" y1="333" x2="656" y2="360" stroke="#E65100" stroke-width="1.8" marker-end="url(#arr-o)" stroke-dasharray="5,3"/>
+<line x1="658" y1="375" x2="630" y2="348" stroke="#455A64" stroke-width="1.8" marker-end="url(#arr)" stroke-dasharray="5,3"/>
+<rect x="630" y="345" width="30" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="645" y="356" text-anchor="middle" font-size="7.5" fill="#E65100" font-weight="700">query</text>
+<rect x="619" y="368" width="40" height="14" rx="3" fill="white" opacity=".9"/>
+<text x="639" y="379" text-anchor="middle" font-size="7.5" fill="#455A64">context</text>
+
+<!-- Self-learning arc from bottom of KB back to top -->
+<path d="M900,620 C928,600 928,155 785,155 C700,155 660,170 630,190" stroke="#E65100" stroke-width="1.6" stroke-dasharray="6,3" fill="none" marker-end="url(#arr-o)"/>
+<rect x="898" y="370" width="20" height="80" rx="4" fill="#FFF3E0" stroke="#FF8F00" stroke-width="1"/>
+<text x="908" y="420" text-anchor="middle" font-size="8" fill="#E65100" font-weight="700" transform="rotate(-90,908,415)">self-learning store-back</text>
+
+<!-- ════════════════════════════════════
+     FIGURE LABEL
+════════════════════════════════════ -->
+<rect x="8" y="836" width="906" height="20" rx="5" fill="#ECEFF1"/>
+<text x="457" y="850" text-anchor="middle" font-size="10" fill="#546E7A">
+  <tspan font-weight="700">Figure 4.3</tspan>
+  &nbsp;— Layered System Architecture of the CTI Agentic System. Six functional layers process threat data from ingestion to presentation, supported by a persistent ChromaDB knowledge base.
+</text>
+
+</svg>
+
+<!-- Download buttons -->
+<div class="dl-bar">
+  <button class="dl-btn dl-svg" id="btnSVG">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download SVG
+  </button>
+  <button class="dl-btn dl-png" id="btnPNG">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Download PNG (2×)
+  </button>
+</div>
+</div>
+
+<script>
+const svg = document.getElementById('arch');
+const FNAME = 'figure_4_3_layered_system_architecture';
+
+document.getElementById('btnSVG').addEventListener('click', () => {
+  const clone = svg.cloneNode(true);
+  const s = document.createElementNS('http://www.w3.org/2000/svg','style');
+  s.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(s, clone.firstChild);
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)], {type:'image/svg+xml'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = FNAME + '.svg';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+
+document.getElementById('btnPNG').addEventListener('click', () => {
+  const W = 920, H = 860, scale = 2;
+  const clone = svg.cloneNode(true);
+  const s = document.createElementNS('http://www.w3.org/2000/svg','style');
+  s.textContent = "text{font-family:'Segoe UI',Tahoma,Arial,sans-serif}";
+  clone.insertBefore(s, clone.firstChild);
+  clone.setAttribute('width', W * scale);
+  clone.setAttribute('height', H * scale);
+  clone.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = FNAME + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.src = url;
+});
+</script>
+</body>
+</html>

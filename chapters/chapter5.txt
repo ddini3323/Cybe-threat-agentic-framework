@@ -6,12 +6,7 @@ CHAPTER 5 - DETAILED DESIGN
 --------------------
 
 5.1.1 Overall System Architecture
-
-The system is composed of seven interacting modules under the CTISystem
-orchestrator. The FastAPI web server runs concurrently in the same asyncio
-event loop. Figure 5.1 (ER / Data Model Diagram) shows the four core data
-entities and their relationships — ThreatEvent, EnrichedEvent, ThreatPattern,
-and MitigationAction — which form the data contracts between pipeline stages.
+Under the CTISystem orchestrator, the components include seven interconnected modules. The FastAPI web server runs alongside the other system components within the same asyncio event loop. The four main data entities and their relationships—ThreatEvent, EnrichedEvent, ThreatPattern, and MitigationAction—that form the basis for data exchange between pipeline steps are shown in Fig 5.1 (Entity Relationship Diagram/ Data Model).
 
   [See Figure 5.1: ER / Data Model Diagram]
 
@@ -78,29 +73,21 @@ The module hierarchy below shows how classes are organised across files:
 
 5.2.1 Ingestion Agent
 ~~~~~~~~~~~~~~~~~~~~~~
+Responsible for all data ingestion and normalization. Four data input methods are available, and the agent polls the directory data/input/ on every iteration cycle:
 
-Responsible for all data intake and normalisation. The agent polls the
-data/input/ directory every cycle and supports four input modes:
+  a) CSV data normalization:
+Utilizes pandas library to load files. Fieldnames such as "indicator," "ioc," "value," "ip," and "url" can be utilized. The description field is extracted from the raw content of the row if not present. 
+     Each row is associated with one ThreatEvent object.
 
-  a) CSV Normalisation:
-     Reads files using pandas. Flexible column mapping accepts headers
-     such as 'indicator', 'ioc', 'value', 'ip', 'url'. If no 'description'
-     column exists the raw row content is used as the threat description.
-     Each row maps to one ThreatEvent.
+  b) JSON data normalization:
+Supports JSON arrays and objects. Fieldnames include "description," "text," "content," "raw," and "message." One ThreatEvent object will be created for each array entry.
 
-  b) JSON Normalisation:
-     Accepts JSON objects and arrays. Supports flexible field names:
-     'description', 'text', 'content', 'raw', 'message'. Arrays are
-     iterated to produce one ThreatEvent per element.
+ d) Get URL:
+Makes feed URLs passed through HTTP GET for EXTERNAL_FEEDS.
+       The response content is converted to a ThreatEvent, and it is treated as unstructured free text.
 
-  c) URL Fetch:
-     Issues HTTP GET requests to feed URLs listed in EXTERNAL_FEEDS.
-     Response body is treated as free text and normalised into a
-     ThreatEvent.
-
-  d) Deduplication:
-     A processed_files set and processed_feed_ids set track previously
-     seen content. MD5 hashing of source+indicator prevents duplicates.
+  d) Deduplication 
+The previously encountered information is tracked using two sets, namely processed_files and processed_feed_ids. Duplicate prevention is carried out using MD5 of the source and indication.
 
   ThreatEvent Schema:
     event_id   : MD5(source + data)
@@ -115,23 +102,16 @@ data/input/ directory every cycle and supports four input modes:
 
 5.2.2 Enrichment Agent
 ~~~~~~~~~~~~~~~~~~~~~~~
+employs a three-stage RAG + LLM process for adding semantic understanding to every ThreatEvent [25][14].
 
-Adds semantic intelligence to each ThreatEvent through a three-step
-RAG + LLM pipeline [25][14].
+Step 1: Context of MITRE RAG
+employs the text of the event itself to query CTIRetriever.get_mitre_context() that returns the top 5 MITRE ATT&CK methods whose cosine similarity is ≥ 0.35. In order to avoid any noise, methods that have lower similarities are not included.
 
-  Step 1 - MITRE RAG Context:
-    Calls CTIRetriever.get_mitre_context() with the event's raw_text,
-    returning the top-5 MITRE ATT&CK techniques with cosine similarity
-    >= 0.35. Techniques below threshold are excluded to avoid noise.
+Step 2: Previous Dangers Background
+queries up to three similar events from the threat_reports collection stored in ChromaDB via get_similar_threats_context(), enabling the LLM to form conclusions based on analogous past incidents.
 
-  Step 2 - Past Threats Context:
-    Calls get_similar_threats_context() to retrieve up to 3 past enriched
-    events from the threat_reports ChromaDB collection, enabling the LLM
-    to reason from historical analogues.
-
-  Step 3 - LLM Extraction:
-    A structured prompt (system role + MITRE context + past threats +
-    event details + JSON schema) is sent to llama3.2:3b via Ollama.
+Step 3: Extraction of LLM
+via Ollama, an input template (system role + MITRE context + previous dangers background + event information + JSON schema) is passed to llama3.2:3b.
     The LLM extracts:
       iocs[]           : list of {type, value} pairs
       cves[]           : CVE identifiers
@@ -182,24 +162,17 @@ weighted similarity score:
 
 5.2.4 Mitigation Agent
 ~~~~~~~~~~~~~~~~~~~~~~~
+employs the technique of chain-of-thought prompting [27], which allows it to offer recommendations that are organized and actionable, in three clear steps:
 
-Generates structured, actionable recommendations using chain-of-thought
-prompting [27] in three explicit steps:
+  1. Threat Mechanics Assessment
+The LLM describes how the threat gains access, what paths it follows laterally, and what its aims are.
 
-  Step 1 - Threat Mechanism Analysis:
-    The LLM reasons about how the threat operates - entry point, lateral
-    movement paths, and objectives.
+  2. D3FEND Mitigation Selection:
+The LLM correlates the threat with the defense mechanisms of MITRE D3FEND [29]:
+      network isolation (D3-NI), incoming traffic filtering (D3-ITF), outgoing traffic filtering (D3-OTF), user accounts management (D3-UA), MFA, endpoint detection (D3-EDR), process analysis (D3-PA), and process monitoring (D3-PM).
 
-  Step 2 - D3FEND Countermeasure Selection:
-    The LLM maps the threat to MITRE D3FEND [29] defense categories:
-    D3-NI (Network Isolation), D3-ITF (Inbound Traffic Filtering),
-    D3-OTF (Outbound Traffic Filtering), D3-UA (User Account Management),
-    D3-MFA (Multi-Factor Authentication), D3-EDR (Endpoint Detection),
-    D3-PA (Process Analysis), D3-PM (Process Monitoring).
-
-  Step 3 - Minimal Effective Mitigation:
-    The LLM produces the smallest set of proportionate, specific actions
-    that address the identified threat mechanism.
+  3. Minimum Effective Defense Strategy
+In order to mitigate the detected danger, the LLM proposes the minimum number of relevant mitigation strategies needed.
 
   MitigationAction Schema:
     title        : short action name
@@ -214,33 +187,28 @@ prompting [27] in three explicit steps:
 
 5.2.5 Validation Agent
 ~~~~~~~~~~~~~~~~~~~~~~~
+Deterministic safety rules have to be performed before sending MitigationActions to the analyst. This agent does not call any LLM.
 
-Applies deterministic safety rules to every MitigationAction before it is
-presented to the analyst. No LLM calls are made in this agent.
+  Completeness checks:
+    Title should not be null.
+    Description must be complete.
+    Steps[] array must contain at least two items of length >=10.
 
-  Completeness Checks:
-    - Title must be non-empty
-    - Description must be non-empty
-    - steps[] must contain >= 2 items, each >= 10 characters
+  Safety checks (if matches exist, discard action):
+    Dangerous system commands: del /f, format c:, dump database, and rm -rf
+    Overly broad network rules: "block all" and "deny all ports"
+    Proportional actions: "shutdown all," "delete all," and "disable all"
+    Broad firewall rules with wildcards: 0.0.0.0/0 without specifying ports
 
-  Safety Checks (reject if any match):
-    - Dangerous system commands: rm -rf, format c:, drop database, del /f
-    - Overly broad network rules: "block all", "deny all ports"
-    - Disproportionate actions: "disable all", "delete all", "shutdown all"
-    - Firewall wildcard rules: 0.0.0.0/0 without specific port context
-
-  If all checks pass: MitigationAction.validated = True
-  If any check fails: MitigationAction.validated = False, reason logged
+  When all the above checks succeed:
+    MitigationAction.validated = True
+  Otherwise, cause(s) of failure are logged,
+    and MitigationAction.validated = False.
 
 
 5.3 Summary
 ------------
-
-This chapter detailed the five-agent structure of the system, presenting
-each agent's internal design, data schema, and processing logic. Key design
-patterns include RAG-augmented LLM prompting (Enrichment), weighted
-multi-factor similarity (Pattern Discovery), chain-of-thought reasoning
-(Mitigation), and deterministic rule-based safety checking (Validation).
+Details about all five agents in the system have been explained in this chapter, including the internal architecture, data format, and processing steps of all agents. Enrichment, which includes prompting for RAG augmented LLMs, Pattern Discovery with multi-factor similarity scoring, Mitigation, which involves chain-of-thought reasoning, and Validation are some significant design patterns.
 
 Figure 5.2 shows the Sequence Diagram, illustrating the chronological
 interaction between the Analyst, FastAPI server, and each agent during
